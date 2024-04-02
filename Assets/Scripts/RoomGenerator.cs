@@ -20,7 +20,7 @@ public class RoomGenerator : MonoBehaviour
 
     private TileBase[,,] tileTemplate = new TileBase[3, 3, 3];
 
-    private float[,,,] sortLines = new float[3, 3, 3, 2];// first 3 indexes are the indexs of a tile sprite, last index is 0:slope, 1:intercept
+    private float[,,,] sortLines = new float[3, 3, 3, 3];// first 3 indexes are the indexs of a tile sprite, last index is 0:slope, 1:intercept, 2:slope type
 
     private Vector3Int[,,,] edgeTemplate = new Vector3Int[3, 3, 3, 3]; // Cordinates of a corner and wall used to get an edge, the Z index of both are ignored as they are already known
 
@@ -276,10 +276,9 @@ public class RoomGenerator : MonoBehaviour
             {
                 for (int y = -randomSizeY / 2; y < randomSizeY / 2; y++)
                 {
-                    TileBase CheckTile = tilemap.GetTile(new Vector3Int(x + randomPosX, y + randomPosY, x + randomPosX + y + randomPosY));
                     StartCoroutine(PaintTile(new Vector3Int(x + randomPosX, y + randomPosY, 0)));
 
-                    if (DebugMode && (CheckTile == null || !IsInList(tileCatagory[0], CheckTile)))
+                    if (DebugMode)
                     {
 
                         yield return new WaitForSeconds(DebugSpeed);
@@ -343,16 +342,17 @@ public class RoomGenerator : MonoBehaviour
             Vector3Int tileIndex = GetTileIndex(tilemap.GetTile(tilePos));
             Vector3 tileWorldPos = tilemap.CellToWorld(tilePos);
 
-            float slope = sortLines[tileIndex.x, tileIndex.y, tileIndex.z, 0];
+            int slopeType = (int) sortLines[tileIndex.x, tileIndex.y, tileIndex.z, 2];//0 means the line is linear (makes a / shape), -1/1 means the line is absolute (makes a V shape)
+            float slope = sortLines[tileIndex.x, tileIndex.y, tileIndex.z, 0] * (slopeType == -1 ? -1 : 1);
             float intercept = tileWorldPos.y + sortLines[tileIndex.x, tileIndex.y, tileIndex.z, 1] / 150 - tileWorldPos.x * slope;
-
-            while (currentIndex < drawOrder.Count - 1 && drawOrder[currentIndex + 1].position.y < slope * drawOrder[currentIndex + 1].position.x + intercept)
+            
+            while (currentIndex < drawOrder.Count - 1 && drawOrder[currentIndex + 1].position.y < (slopeType == 0 ? (slope *  drawOrder[currentIndex + 1].position.x) + intercept : (slope * Mathf.Abs(drawOrder[currentIndex + 1].position.x - tileWorldPos.x)) + tileWorldPos.y))
             { 
                 currentIndex++;
             }
 
 
-            heightOrder[currentIndex + 1].Add(tilePos);//once it finds a object that is above the tile, set the tiles Z position to the position behind that object
+            heightOrder[currentIndex + 1].Add(tilePos);//once it finds a object that is below the tile, set the tiles Z position to the position above that object
             //note that while tiles and objects change Z position by the same amount, objects are offset by 0.5 to prevent overlap, that means that if a object and tile are on the same relative Z index, the object will be drawn in front.
         }
 
@@ -448,7 +448,7 @@ public class RoomGenerator : MonoBehaviour
             else if (tile.name.Equals("LeftCap"))
             {
                 tileTemplate[0, 2, 0] = tile;
-                sortLines[0, 2, 0, 0] = -slopeRatio;
+                sortLines[0, 2, 0, 0] = slopeRatio;
                 sortLines[0, 2, 0, 1] = 0;
 
                 tileCatagory[2].Add(tile);
@@ -457,7 +457,7 @@ public class RoomGenerator : MonoBehaviour
             else if (tile.name.Equals("RightCap"))
             {
                 tileTemplate[2, 0, 0] = tile;
-                sortLines[2, 0, 0, 0] = slopeRatio;
+                sortLines[2, 0, 0, 0] = -slopeRatio;
                 sortLines[2, 0, 0, 1] = 0;
 
                 tileCatagory[2].Add(tile);
@@ -466,8 +466,9 @@ public class RoomGenerator : MonoBehaviour
             else if (tile.name.Equals("UpCorner"))
             {
                 tileTemplate[2, 2, 1] = tile;
-                sortLines[2, 2, 1, 0] = 0;
-                sortLines[2, 2, 1, 1] = 43;
+                sortLines[2, 2, 1, 0] = slopeRatio;
+                sortLines[2, 2, 1, 1] = 0;
+                sortLines[2, 2, 1, 2] = 1;
 
                 edgeTemplate[2, 2, 2, 1] = new Vector3Int(2, 2, 1);//same idea as the tileTemplate, but it takes the x and y of 2 different tiles (corner + wall or hall + wall) and returns the edge that would be created from it
                 edgeTemplate[2, 2, 1, 2] = new Vector3Int(2, 2, 1);
@@ -502,8 +503,9 @@ public class RoomGenerator : MonoBehaviour
             else if (tile.name.Equals("DownCorner"))
             {
                 tileTemplate[0, 0, 1] = tile;
-                sortLines[0, 0, 1, 0] = 0;
-                sortLines[0, 0, 1, 1] = -20;//estimated, measure exact value later
+                sortLines[0, 0, 1, 0] = slopeRatio;
+                sortLines[0, 0, 1, 1] = 0;
+                sortLines[0, 0, 1, 2] = -1;
 
                 tileCatagory[5].Add(tile);
 
@@ -537,8 +539,9 @@ public class RoomGenerator : MonoBehaviour
             else if (tile.name.Equals("UpEdge"))
             {
                 tileTemplate[2, 1, 2] = tile;
-                sortLines[2, 1, 2, 0] = 0;
-                sortLines[2, 1, 2, 1] = 43;
+                sortLines[2, 1, 2, 0] = slopeRatio;
+                sortLines[2, 1, 2, 1] = 0;
+                sortLines[2, 1, 2, 1] = 1;
 
                 edgeTemplate[2, 0, 1, 2] = new Vector3Int(2, 1, 2);
                 edgeTemplate[2, 2, 1, 0] = new Vector3Int(2, 1, 2);
@@ -549,8 +552,9 @@ public class RoomGenerator : MonoBehaviour
             else if (tile.name.Equals("LeftEdge"))
             {
                 tileTemplate[1, 2, 2] = tile;
-                sortLines[1, 2, 2, 0] = 0;
-                sortLines[1, 2, 2, 1] = 42;
+                sortLines[1, 2, 2, 0] = slopeRatio;
+                sortLines[1, 2, 2, 1] = 0;
+                sortLines[1, 2, 2, 2] = 1;
 
                 edgeTemplate[0, 2, 2, 1] = new Vector3Int(1, 2, 2);
                 edgeTemplate[2, 2, 0, 1] = new Vector3Int(1, 2, 2);

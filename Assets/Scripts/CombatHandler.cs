@@ -1,8 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using Random = UnityEngine.Random;
 using UnityEngine.UI;
+using System.Reflection;
 
 public class CombatHandler : MonoBehaviour
 {
@@ -34,7 +37,7 @@ public class CombatHandler : MonoBehaviour
         Player player = playerObject.AddComponent(typeof(Player)) as Player;
 
         player.New(50, new Vector2Int(0, Random.Range(0, 5)), "One armed knight", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/OneArmedKnight"), new List<string>
-        {"Spear Strike", "Bifurcated Strike"});
+        {"Spear Strike", "Bifurcated Strike", "Guard"});
 
         participants.Add(player);
 
@@ -43,7 +46,7 @@ public class CombatHandler : MonoBehaviour
 
         Enemy enemy = enemyObject.AddComponent(typeof(Enemy)) as Enemy;
         enemy.New(40, new Vector2Int(1, Random.Range(0,5)), "Skeleton", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/Skeleton"), new List<string>
-        {"Spear Strike", "Bifurcated Strike"});
+        {"Spear Strike", "Bifurcated Strike", "Guard"});
 
         participants.Add(enemy);
 
@@ -216,20 +219,23 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
     public static void Start()
     {
         //targetTypes initialization
-        targetTypes["ForwardHit"] = new BasicTarget(new List<int> { 0 });
-        targetTypes["DiagonalHit"] = new BasicTarget(new List<int> { -1, 1 });
+        targetTypes["ForwardHit"] = new BasicTarget(new List<int> { 0 }, new List<int> { 1 });
+        targetTypes["DiagonalHit"] = new BasicTarget(new List<int> { -1, 1 }, new List<int> { 1 });
+        targetTypes["SelfEffect"] = new BasicTarget(new List<int> { 0 }, new List<int> { 0 }, new List<int> {-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 });
 
         //attacks initialization
-        MakeCardIndex(new Dictionary<string, string>()
+        MakeCardIndex(new Dictionary<string, string>() //the name and description on the card
         {
             {"Name", "Spear Strike"},
             {"Description", "*The user deals 1d4 + 2 damage." }
-        }, new Dictionary<string, float>
+        }, new Dictionary<string, float> //the font size of the name and description
         {
             {"Name", 0.15f},
             {"Description",  0.15f}
-        }, new BasicAttack(targetTypes["ForwardHit"], new List<Effect> { new DamageDice(4, 2) }));
-
+        }, new BasicAttack(new Dictionary<TargetType, List<Effect>> //the dictionary containing the cards target types, and the effects corrisponding to each
+        {
+            {targetTypes["ForwardHit"], new List<Effect> { new DamageDice(1, 4, 2) } }//This card targets the character in the opposite column to the user, and deals 1d4 + 2 damage, thus it uses the ForwardHit target type and its only effect is a 1d4 + 2 DamageDice
+        }));
 
         MakeCardIndex(new Dictionary<string, string>()
         {
@@ -237,9 +243,25 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
             {"Description", "*The user deals 1d4 damage along both diagonals."}
         }, new Dictionary<string, float>
         {
-            {"Name", 0.12f},
+            {"Name", 0.11f},
             {"Description",  0.15f}
-        }, new BasicAttack(targetTypes["DiagonalHit"], new List<Effect> { new DamageDice(4, 0) }));
+        }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
+        {
+            {targetTypes["DiagonalHit"], new List<Effect> { new DamageDice(1, 4, 0) } }
+        }));
+
+        MakeCardIndex(new Dictionary<string, string>()
+        {
+            {"Name", "Guard"},
+            {"Description", "*The user gains the guarded status.\n*Repeated use increases the duration."}
+        }, new Dictionary<string, float>
+        {
+            {"Name", 0.15f},
+            {"Description",  0.12f}
+        }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
+        {
+            {targetTypes["SelfEffect"], new List<Effect> { new ApplyStatus("Guarded", 1) } },
+        }));
 
     }
 
@@ -248,9 +270,22 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         attacks[attackName].Activate(userPos, character);
     }
 
-    public static List<int> GetHitPositions(string attackName)
+    public static List<int> GetStandPositions(string attackName)//remember to add a way to distinguish between cards that help and cards that hurt.
     {
-        return attacks[attackName].GetTargetType().GetHitPositions();
+        List<int> hitPositions = new List<int>();
+
+        foreach (TargetType targetType in attacks[attackName].GetTargetType())//loop through each target type of the attack
+        {
+            foreach (int pos in targetType.GetStandPositions())//loop through each position the enemy can be in for the attack to land
+            {
+                if (!hitPositions.Contains(pos))//if the position has not already been considered, add it to the list.
+                {
+                    hitPositions.Add(pos);
+                }
+            }
+        }
+
+        return hitPositions;
     }
 
     private static void MakeCardIndex(Dictionary<string, string> newCardInfo, Dictionary<string, float> newCardSize, Attack attack)
@@ -287,6 +322,8 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
     protected int speedMod;
     protected int movement;
 
+    protected List<StatusEffect> statusEffects = new List<StatusEffect>();
+
     protected List<string> validCards = new List<string>();
 
     protected Vector2Int gridPos;
@@ -306,7 +343,13 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     public virtual IEnumerator Turn()//signals that it is this character's turn
     {
-        Debug.Log("Turn called on Character superclass, use subclasses instead.");
+        foreach (StatusEffect status in statusEffects)
+        {
+            if (status.triggers.Contains("ReduceOnTurnStart"))
+            {
+                status.Reduce();
+            }
+        }
         yield return 0;
     }
 
@@ -327,8 +370,16 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         speedMod = 0;
     }
 
-    public int TakeDamage(int damage)//updates the character's health, and destroys them if it is at or below 0
+    public List<int> TakeDamage(int damage)//updates the character's health, and destroys them if it is at or below 0
     {
+        foreach (StatusEffect status in statusEffects)
+        {
+            if (status.triggers.Contains("ModifyTakenDamage"))
+            {
+                damage = status.Activate(damage);
+            }
+        }
+
         health -= damage;
 
         if (health <= 0)
@@ -338,7 +389,26 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
             Destroy(gameObject);
         }
 
-        return health;
+        return new List<int> {health, damage};
+    }
+
+    public void AddStatus(StatusEffect status)
+    {
+        foreach (StatusEffect i in statusEffects)
+        {
+            if (i.type.Equals(status.type))
+            {
+                i.Stack(status.duration);
+                return;
+            }
+        }
+
+        statusEffects.Add(status);
+    }
+
+    public void RemoveStatus(StatusEffect status)
+    {
+        statusEffects.Remove(status);
     }
 
     public virtual void RemoveCard(Card card)
@@ -386,6 +456,8 @@ public class Player : Character
 
     public override IEnumerator Turn()
     {
+        base.Turn();
+
         turnEnd = false;
         isTurn = true;
 
@@ -524,6 +596,8 @@ public class Enemy : Character
 
     public override IEnumerator Turn()
     {
+        base.Turn();
+
         movement = 2;
 
         bool usedCard = true;
@@ -544,7 +618,7 @@ public class Enemy : Character
 
             string randomCard = validCards[Random.Range(0, validCards.Count)];
 
-            List<int> validPos = AttackHandler.GetHitPositions(randomCard);
+            List<int> validPos = AttackHandler.GetStandPositions(randomCard);
 
             int closestPos = validPos[0];
             foreach (int pos in validPos)
@@ -561,14 +635,18 @@ public class Enemy : Character
             if (movementCost > 0 && movement > 0)
             {
                 Move(new Vector2Int(gridPos.x, gridPos.y + Mathf.Clamp(targetPos.y - gridPos.y, -movement, movement)));
+
+                movement = Mathf.Clamp(movementCost, 0, movement);
                 movement -= movementCost;
+
                 Debug.Log(name + " used " + movementCost + " movement points. " + movement + " remaining.");
 
                 yield return new WaitForSeconds(1);
             }
 
-
             Debug.Log(name + " decided to use " + randomCard);
+
+            yield return new WaitForSeconds(0.5f);
 
             if (gridPos.y == targetPos.y)//if the enemy is in range to use the card
             {
@@ -636,10 +714,12 @@ public class Enemy : Character
 public class TargetType
 {
     protected List<int> hitPositions;
+    protected List<int> standPositions;
+    protected List<int> columnPositions;//if it contains 0 it will target friendly characters, if it contains 1 it will target hostile characters, it can contain both.
 
-    public virtual List<int> GetHitPositions()//where enemies can be relative to a target in order for the attack to land
+    public virtual List<int> GetStandPositions()//where enemies can be relative to a target in order for the attack to land
     {
-        Debug.LogWarning("GetHitPositions called on superclass, use subclass instead.");
+        Debug.LogWarning("GetStandsPositions called on superclass, use subclass instead.");
         return new List<int>();
     }
 
@@ -652,16 +732,9 @@ public class TargetType
 
 public class BasicTarget : TargetType
 {
-    public override List<int> GetHitPositions()
+    public override List<int> GetStandPositions()
     {
-        List<int> RealPositions = new List<int>();
-
-        foreach (int pos in hitPositions)
-        {
-            RealPositions.Add(-pos);
-        }
-
-        return RealPositions;
+        return standPositions;
     }
 
     public override List<Character> GetTargets(Vector2Int userPos)
@@ -670,15 +743,32 @@ public class BasicTarget : TargetType
 
         foreach (int offset in hitPositions)
         {
-            targets.Add(CombatHandler.GetCharacter(new Vector2Int(Mathf.Abs(userPos.x - 1), userPos.y + offset)));
+            foreach (int column in columnPositions)
+            {
+                targets.Add(CombatHandler.GetCharacter(new Vector2Int(Mathf.Abs(userPos.x - column), userPos.y + offset)));
+            }
         }
 
         return targets;
     }
 
-    public BasicTarget(List<int> hitPositions)
+    public BasicTarget(List<int> hitPositions, List<int> columnPositions)
     {
         this.hitPositions = hitPositions;
+        this.columnPositions = columnPositions;
+        this.standPositions = new List<int>();
+
+        foreach(int i in hitPositions)
+        {
+            standPositions.Add(-i);
+        }
+    }
+
+    public BasicTarget(List<int> hitPositions, List<int> columnPositions, List<int> standPositions)
+    {
+        this.hitPositions = hitPositions;
+        this.columnPositions = columnPositions;
+        this.standPositions = standPositions;
     }
 }
 
@@ -690,13 +780,61 @@ public class Effect
     }
 }
 
+public class ApplyStatus : Effect
+{
+    public static Dictionary<string, Type> statusEffects = new Dictionary<string, Type>
+    {
+        {"Guarded", typeof(Guarded)}
+    };
+
+    private string statusIndex;
+
+    private int amount;
+
+    public ApplyStatus(string statusIndex, int amount)
+    {
+        this.statusIndex = statusIndex;
+        this.amount = amount;
+    }
+
+    public override void Activate(Character target, Character user)
+    {
+        if (target != null)
+        {
+            if (statusEffects.TryGetValue(statusIndex, out Type statusType))
+            {
+                ConstructorInfo cons = statusType.GetConstructor(new[] { typeof(int), typeof(Character) });
+
+                if (cons != null)
+                {
+                    StatusEffect status = (StatusEffect)cons.Invoke(new object[] { amount, target });
+
+                    target.AddStatus(status);
+
+                    if (target.Equals(user))
+                    {
+                        Debug.Log(target.name + " applied " + status.ToString() + " to themself.");
+                    }
+                    else
+                    {
+                        Debug.Log(user.name + " inflicted " + status.ToString() + " on " + target.name + ".");
+
+                    }
+                }
+            }
+        }
+    }
+}
+
 public class DamageDice : Effect
 {
+    private int amount;
     private int faces;
     private int modifier;
 
-    public DamageDice(int faces, int modifier)
+    public DamageDice(int amount, int faces, int modifier)
     {
+        this.amount = amount;
         this.faces = faces;
         this.modifier = modifier;
     }
@@ -705,29 +843,112 @@ public class DamageDice : Effect
     {
         if (target != null)
         {
-            int damage = Random.Range(1, faces) + modifier;
-            int health = target.TakeDamage(damage);
+            int damage = modifier;
 
-            Debug.Log(user.GetName() + " dealt " + damage + " damage to " + target.GetName() + ". " + target.GetName() + " is now at " + health + " health.");
+            for (int i = 0; i < amount; i++)
+            {
+                damage += Random.Range(1, faces + 1);
+            }
+
+            List<int> health = target.TakeDamage(damage);
+
+            Debug.Log(user.GetName() + " dealt " + health[1] + " damage to " + target.GetName() + ". " + target.GetName() + " is now at " + health[0] + " health.");
         }
+    }
+}
+
+public class StatusEffect
+{
+    protected Character target;
+
+    public string type;
+
+    public int duration;
+
+    public List<string> triggers;
+
+    public StatusEffect(string type, Character target, List<string> triggers)
+    {
+        this.type = type;
+        this.target = target;
+        this.triggers = triggers;
+    }
+
+    public virtual void Stack(int amount)
+    {
+        Debug.Log("Stack called on StatusEffect superclass, use subclass isntead");
+    }
+
+    public virtual void Activate()
+    {
+        Debug.Log("void Activate called on StatusEffect superclass, use subclass instead.");
+    }
+
+    public virtual int Activate(int armount)
+    {
+        Debug.Log("int Activate called on StatusEffect superclass, use subclass instead.");
+        return 0;
+    }
+
+    public virtual void Reduce()
+    {
+        Debug.Log("Reduce called on StatusEffect superclass, use subclass isntead.");
+    }
+}
+
+public class Guarded : StatusEffect
+{
+    public Guarded(int duration, Character target) : base("Guarded", target, new List<string> { "ModifyTakenDamage", "ReduceOnTurnStart" })
+    {
+        this.duration = duration;
+    }
+
+    public override void Reduce()
+    {
+        duration--;
+
+        if (duration <= 0)
+        {
+            Debug.Log("Guarded wore off on " + target.name + ".");
+            target.RemoveStatus(this);
+        }
+    }
+
+    public override void Stack(int duration)
+    {
+        this.duration += duration;
+    }
+
+    public override int Activate(int damage)
+    {
+        return (int) Math.Round(damage / 2.0f + 0.5f);
+    }
+
+    public override string ToString()
+    {
+        return "Guarded";
     }
 }
 
 public class Attack
 {
-    protected TargetType targetType;
+    protected Dictionary<TargetType, List<Effect>> targetEffects;
 
-    protected List<Effect> effects;
-
-    public TargetType GetTargetType()
+    public List<TargetType> GetTargetType()
     {
-        return targetType;
+        List<TargetType> targetTypes = new List<TargetType>();
+
+        foreach (TargetType targetType in targetEffects.Keys)
+        {
+            targetTypes.Add(targetType);
+        }
+
+        return targetTypes;
     }
 
-    public Attack(TargetType targetType, List<Effect> effects)
+    public Attack(Dictionary<TargetType, List<Effect>> targetEffects)
     {
-        this.targetType = targetType;
-        this.effects = effects;
+        this.targetEffects = targetEffects;
     }
 
     public virtual void Activate(Vector2Int userPos, Character user)
@@ -738,17 +959,20 @@ public class Attack
 
 public class BasicAttack : Attack
 {
-    public BasicAttack(TargetType targetType, List<Effect> effects) : base(targetType, effects) {}
+    public BasicAttack(Dictionary<TargetType, List<Effect>> targetEffects) : base(targetEffects) {}
 
     public override void Activate(Vector2Int userPos, Character user)
     {
-        List<Character> targets = targetType.GetTargets(userPos);
-
-        foreach (Character character in targets)
+        foreach (TargetType targetType in targetEffects.Keys)
         {
-            foreach (Effect effect in effects)
+            List<Character> targets = targetType.GetTargets(userPos);
+
+            foreach (Character character in targets)
             {
+                foreach (Effect effect in targetEffects[targetType])
+                {
                     effect.Activate(character, user);
+                }
             }
         }
     }

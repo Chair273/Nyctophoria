@@ -31,15 +31,26 @@ public class CombatHandler : MonoBehaviour
         AttackHandler.Start();
 
         GameObject prefab = Resources.Load<GameObject>("CombatPrefabs/CharacterPlaceholder");
-        GameObject playerObject = Instantiate(prefab, new Vector3Int(), Quaternion.identity);
-        playerObject.transform.parent = transform;
 
-        Player player = playerObject.AddComponent(typeof(Player)) as Player;
+        GameObject OAKObject = Instantiate(prefab, new Vector3Int(), Quaternion.identity);//One Armed Knight
+        OAKObject.transform.parent = transform;
 
-        player.New(50, new Vector2Int(0, Random.Range(0, 5)), "One armed knight", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/OneArmedKnight"), new List<string>
+        Player OAK = OAKObject.AddComponent(typeof(Player)) as Player;
+
+        OAK.New(50, new Vector2Int(0, 1), "One Armed Knight", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/OneArmedKnight"), new List<string>
         {"Spear Strike", "Bifurcated Strike", "Guard"});
 
-        participants.Add(player);
+        participants.Add(OAK);
+
+        GameObject PCObject = Instantiate(prefab, new Vector3Int(), Quaternion.identity);//Plague Caster
+        PCObject.transform.parent = transform;
+
+        Player PC = PCObject.AddComponent(typeof(Player)) as Player;
+
+        PC.New(50, new Vector2Int(0, 3), "Plague Caster", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/PlagueCaster"), new List<string>
+        {"Spear Strike"});
+
+        participants.Add(PC);
 
         GameObject enemyObject = Instantiate(prefab, new Vector3Int(), Quaternion.identity);
         enemyObject.transform.parent = transform;
@@ -55,10 +66,7 @@ public class CombatHandler : MonoBehaviour
 
     IEnumerator Combat()
     {
-        foreach (Character character in participants)//draw 5 cards at the start of combat.
-        {
-            character.DrawCard(5);
-        }
+        int round = 1;
 
         while (!gameEnded)//while there is at least 1 player and 1 enemy alive
         {
@@ -103,7 +111,8 @@ public class CombatHandler : MonoBehaviour
                 {
                     Debug.Log("----------------------");
                     Debug.Log(character.GetName() + "'s turn.");
-                    yield return StartCoroutine(character.Turn());
+
+                    yield return StartCoroutine(character.Turn(round == 1));
                     yield return new WaitForSeconds(1);
                 }
             }
@@ -129,6 +138,8 @@ public class CombatHandler : MonoBehaviour
             {
                 gameEnded = true;
             }
+
+            round++;
         }
 
         Debug.Log("Combat Ended");
@@ -315,12 +326,24 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
 
 public class Character : MonoBehaviour //the superclass of both enemies and players
 {
+    protected static Dictionary<string, Color32> CharacterColors = new Dictionary<string, Color32>
+    {
+        {"One Armed Knight", new Color32(0, 200, 100, 255)},
+        {"Plague Caster", new Color32(170, 50, 0, 255) },
+
+        {"Skeleton", new Color32(200, 200, 200, 255)}
+    };
+
     protected string characterName;
 
     protected int health;
     protected int speed;
     protected int speedMod;
     protected int movement;
+
+    protected Color32 baseColor;
+
+    protected SpriteRenderer spriteRenderer;
 
     protected List<StatusEffect> statusEffects = new List<StatusEffect>();
 
@@ -336,12 +359,24 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         characterName = name;
         this.validCards = validCards;
 
-        transform.GetComponent<SpriteRenderer>().sprite = sprite;
+        if (CharacterColors.ContainsKey(name))
+        {
+            baseColor = CharacterColors[name];
+        }
+        else
+        {
+            baseColor = new Color32(255, 255, 255, 255);
+        }
 
-        Move(gridPos);
+        spriteRenderer = transform.GetComponent<SpriteRenderer>();
+
+        spriteRenderer.sprite = sprite;
+        spriteRenderer.color = baseColor;
+
+        Move(gridPos, false);
     }
 
-    public virtual IEnumerator Turn()//signals that it is this character's turn
+    public virtual IEnumerator Turn(bool first)//signals that it is this character's turn
     {
         foreach (StatusEffect status in statusEffects)
         {
@@ -358,10 +393,21 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         Debug.Log("DrawCard used on Character superclass, use subclass instead.");
     }
 
-    protected void Move(Vector2Int moveTo)//changes the grid position to the argument, and updates the world position using getNewPos()
+    public void Move(Vector2Int moveTo, bool moveOthers)//changes the grid position to the argument, and updates the world position using getNewPos()
     {
-        gridPos = moveTo;
+        if (moveOthers)
+        {
+            Character otherCharacter = CombatHandler.GetCharacter(moveTo);
+
+            if (otherCharacter != null)
+            {
+                Debug.Log(name + " swapped places with " + otherCharacter.name + ".");
+                otherCharacter.Move(gridPos, false);
+            }
+        }
+
         transform.position = CombatHandler.getNewPos(moveTo);
+        gridPos = moveTo;
     }
 
     public void RollSpeed()//rolls a random speed between 1 and 20, then adds the speedMod to that number
@@ -388,8 +434,18 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
             Debug.Log(name + " has perished.");
             Destroy(gameObject);
         }
+        else
+        {
+            StartCoroutine(DamageVisuals());
+        }
 
         return new List<int> {health, damage};
+    }
+
+    private IEnumerator DamageVisuals()
+    {
+        spriteRenderer.color = new Color32(255, 0, 0, 255);
+        yield return StartCoroutine(Tween.New(baseColor, spriteRenderer, 0.2f));
     }
 
     public void AddStatus(StatusEffect status)
@@ -449,26 +505,31 @@ public class Player : Character
     {
         base.New(health, gridPos, name, sprite, validCards);
 
-        gameObject.GetComponent<SpriteRenderer>().color = new Color32(0, 255, 0, 255);
-
         CombatHandler.endTurnButton.onClick.AddListener(Click);
     }
 
-    public override IEnumerator Turn()
+    public override IEnumerator Turn(bool first)
     {
-        base.Turn();
+        base.Turn(first);
 
         turnEnd = false;
         isTurn = true;
 
         movement = 2;
 
-        foreach (Card card in hand)
+        if (first)
         {
-            card.gameObject.SetActive(true);
+            DrawCard(5);
         }
+        else
+        {
+            foreach (Card card in hand)
+            {
+                card.gameObject.SetActive(true);
+            }
 
-        DrawCard(1);
+            DrawCard(1);
+        }
 
         yield return new WaitUntil(() => turnEnd);
 
@@ -560,12 +621,11 @@ public class Player : Character
             {
                 movementCost = Mathf.Clamp(movementCost, 0, movement);
 
-                transform.position = CombatHandler.getNewPos(newPos);
                 movement -= movementCost;
 
                 Debug.Log(name + " used " + movementCost + " movement points. " + movement + " remaining.");
 
-                gridPos = newPos;
+                Move(newPos, true);
             }
             else
             {
@@ -590,19 +650,16 @@ public class Enemy : Character
     public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, List<string> validCards)
     {
         base.New(health, gridPos, name, sprite, validCards);
-
-        gameObject.GetComponent<SpriteRenderer>().color = new Color32(255, 0, 0, 255);
     }
 
-    public override IEnumerator Turn()
+    public override IEnumerator Turn(bool first)
     {
-        base.Turn();
+        base.Turn(first);
+
+        DrawCard(first == true ? 5 : 1);
 
         movement = 2;
-
         bool usedCard = true;
-
-        DrawCard(1);
 
         while (usedCard == true && hand.Count > 0)
         {
@@ -616,7 +673,7 @@ public class Enemy : Character
             }
             Vector2Int targetPos = target.GetGridPos();
 
-            string randomCard = validCards[Random.Range(0, validCards.Count)];
+            string randomCard = hand[Random.Range(0, hand.Count)];
 
             List<int> validPos = AttackHandler.GetStandPositions(randomCard);
 
@@ -634,7 +691,7 @@ public class Enemy : Character
 
             if (movementCost > 0 && movement > 0)
             {
-                Move(new Vector2Int(gridPos.x, gridPos.y + Mathf.Clamp(targetPos.y - gridPos.y, -movement, movement)));
+                Move(new Vector2Int(gridPos.x, gridPos.y + Mathf.Clamp(targetPos.y - gridPos.y, -movement, movement)), true);
 
                 movement = Mathf.Clamp(movementCost, 0, movement);
                 movement -= movementCost;
@@ -673,14 +730,12 @@ public class Enemy : Character
 
                     if (!nextCard.Equals(""))
                     {
-                        Debug.Log(name + " decided to use " + nextCard + " again.");
+                        Debug.Log(name + " used " + nextCard + " again.");
 
                         AttackHandler.UseAttack(gridPos, this, nextCard);
                         hand.Remove(nextCard);
 
                         random = Random.Range(0, 2);
-
-                        usedCard = true;
 
                         yield return new WaitForSeconds(1);
                     }
@@ -1103,5 +1158,21 @@ public class Tween
         }
 
         transform.rotation = targetRot;
+    }
+
+    public static IEnumerator New(Color32 targetColor, SpriteRenderer spriteRenderer, float tweenTime)
+    {
+        float startTime = Time.time;
+
+        Color32 startColor = spriteRenderer.color;
+
+        while (Time.time - startTime <= tweenTime)
+        {
+            spriteRenderer.color = Color32.Lerp(startColor, targetColor, Mathf.Clamp((Time.time - startTime) / tweenTime, 0, 1));
+
+            yield return null;
+        }
+
+        spriteRenderer.color = targetColor;
     }
 }

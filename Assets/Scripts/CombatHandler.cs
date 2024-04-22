@@ -6,7 +6,6 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 using UnityEngine.UI;
 using System.Reflection;
-using static UnityEngine.GraphicsBuffer;
 
 //----------Game----------\\
 
@@ -14,6 +13,9 @@ public class CombatHandler : MonoBehaviour
 {
     public GameObject _endTurnButton;//Static variables don't show in the inspector, so I have to do this to make it work.
     public static Button endTurnButton;
+
+    public GameObject _preTurnGui;
+    public static GameObject preTurnGui;
 
     private bool gameEnded = false;
 
@@ -30,6 +32,7 @@ public class CombatHandler : MonoBehaviour
     void Start()//basically all of this is a placeholder for testing purposes
     {
         endTurnButton = _endTurnButton.GetComponent<Button>();
+        preTurnGui = _preTurnGui;
 
         AttackHandler.Start();
 
@@ -235,7 +238,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         //targetTypes initialization
         targetTypes["ForwardHit"] = new BasicTarget(new List<int> { 0 }, new List<int> { 1 });
         targetTypes["DiagonalHit"] = new BasicTarget(new List<int> { -1, 1 }, new List<int> { 1 });
-        targetTypes["SelfEffect"] = new BasicTarget(new List<int> { 0 }, new List<int> { 0 }, new List<int> {-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 });
+        targetTypes["SelfEffect"] = new BasicTarget(new List<int> { 0 }, new List<int> { 0 }, new List<int> {-1, 0, 1});
 
         //attacks initialization
         MakeCardIndex(new Dictionary<string, string>() //the name and description on the card
@@ -521,7 +524,9 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
 public class Player : Character
 {
-    private bool isTurn = false;
+    private int turnStage = 0; //0: not this characters turn, 1: pre turn, 2: turn
+    private int drawAmount = 0;
+
     private bool turnEnd = false;
     private bool dragging = false;
 
@@ -532,34 +537,57 @@ public class Player : Character
         base.New(health, gridPos, name, sprite, validCards);
 
         CombatHandler.endTurnButton.onClick.AddListener(Click);
+
+        CombatHandler.preTurnGui.transform.Find("Draw").GetComponent<Button>().onClick.AddListener(() =>
+        {
+            if (turnStage == 1)
+            {
+                drawAmount += 1;
+                turnStage = 2;
+            }
+        });
+
+        CombatHandler.preTurnGui.transform.Find("Fold").GetComponent<Button>().onClick.AddListener(() =>
+        {
+            if (turnStage == 1)
+            {
+                Debug.Log(name + " folded.");
+
+                drawAmount += 2;
+                turnStage = 0;
+            }
+        });
     }
 
     public override IEnumerator Turn(bool first)
     {
-        StartCoroutine(base.Turn(first));
-
-        turnEnd = false;
-        isTurn = true;
-
-        movement = 2;
-
         if (first)
         {
-            DrawCard(5);
+            drawAmount += 5;
         }
-        else
+
+        turnEnd = false;
+        turnStage = 1;
+
+        CombatHandler.preTurnGui.SetActive(true);
+
+        yield return new WaitUntil(() => turnStage != 1);
+
+        CombatHandler.preTurnGui.SetActive(false);
+
+        StartCoroutine(base.Turn(first));//trigger any begining-of-turn status effects
+
+        if (turnStage == 2)
         {
-            foreach (Card card in hand)
-            {
-                card.gameObject.SetActive(true);
-            }
+            movement = 2;
 
-            DrawCard(1);
+            DrawCard(drawAmount);
+            drawAmount = 0;
+
+            yield return new WaitUntil(() => turnEnd);
         }
 
-        yield return new WaitUntil(() => turnEnd);
-
-        isTurn = false;
+        turnStage = 0;
         movement = 0;
 
         foreach (Card card in hand)
@@ -624,7 +652,7 @@ public class Player : Character
 
     private void OnMouseDrag()
     {
-        if (movement > 0 && isTurn)
+        if (movement > 0 && turnStage == 2)
         {
             dragging = true;
 
@@ -663,7 +691,7 @@ public class Player : Character
 
     private void Click()
     {
-        if (isTurn && !turnEnd)
+        if (turnStage == 2 && !turnEnd)
         {
             turnEnd = true;
         }
@@ -682,6 +710,21 @@ public class Enemy : Character
     public override IEnumerator Turn(bool first)
     {
         StartCoroutine(base.Turn(first));
+
+        if (first)
+        {
+            DrawCard(5);
+        }
+
+        if (Random.Range(1, 5) == 4)
+        {
+            DrawCard(2);
+
+            Debug.Log(name + " folded.");
+
+            yield return new WaitForSeconds(1);
+            yield break;
+        }
 
         DrawCard(first == true ? 5 : 1);
 
@@ -1069,7 +1112,7 @@ public class Contagion : StatusEffect
     {
         duration++;
 
-        Debug.Log("Increased contagion, new value: " + this.duration);
+        Debug.Log("Increased contagion, new value: " + duration);
 
         if (duration >= 4)
         {

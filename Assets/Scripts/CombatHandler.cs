@@ -43,8 +43,8 @@ public class CombatHandler : MonoBehaviour
 
         Player OAK = OAKObject.AddComponent(typeof(Player)) as Player;
 
-        OAK.New(50, new Vector2Int(0, 1), "One Armed Knight", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/OneArmedKnight"), new List<string>
-        {"Spear Strike", "Bifurcated Strike", "Guard"});
+        OAK.New(50, new Vector2Int(0, 1), "One Armed Knight", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/OneArmedKnight"), new Dictionary<string, int>//the name and sprite of the character
+        { {"Spear Strike", 4 }, {"Bifurcated Strike", 3 }, {"Guard", 2 } });//the cards they have acess to, and the amount of each.
 
         participants.Add(OAK);
 
@@ -53,8 +53,8 @@ public class CombatHandler : MonoBehaviour
 
         Player PC = PCObject.AddComponent(typeof(Player)) as Player;
 
-        PC.New(50, new Vector2Int(0, 3), "Plague Caster", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/PlagueCaster"), new List<string>
-        {"Spear Strike", "Contagion"});
+        PC.New(50, new Vector2Int(0, 3), "Plague Caster", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/PlagueCaster"), new Dictionary<string, int>
+        { {"Spear Strike", 3 }, {"Contagion", 4} });
 
         participants.Add(PC);
 
@@ -62,8 +62,8 @@ public class CombatHandler : MonoBehaviour
         enemyObject.transform.parent = transform;
 
         Enemy enemy = enemyObject.AddComponent(typeof(Enemy)) as Enemy;
-        enemy.New(40, new Vector2Int(1, Random.Range(0,5)), "Skeleton", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/Skeleton"), new List<string>
-        {"Spear Strike", "Bifurcated Strike", "Guard"});
+        enemy.New(40, new Vector2Int(1, Random.Range(0,5)), "Skeleton", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/Skeleton"), new Dictionary<string, int>
+        {{"Spear Strike", 3 }, {"Bifurcated Strike", 3 }, {"Guard", 2 } });
 
         participants.Add(enemy);
 
@@ -120,32 +120,36 @@ public class CombatHandler : MonoBehaviour
 
                     yield return StartCoroutine(character.Turn(round == 1));
                     yield return new WaitForSeconds(1);
+
+                    bool foundPlayer = false;
+                    bool foundEnemy = false;
+
+                    foreach (Character checkCharacter in participants)
+                    {
+                        foundPlayer = checkCharacter.GetGridPos().x == 0 || foundPlayer;
+                        foundEnemy = checkCharacter.GetGridPos().x == 1 || foundEnemy;
+
+                        if (foundPlayer && foundEnemy)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (!foundPlayer || !foundEnemy)
+                    {
+                        gameEnded = true;
+                        break;
+                    }
                 }
             }
 
-            yield return new WaitForSeconds(1);
-            Debug.Log("Round end.");
-
-            bool foundPlayer = false;
-            bool foundEnemy = false;
-
-            foreach (Character character in participants)
+            if (!gameEnded)
             {
-                foundPlayer = character.GetGridPos().x == 0 || foundPlayer;
-                foundEnemy = character.GetGridPos().x == 1 || foundEnemy;
+                yield return new WaitForSeconds(1);
+                Debug.Log("Round end.");
 
-                if (foundPlayer && foundEnemy)
-                {
-                    break;
-                }
+                round++;
             }
-
-            if (!foundPlayer || !foundEnemy)
-            {
-                gameEnded = true;
-            }
-
-            round++;
         }
 
         Debug.Log("Combat Ended");
@@ -353,33 +357,40 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         {"One Armed Knight", new Color32(0, 200, 100, 255)},
         {"Plague Caster", new Color32(170, 50, 0, 255) },
         //-----Enemies-----\\
-        {"Skeleton", new Color32(200, 200, 200, 255)}
+        {"Skeleton", new Color32(225, 200, 200, 255)}
     };
 
     protected string characterName;
 
-    protected int health;
-    protected int speed;
-    protected int speedMod;
-    protected int movement;
+    protected Dictionary<string, int> drawHand;//when drawing a card, they pull from this list
+    protected Dictionary<string, int> discardHand;//when using a card, it moves to this (if it doesnt proc exaustion)
 
-    protected Color32 baseColor;
+    protected bool exaustedLastTurn;
+
+    protected int cardsUsed;//the amount of cards used this turn
+    protected int exaustionChance;//the chance of a card proccing exaustion, represented as a d20
+    protected int health;//self explanatory, if it reaches 0 you die.
+    protected int speed;//determines the turn order by rolling a d20, higher speeds go first
+    protected int speedMod;//arbitrary number to add on to the speed roll
+    protected int movement;//amount of grids the character can move on their turn
+
+    protected Color32 baseColor;//color of the character
 
     protected SpriteRenderer spriteRenderer;
 
-    protected List<StatusEffect> statusEffects = new List<StatusEffect>();
+    protected List<StatusEffect> statusEffects = new List<StatusEffect>();//list of status effects applied to this character
 
-    protected List<string> validCards = new List<string>();
+    protected Vector2Int gridPos;//the grid position of the character.
 
-    protected Vector2Int gridPos;
-
-    public virtual void New(int health, Vector2Int gridPos, string name, Sprite sprite, List<string> validCards)//character constructor
+    public virtual void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawHand)//character constructor
     {
         this.health = health;
         this.gridPos = gridPos;
         this.name = name;
         characterName = name;
-        this.validCards = validCards;
+        this.drawHand = drawHand;
+
+        discardHand = new Dictionary<string, int>();
 
         if (CharacterColors.ContainsKey(name))
         {
@@ -400,7 +411,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     public virtual IEnumerator Turn(bool first)//signals that it is this character's turn
     {
-        for (int i = 0; i < statusEffects.Count; i += 0)
+        for (int i = 0; i < statusEffects.Count; i += 0)//loops through and activates/reduces any status effects that have an effect at the begining of a turn
         {
             StatusEffect status = statusEffects[i];
 
@@ -525,16 +536,16 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 public class Player : Character
 {
     private int turnStage = 0; //0: not this characters turn, 1: pre turn, 2: turn
-    private int drawAmount = 0;
+    private int drawAmount = 5;
 
     private bool turnEnd = false;
     private bool dragging = false;
 
-    protected List<Card> hand = new List<Card>();
+    private List<Card> hand = new List<Card>();
 
-    public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, List<string> validCards)//player constructor
+    public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawHand)//player constructor
     {
-        base.New(health, gridPos, name, sprite, validCards);
+        base.New(health, gridPos, name, sprite, drawHand);
 
         CombatHandler.endTurnButton.onClick.AddListener(Click);
 
@@ -542,7 +553,7 @@ public class Player : Character
         {
             if (turnStage == 1)
             {
-                drawAmount += 1;
+                drawAmount++;
                 turnStage = 2;
             }
         });
@@ -561,11 +572,6 @@ public class Player : Character
 
     public override IEnumerator Turn(bool first)
     {
-        if (first)
-        {
-            drawAmount += 5;
-        }
-
         turnEnd = false;
         turnStage = 1;
 
@@ -580,6 +586,7 @@ public class Player : Character
         if (turnStage == 2)
         {
             movement = 2;
+            cardsUsed = 0;
 
             DrawCard(drawAmount);
             drawAmount = 0;
@@ -596,6 +603,12 @@ public class Player : Character
 
             yield return new WaitForSeconds(0.25f / hand.Count);
         }
+
+        if (drawHand.Count == 0)
+        {
+            drawHand = discardHand;
+            discardHand = new Dictionary<string, int>();
+        }
     }
 
     public override void DrawCard(int amount)
@@ -606,15 +619,32 @@ public class Player : Character
     public IEnumerator DrawCardCoroutine(int amount)
     {
         List<Card> flipThese = new List<Card>();
+        List<string> keys = new List<string>(drawHand.Keys);
 
-        for (int i = 0; i < amount; i++)
+        for (int i = 0; i < amount && drawHand.Count > 0; i++)//create new random cards and remove them from the draw hand
         {
-            Card card = AttackHandler.MakeCardObject(validCards[Random.Range(0, validCards.Count)], this);
+            string randomCard = keys[Random.Range(0, keys.Count)];
+            drawHand[randomCard]--;
+
+            Card card = AttackHandler.MakeCardObject(randomCard, this);
+
+
+            if (drawHand[randomCard] <= 0)
+            {
+                drawHand.Remove(randomCard);
+                keys.Remove(randomCard);
+            }
+
             hand.Add(card);
             flipThese.Add(card);
         }
 
-        foreach(Card card in hand)
+        if (drawHand.Count == 0)
+        {
+            Debug.Log(name + " ran out of cards in their draw pile.");
+        }
+
+        foreach(Card card in hand)//loop through all the cards already in the characters hand to instantly organize them.
         {
             if (!flipThese.Contains(card))
             {
@@ -622,7 +652,7 @@ public class Player : Character
             }
         }
 
-        foreach(Card card in flipThese)
+        foreach(Card card in flipThese)//loop through all the new cards and play the flip animation on them.
         {
             card.gameObject.SetActive(true);
 
@@ -638,6 +668,15 @@ public class Player : Character
     public override void RemoveCard(Card card)
     {
         hand.Remove(card);
+
+        string cardName = card.GetName();
+
+        if (!discardHand.ContainsKey(cardName))
+        {
+            discardHand.Add(cardName, 0);
+        }
+
+        discardHand[card.GetName()]++;
 
         foreach (Card _card in hand)
         {
@@ -702,9 +741,9 @@ public class Enemy : Character
 {
     protected List<string> hand = new List<string>();
 
-    public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, List<string> validCards)
+    public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawHand)
     {
-        base.New(health, gridPos, name, sprite, validCards);
+        base.New(health, gridPos, name, sprite, drawHand);
     }
 
     public override IEnumerator Turn(bool first)
@@ -780,6 +819,13 @@ public class Enemy : Character
                 AttackHandler.UseAttack(gridPos, this, randomCard);
                 hand.Remove(randomCard);
 
+                if (!discardHand.ContainsKey(randomCard))
+                {
+                    discardHand.Add(randomCard, 0);
+                }
+
+                discardHand[randomCard]++;
+
                 usedCard = true;
 
                 yield return new WaitForSeconds(1);
@@ -804,6 +850,7 @@ public class Enemy : Character
 
                         AttackHandler.UseAttack(gridPos, this, nextCard);
                         hand.Remove(nextCard);
+                        discardHand[nextCard]++;
 
                         random = Random.Range(0, 2);
 
@@ -825,13 +872,36 @@ public class Enemy : Character
         {
             Debug.Log(name + " ran out of cards in their hand.");
         }
+
+        if (drawHand.Count == 0)
+        {
+            drawHand = discardHand;
+
+            discardHand = new Dictionary<string, int>();
+        }
     }
 
     public override void DrawCard(int amount)
     {
-        for (int i = 0; i < amount; i++)
+        List<string> keys = new List<string>(drawHand.Keys);
+
+        for (int i = 0; i < amount && drawHand.Count > 0; i++)
         {
-            hand.Add(validCards[Random.Range(0, validCards.Count)]);
+            string randomCard = keys[Random.Range(0, keys.Count)];
+
+            hand.Add(randomCard);
+            drawHand[randomCard]--;
+
+            if (drawHand[randomCard] <= 0)
+            {
+                drawHand.Remove(randomCard);
+                keys.Remove(randomCard);
+            }
+        }
+
+        if (drawHand.Count == 0)
+        {
+            Debug.Log(name + " ran out of cards in their draw pile.");
         }
     }
 }
@@ -1221,6 +1291,11 @@ public class Card : MonoBehaviour
 
     public Vector3 goHere = new Vector3(-5, -4.3f, 0);
 
+    public string GetName()
+    {
+        return cardInfo["Name"];
+    }
+
     public void Awake()
     {
         spikePrefab = Resources.Load<GameObject>("CombatPrefabs/Spike");
@@ -1349,7 +1424,7 @@ public class Card : MonoBehaviour
 
                 if (amount % 2 == 0)
                 {
-                    amount += 1;
+                    amount++;
                 }
 
                 Vector3[] bezeir = Bezeir.GetPointsAlongCurve(transform.position, endPos, amount);

@@ -362,13 +362,13 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     protected string characterName;
 
-    protected Dictionary<string, int> drawHand;//when drawing a card, they pull from this list
-    protected Dictionary<string, int> discardHand;//when using a card, it moves to this (if it doesnt proc exaustion)
+    protected Dictionary<string, int> drawPile;//when drawing a card, they pull from this list
+    protected Dictionary<string, int> discardPile;//when using a card, it moves to this (if it doesnt proc exhaustion)
 
     protected bool exaustedLastTurn;
 
     protected int cardsUsed;//the amount of cards used this turn
-    protected int exaustionChance;//the chance of a card proccing exaustion, represented as a d20
+    protected int exhaustionChance;//the chance of a card proccing exhaustion, represented as a d20
     protected int health;//self explanatory, if it reaches 0 you die.
     protected int speed;//determines the turn order by rolling a d20, higher speeds go first
     protected int speedMod;//arbitrary number to add on to the speed roll
@@ -382,15 +382,15 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     protected Vector2Int gridPos;//the grid position of the character.
 
-    public virtual void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawHand)//character constructor
+    public virtual void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawPile)//character constructor
     {
         this.health = health;
         this.gridPos = gridPos;
         this.name = name;
         characterName = name;
-        this.drawHand = drawHand;
+        this.drawPile = drawPile;
 
-        discardHand = new Dictionary<string, int>();
+        discardPile = new Dictionary<string, int>();
 
         if (CharacterColors.ContainsKey(name))
         {
@@ -411,14 +411,18 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     public virtual IEnumerator Turn(bool first)//signals that it is this character's turn
     {
-        for (int i = 0; i < statusEffects.Count; i += 0)//loops through and activates/reduces any status effects that have an effect at the begining of a turn
+        Debug.Log("Reduce on turn start: ");
+
+        int i = 0;
+        while (i < statusEffects.Count)//loops through and activates/reduces any status effects that have an effect at the begining of a turn
         {
             StatusEffect status = statusEffects[i];
 
             if (status.triggers.Contains("ReduceOnTurnStart"))
             {
                 Debug.Log(status.ToString());
-                if (status.Reduce() == true)
+
+                if (status.Reduce())
                 {
                     i++;
                 }
@@ -543,9 +547,9 @@ public class Player : Character
 
     private List<Card> hand = new List<Card>();
 
-    public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawHand)//player constructor
+    public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawPile)//player constructor
     {
-        base.New(health, gridPos, name, sprite, drawHand);
+        base.New(health, gridPos, name, sprite, drawPile);
 
         CombatHandler.endTurnButton.onClick.AddListener(Click);
 
@@ -583,13 +587,17 @@ public class Player : Character
 
         StartCoroutine(base.Turn(first));//trigger any begining-of-turn status effects
 
-        if (turnStage == 2)
+        if (turnStage == 2)//if the player did not forfeit their turn (didnt fold)
         {
+            if (!exaustedLastTurn)
+            {
+                exhaustionChance = Mathf.Clamp(exhaustionChance - 1, 0, 20);
+            }
+
             movement = 2;
             cardsUsed = 0;
 
             DrawCard(drawAmount);
-            drawAmount = 0;
 
             yield return new WaitUntil(() => turnEnd);
         }
@@ -604,10 +612,10 @@ public class Player : Character
             yield return new WaitForSeconds(0.25f / hand.Count);
         }
 
-        if (drawHand.Count == 0)
+        if (drawPile.Count == 0)
         {
-            drawHand = discardHand;
-            discardHand = new Dictionary<string, int>();
+            drawPile = discardPile;
+            discardPile = new Dictionary<string, int>();
         }
     }
 
@@ -619,19 +627,19 @@ public class Player : Character
     public IEnumerator DrawCardCoroutine(int amount)
     {
         List<Card> flipThese = new List<Card>();
-        List<string> keys = new List<string>(drawHand.Keys);
+        List<string> keys = new List<string>(drawPile.Keys);
 
-        for (int i = 0; i < amount && drawHand.Count > 0; i++)//create new random cards and remove them from the draw hand
+        for (int i = 0; i < amount && drawPile.Count > 0; i++)//create new random cards and remove it from the draw pile
         {
             string randomCard = keys[Random.Range(0, keys.Count)];
-            drawHand[randomCard]--;
+            drawPile[randomCard]--;
 
             Card card = AttackHandler.MakeCardObject(randomCard, this);
 
 
-            if (drawHand[randomCard] <= 0)
+            if (drawPile[randomCard] <= 0)
             {
-                drawHand.Remove(randomCard);
+                drawPile.Remove(randomCard);
                 keys.Remove(randomCard);
             }
 
@@ -639,7 +647,9 @@ public class Player : Character
             flipThese.Add(card);
         }
 
-        if (drawHand.Count == 0)
+        drawAmount = 0;
+
+        if (drawPile.Count == 0)
         {
             Debug.Log(name + " ran out of cards in their draw pile.");
         }
@@ -665,23 +675,53 @@ public class Player : Character
         }
     }
 
-    public override void RemoveCard(Card card)
+    public override void RemoveCard(Card card)//removes the card from the players hand, and adds it to the discard pile
     {
         hand.Remove(card);
 
+        cardsUsed++;
+
+        if (cardsUsed > 1)
+        {
+            exhaustionChance = Mathf.Clamp(exhaustionChance++, 0, 20);
+
+            int random = Random.Range(1, 21);
+
+            Debug.Log("Chance: " + exhaustionChance + ". Rolled: " + random + ".");
+
+            if (random == 1 || random < exhaustionChance && random != 20)
+            {
+                exaustedLastTurn = true;
+
+                StartCoroutine(card.Burn());
+
+                foreach (Card otherCard in hand)//organizes the rest of the cards
+                {
+                    otherCard.Organize(hand, hand.IndexOf(otherCard));
+                }
+
+                
+
+                return;
+            }
+        }
+
         string cardName = card.GetName();
 
-        if (!discardHand.ContainsKey(cardName))
+        if (!discardPile.ContainsKey(cardName))
         {
-            discardHand.Add(cardName, 0);
+            discardPile.Add(cardName, 0);
         }
 
-        discardHand[card.GetName()]++;
+        discardPile[card.GetName()]++;
 
-        foreach (Card _card in hand)
+        foreach (Card otherCard in hand)//organizes the rest of the cards
         {
-            _card.Organize(hand, hand.IndexOf(_card));
+            otherCard.Organize(hand, hand.IndexOf(otherCard));
         }
+
+        card.gameObject.SetActive(false);
+        Destroy(card.gameObject);
     }
 
     public List<Card> GetHand()
@@ -689,7 +729,7 @@ public class Player : Character
         return hand;
     }
 
-    private void OnMouseDrag()
+    private void OnMouseDrag()//If it the players turn, and they have movement points left, allow them to move by dragging to a new grid
     {
         if (movement > 0 && turnStage == 2)
         {
@@ -700,7 +740,7 @@ public class Player : Character
         }
     }
 
-    private void OnMouseUp()
+    private void OnMouseUp()//Extension of OnMouseDrag, finds the nearest grid to where you dragged the character and moves them to the closest grid within range of it
     {
         if (dragging)
         {
@@ -728,7 +768,7 @@ public class Player : Character
         }
     }
 
-    private void Click()
+    private void Click()//ends the players turn, remember to rename this if more buttons require a dedicated click function.
     {
         if (turnStage == 2 && !turnEnd)
         {
@@ -741,9 +781,9 @@ public class Enemy : Character
 {
     protected List<string> hand = new List<string>();
 
-    public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawHand)
+    public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawPile)
     {
-        base.New(health, gridPos, name, sprite, drawHand);
+        base.New(health, gridPos, name, sprite, drawPile);
     }
 
     public override IEnumerator Turn(bool first)
@@ -819,12 +859,12 @@ public class Enemy : Character
                 AttackHandler.UseAttack(gridPos, this, randomCard);
                 hand.Remove(randomCard);
 
-                if (!discardHand.ContainsKey(randomCard))
+                if (!discardPile.ContainsKey(randomCard))
                 {
-                    discardHand.Add(randomCard, 0);
+                    discardPile.Add(randomCard, 0);
                 }
 
-                discardHand[randomCard]++;
+                discardPile[randomCard]++;
 
                 usedCard = true;
 
@@ -850,7 +890,7 @@ public class Enemy : Character
 
                         AttackHandler.UseAttack(gridPos, this, nextCard);
                         hand.Remove(nextCard);
-                        discardHand[nextCard]++;
+                        discardPile[nextCard]++;
 
                         random = Random.Range(0, 2);
 
@@ -873,33 +913,33 @@ public class Enemy : Character
             Debug.Log(name + " ran out of cards in their hand.");
         }
 
-        if (drawHand.Count == 0)
+        if (drawPile.Count == 0)
         {
-            drawHand = discardHand;
+            drawPile = discardPile;
 
-            discardHand = new Dictionary<string, int>();
+            discardPile = new Dictionary<string, int>();
         }
     }
 
     public override void DrawCard(int amount)
     {
-        List<string> keys = new List<string>(drawHand.Keys);
+        List<string> keys = new List<string>(drawPile.Keys);
 
-        for (int i = 0; i < amount && drawHand.Count > 0; i++)
+        for (int i = 0; i < amount && drawPile.Count > 0; i++)
         {
             string randomCard = keys[Random.Range(0, keys.Count)];
 
             hand.Add(randomCard);
-            drawHand[randomCard]--;
+            drawPile[randomCard]--;
 
-            if (drawHand[randomCard] <= 0)
+            if (drawPile[randomCard] <= 0)
             {
-                drawHand.Remove(randomCard);
+                drawPile.Remove(randomCard);
                 keys.Remove(randomCard);
             }
         }
 
-        if (drawHand.Count == 0)
+        if (drawPile.Count == 0)
         {
             Debug.Log(name + " ran out of cards in their draw pile.");
         }
@@ -1378,9 +1418,6 @@ public class Card : MonoBehaviour
         attack.Activate(character.GetGridPos(), character);
 
         character.RemoveCard(this);
-
-        gameObject.SetActive(false);
-        Destroy(gameObject);
     }
 
     private IEnumerator Visualize()
@@ -1506,6 +1543,27 @@ public class Card : MonoBehaviour
         chainObjects = new List<List<GameObject>>();
         yield return 0;
         visualDebounce = false;
+    }
+
+    public IEnumerator Burn()
+    {
+        Destroy(transform.Find("BackCard").gameObject);
+
+        StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), transform.Find("FrontCard").GetComponent<SpriteRenderer>(), 0.25f));
+        StartCoroutine(Tween.New(transform.position + new Vector3(0, -0.5f, 0), transform, 1));
+        StartCoroutine(Tween.New(Quaternion.Euler(0, 0, Random.Range(-4, 5) * 5), transform, 1));
+
+        yield return new WaitForSeconds(0.3f);
+
+        Destroy(transform.Find("FrontCard").Find("NameCanvas").gameObject);
+        Destroy(transform.Find("FrontCard").Find("DescriptionCanvas").gameObject);
+
+        StartCoroutine(Tween.New(new Color32(0, 0, 0, 0), transform.Find("FrontCard").GetComponent<SpriteRenderer>(), 0.8f));
+
+        yield return new WaitForSeconds(1.2f);
+
+        gameObject.SetActive(false);
+        Destroy(gameObject);
     }
 }
 

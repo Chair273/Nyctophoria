@@ -17,6 +17,9 @@ public class CombatHandler : MonoBehaviour
     public GameObject _preTurnGui;
     public static GameObject preTurnGui;
 
+    public GameObject _exhaustionDC;
+    public static GameObject exhaustionDC;
+
     private bool gameEnded = false;
 
     private static List<Character> participants = new List<Character>();
@@ -33,6 +36,7 @@ public class CombatHandler : MonoBehaviour
     {
         endTurnButton = _endTurnButton.GetComponent<Button>();
         preTurnGui = _preTurnGui;
+        exhaustionDC = _exhaustionDC;
 
         AttackHandler.Start();
 
@@ -365,7 +369,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
     protected Dictionary<string, int> drawPile;//when drawing a card, they pull from this list
     protected Dictionary<string, int> discardPile;//when using a card, it moves to this (if it doesnt proc exhaustion)
 
-    protected bool exaustedLastTurn;
+    protected bool exhaustedLastTurn;
 
     protected int cardsUsed;//the amount of cards used this turn
     protected int exhaustionChance;//the chance of a card proccing exhaustion, represented as a d20
@@ -411,17 +415,14 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     public virtual IEnumerator Turn(bool first)//signals that it is this character's turn
     {
-        Debug.Log("Reduce on turn start: ");
-
         int i = 0;
+
         while (i < statusEffects.Count)//loops through and activates/reduces any status effects that have an effect at the begining of a turn
         {
             StatusEffect status = statusEffects[i];
 
             if (status.triggers.Contains("ReduceOnTurnStart"))
             {
-                Debug.Log(status.ToString());
-
                 if (status.Reduce())
                 {
                     i++;
@@ -465,7 +466,6 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         {
             if (status.triggers.Contains("ModifyTakenDamage"))
             {
-                Debug.Log(status.ToString());
                 damage = status.Activate(damage);
             }
         }
@@ -589,7 +589,7 @@ public class Player : Character
 
         if (turnStage == 2)//if the player did not forfeit their turn (didnt fold)
         {
-            if (!exaustedLastTurn)
+            if (!exhaustedLastTurn)
             {
                 exhaustionChance = Mathf.Clamp(exhaustionChance - 1, 0, 20);
             }
@@ -598,6 +598,9 @@ public class Player : Character
             cardsUsed = 0;
 
             DrawCard(drawAmount);
+
+            CombatHandler.exhaustionDC.GetComponent<TextMeshProUGUI>().text = "Exhaustion DC: " + exhaustionChance;
+            CombatHandler.exhaustionDC.SetActive(true);
 
             yield return new WaitUntil(() => turnEnd);
         }
@@ -617,6 +620,8 @@ public class Player : Character
             drawPile = discardPile;
             discardPile = new Dictionary<string, int>();
         }
+
+        CombatHandler.exhaustionDC.SetActive(false);
     }
 
     public override void DrawCard(int amount)
@@ -683,7 +688,9 @@ public class Player : Character
 
         if (cardsUsed > 1)
         {
-            exhaustionChance = Mathf.Clamp(exhaustionChance++, 0, 20);
+            exhaustionChance = Mathf.Clamp(exhaustionChance + 1, 0, 20);
+
+            CombatHandler.exhaustionDC.GetComponent<TextMeshProUGUI>().text = "Exhaustion DC: " + exhaustionChance;
 
             int random = Random.Range(1, 21);
 
@@ -691,7 +698,7 @@ public class Player : Character
 
             if (random == 1 || random < exhaustionChance && random != 20)
             {
-                exaustedLastTurn = true;
+                exhaustedLastTurn = true;
 
                 StartCoroutine(card.Burn());
 
@@ -699,8 +706,6 @@ public class Player : Character
                 {
                     otherCard.Organize(hand, hand.IndexOf(otherCard));
                 }
-
-                
 
                 return;
             }
@@ -789,6 +794,11 @@ public class Enemy : Character
     public override IEnumerator Turn(bool first)
     {
         StartCoroutine(base.Turn(first));
+
+        if (health <= 0)
+        {
+            yield break;
+        }
 
         if (first)
         {
@@ -1157,6 +1167,8 @@ public class Guarded : StatusEffect
     {
         duration--;
 
+        Debug.Log("Guarded decreased, new value: " + duration);
+
         if (duration <= 0)
         {
             Debug.Log("Guarded wore off on " + target.name + ".");
@@ -1170,6 +1182,7 @@ public class Guarded : StatusEffect
 
     public override void Stack(int duration)
     {
+        Debug.Log("Stacked Guarded, new value: " + this.duration);
         this.duration += duration;
     }
 
@@ -1194,9 +1207,9 @@ public class Contagion : StatusEffect
     private void Explode()
     {
         Debug.Log(target.name + "'s infection progressed to its final stage.");
-        List<int> health = target.TakeDamage(Random.Range(1, 10));
+        List<int> health = target.TakeDamage(Random.Range(1, 11));
 
-        for (int i = -1; i < 2; i += 2)
+        for (int i = -1; i < 3; i += 2)
         {
             Character newTarget = CombatHandler.GetCharacter(target.GetGridPos() + new Vector2Int(0, i));
 
@@ -1239,7 +1252,7 @@ public class Contagion : StatusEffect
         this.duration += duration;
         Debug.Log("Stacked contagion, new value: " + this.duration);
 
-        if (duration >= 4)
+        if (this.duration >= 4)
         {
             Explode();
         }
@@ -1379,6 +1392,8 @@ public class Card : MonoBehaviour
         float rotation = -Mathf.Pow(xPos - 2.5f, 3) / 5;
 
         Vector3 newPos = new Vector3(xPos, yPos, zPos);
+
+        gameObject.SetActive(true);
 
         StartCoroutine(Tween.New(newPos, transform, 0.25f));
         StartCoroutine(Tween.New(Quaternion.Euler(0, 0, rotation), transform, 0.25f));

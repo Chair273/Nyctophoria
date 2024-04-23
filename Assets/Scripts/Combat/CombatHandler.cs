@@ -58,7 +58,7 @@ public class CombatHandler : MonoBehaviour
         Player PC = PCObject.AddComponent(typeof(Player)) as Player;
 
         PC.New(50, new Vector2Int(0, 3), "Plague Caster", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/PlagueCaster"), new Dictionary<string, int>
-        { {"Spear Strike", 3 }, {"Contagion", 4} });
+        { {"Summon Bees", 3 }, {"Contagion", 2}, {"Lesser Ooze", 2} });
 
         participants.Add(PC);
 
@@ -301,6 +301,32 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
             {targetTypes["ForwardHit"], new List<Effect> { new ApplyStatus("Contagion", 1) } },
         }));
 
+        MakeCardIndex(new Dictionary<string, string>()
+        {
+            {"Name", "Summon Bees"},
+            {"Description", "*Manifest a wave of bees."}
+        }, new Dictionary<string, float>
+        {
+            {"Name", 0.15f},
+            {"Description",  0.15f}
+        }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
+        {
+            {targetTypes["ForwardHit"], new List<Effect> { new DamageDice(1, 4, 0), new ApplyStatus("Poison", 3) }},
+            {targetTypes["DiagonalHit"], new List<Effect> {new DamageDice(1, 2, 0), new ApplyStatus("Poison", 2) }}
+        }));
+
+        MakeCardIndex(new Dictionary<string, string>()
+        {
+            {"Name", "Lesser Ooze"},
+            {"Description", "*Coat your enemy in a debilitating slime."}
+        }, new Dictionary<string, float>
+        {
+            {"Name", 0.15f},
+            {"Description",  0.12f}
+        }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
+        {
+            {targetTypes["ForwardHit"], new List<Effect> { new ApplyStatus("Oozed", 2) } },
+        }));
     }
 
     public static void UseAttack(Vector2Int userPos, Character character, string attackName) //allows characters to use cards
@@ -428,6 +454,11 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
                     i++;
                 }
             }
+
+            if (status.triggers.Contains("ModifySpeed"))
+            {
+                speed = status.Activate(speed);
+            }
         }
         yield return 0;
     }
@@ -476,7 +507,8 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         {
             CombatHandler.RemoveCharacter(this);
             Debug.Log(name + " has perished.");
-            Destroy(gameObject);
+
+            StartCoroutine(Die());
         }
         else
         {
@@ -504,6 +536,12 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         }
 
         statusEffects.Add(status);
+    }
+
+    protected virtual IEnumerator Die()
+    {
+        Destroy(gameObject);
+        yield return 0;
     }
 
     public void RemoveStatus(StatusEffect status)
@@ -594,6 +632,7 @@ public class Player : Character
                 exhaustionChance = Mathf.Clamp(exhaustionChance - 1, 0, 20);
             }
 
+            exhaustedLastTurn = false;
             movement = 2;
             cardsUsed = 0;
 
@@ -601,6 +640,8 @@ public class Player : Character
 
             CombatHandler.exhaustionDC.GetComponent<TextMeshProUGUI>().text = "Exhaustion DC: " + exhaustionChance;
             CombatHandler.exhaustionDC.SetActive(true);
+
+            CombatHandler.endTurnButton.gameObject.SetActive(true);
 
             yield return new WaitUntil(() => turnEnd);
         }
@@ -622,6 +663,25 @@ public class Player : Character
         }
 
         CombatHandler.exhaustionDC.SetActive(false);
+        CombatHandler.endTurnButton.gameObject.SetActive(false);
+    }
+
+    protected override IEnumerator Die()
+    {
+        Vector3 newPos = new Vector3(transform.position.x, transform.position.y - 0.125f, transform.position.z);//the only difference is that players go down and enemies go up
+
+        StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), spriteRenderer, 0.25f));
+        StartCoroutine(Tween.New(newPos, transform, 0.5f));
+        StartCoroutine(Tween.New(Quaternion.Euler(0, 0, Random.Range(-4, 5) * 5), transform, 0.25f));
+
+        yield return new WaitForSeconds(0.15f);
+
+        StartCoroutine(Tween.New(new Color32(0, 0, 0, 0), spriteRenderer, 0.4f));
+
+        yield return new WaitForSeconds(0.6f);
+
+        gameObject.SetActive(false);
+        Destroy(gameObject);
     }
 
     public override void DrawCard(int amount)
@@ -931,6 +991,24 @@ public class Enemy : Character
         }
     }
 
+    protected override IEnumerator Die()
+    {
+        Vector3 newPos = new Vector3(transform.position.x, transform.position.y + 0.3f, transform.position.z);//the only difference is that players go down and enemies go up
+
+        StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), spriteRenderer, 0.15f));
+        StartCoroutine(Tween.New(newPos, transform, 0.5f));
+        StartCoroutine(Tween.New(Quaternion.Euler(0, 0, Random.Range(-4, 5) * 5), transform, 0.5f));
+
+        yield return new WaitForSeconds(0.15f);
+
+        StartCoroutine(Tween.New(new Color32(0, 0, 0, 0), spriteRenderer, 0.4f));
+
+        yield return new WaitForSeconds(0.6f);
+
+        gameObject.SetActive(false);
+        Destroy(gameObject);
+    }
+
     public override void DrawCard(int amount)
     {
         List<string> keys = new List<string>(drawPile.Keys);
@@ -1041,7 +1119,8 @@ public class ApplyStatus : Effect
     public static Dictionary<string, Type> statusEffects = new Dictionary<string, Type>
     {
         {"Guarded", typeof(Guarded)},
-        {"Contagion", typeof(Contagion)}
+        {"Contagion", typeof(Contagion)},
+        {"Poison", typeof(Poison)}
     };
 
     private string statusIndex;
@@ -1269,6 +1348,84 @@ public class Contagion : StatusEffect
     }
 }
 
+public class Poison : StatusEffect
+{
+    public Poison(int duration, Character target) : base("Poison", target, new List<string> {"ReduceOnTurnStart"})
+    {
+        this.duration = duration;
+    }
+
+    public override bool Reduce()
+    {
+        duration--;
+
+        target.TakeDamage(Random.Range(1, 5));
+
+        Debug.Log("Poison decreased, new duration: " + duration);
+
+        if (duration <= 0)
+        {
+            Debug.Log("Poison wore off on " + target.name + ".");
+            target.RemoveStatus(this);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    public override void Stack(int duration)
+    {
+        Debug.Log("Stacked Poison, new value: " + this.duration);
+        this.duration += duration;
+    }
+
+    public override string ToString()
+    {
+        return "Poison";
+    }
+}
+
+public class Oozed : StatusEffect
+{
+    public Oozed(int duration, Character target) : base("Oozed", target, new List<string> { "ReduceOnTurnStart", "ModifySpeed" })
+    {
+        this.duration = duration;
+    }
+
+    public override int Activate(int speed)
+    {
+        return Mathf.Clamp(speed - 1, 0, int.MaxValue);
+    }
+
+    public override bool Reduce()
+    {
+        duration--;
+
+        Debug.Log("Oozed decreased, new duration: " + duration);
+
+        if (duration <= 0)
+        {
+            Debug.Log("Oozed wore off on " + target.name + ".");
+            target.RemoveStatus(this);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    public override void Stack(int duration)
+    {
+        Debug.Log("Stacked Oozed, new value: " + this.duration);
+        this.duration += duration;
+    }
+
+    public override string ToString()
+    {
+        return "Oozed";
+    }
+}
 //----------Cards----------\\
 
 public class Attack
@@ -1564,8 +1721,11 @@ public class Card : MonoBehaviour
     {
         Destroy(transform.Find("BackCard").gameObject);
 
+        Vector3 newPos = new Vector3(transform.position.x, transform.position.y - 0.5f, transform.position.z);
+
         StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), transform.Find("FrontCard").GetComponent<SpriteRenderer>(), 0.25f));
-        StartCoroutine(Tween.New(transform.position + new Vector3(0, -0.5f, 0), transform, 1));
+        //StartCoroutine(Tween.New(transform.position + new Vector3(0, -0.5f, 0), transform, 1));
+        StartCoroutine(Tween.New(newPos, transform, 1));
         StartCoroutine(Tween.New(Quaternion.Euler(0, 0, Random.Range(-4, 5) * 5), transform, 1));
 
         yield return new WaitForSeconds(0.3f);

@@ -47,7 +47,7 @@ public class CombatHandler : MonoBehaviour
 
         Player OAK = OAKObject.AddComponent(typeof(Player)) as Player;
 
-        OAK.New(50, new Vector2Int(0, 1), "One Armed Knight", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/OneArmedKnight"), new Dictionary<string, int>//the name and sprite of the character
+        OAK.New(40, new Vector2Int(0, Random.Range(3, 5)), "One Armed Knight", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/OneArmedKnight"), new Dictionary<string, int>//the name and sprite of the character
         { {"Spear Strike", 4 }, {"Bifurcated Strike", 3 }, {"Guard", 2 } });//the cards they have acess to, and the amount of each.
 
         participants.Add(OAK);
@@ -57,19 +57,28 @@ public class CombatHandler : MonoBehaviour
 
         Player PC = PCObject.AddComponent(typeof(Player)) as Player;
 
-        PC.New(50, new Vector2Int(0, 3), "Plague Caster", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/PlagueCaster"), new Dictionary<string, int>
+        PC.New(30, new Vector2Int(0, Random.Range(0, 3)), "Plague Caster", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/PlagueCaster"), new Dictionary<string, int>
         { {"Summon Bees", 3 }, {"Contagion", 2}, {"Lesser Ooze", 2} });
 
         participants.Add(PC);
 
-        GameObject enemyObject = Instantiate(prefab, new Vector3Int(), Quaternion.identity);
-        enemyObject.transform.parent = transform;
+        GameObject skeletonObject = Instantiate(prefab, new Vector3Int(), Quaternion.identity);
+        skeletonObject.transform.parent = transform;
 
-        Enemy enemy = enemyObject.AddComponent(typeof(Enemy)) as Enemy;
-        enemy.New(40, new Vector2Int(1, Random.Range(0,5)), "Skeleton", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/Skeleton"), new Dictionary<string, int>
-        {{"Spear Strike", 3 }, {"Bifurcated Strike", 3 }, {"Guard", 2 } });
+        Enemy skeleton = skeletonObject.AddComponent(typeof(Enemy)) as Enemy;
+        skeleton.New(25, new Vector2Int(1, Random.Range(0, 3)), "Skeleton", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/Skeleton"), new Dictionary<string, int>
+        {{"Spear Strike", 3 }, {"Bifurcated Strike", 3 }, {"Guard", 1 } });
 
-        participants.Add(enemy);
+        participants.Add(skeleton);
+
+        GameObject CKObject = Instantiate(prefab, new Vector3Int(), Quaternion.identity);
+        CKObject.transform.parent = transform;
+
+        Enemy cryptKeeper = CKObject.AddComponent(typeof(Enemy)) as Enemy;
+        cryptKeeper.New(45, new Vector2Int(1, Random.Range(3, 5)), "Crypt Keeper", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/CryptKeeper"), new Dictionary<string, int>
+        {{"Spear Strike", 4 }, {"Bifurcated Strike", 2 }, {"Contagion", 1}, {"Lesser Ooze", 1} });
+
+        participants.Add(cryptKeeper);
 
         StartCoroutine(Combat());//starts the combat encounter
     }
@@ -225,7 +234,7 @@ public class CombatHandler : MonoBehaviour
         return new Vector3(xPos, moveTo.x == 0 ?
             0.1f * Mathf.Pow(xPos - 2.5f, 2) - 0.525f :
             0.145f * Mathf.Pow(xPos - 2.5f, 2) + 0.518f,
-            -1);
+            moveTo.x == 0 ? -3: -1);
     }
 }
 
@@ -239,7 +248,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
 
     private static Dictionary<string, TargetType> targetTypes = new Dictionary<string, TargetType>();//stores the different target types that cards can use
 
-    private static GameObject cardPrefab = Resources.Load<GameObject>("CombatPrefabs/Card");
+    private static GameObject cardPrefab = Resources.Load<GameObject>("CombatPrefabs/Gui/Card");
 
     public static void Start()
     {
@@ -387,7 +396,8 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         {"One Armed Knight", new Color32(0, 200, 100, 255)},
         {"Plague Caster", new Color32(170, 50, 0, 255) },
         //-----Enemies-----\\
-        {"Skeleton", new Color32(225, 200, 200, 255)}
+        {"Skeleton", new Color32(255, 255, 255, 255)},
+        {"Crypt Keeper", new Color32(200, 180, 210, 255) }
     };
 
     protected string characterName;
@@ -668,6 +678,9 @@ public class Player : Character
 
     protected override IEnumerator Die()
     {
+        turnEnd = true;
+        turnStage = 0;
+
         Vector3 newPos = new Vector3(transform.position.x, transform.position.y - 0.125f, transform.position.z);//the only difference is that players go down and enemies go up
 
         StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), spriteRenderer, 0.25f));
@@ -1193,6 +1206,7 @@ public class DamageDice : Effect
     }
 }
 
+
 //----------Status Effects----------\\
 
 public class StatusEffect
@@ -1478,11 +1492,9 @@ public class BasicAttack : Attack
 
 public class Card : MonoBehaviour
 {
-    private List<List<GameObject>> chainObjects = new List<List<GameObject>>();
+    private List<GameObject> chainObjects = new List<GameObject>();
 
     private GameObject spikePrefab;
-    private GameObject chainPrefab;
-    private GameObject chainLinkPrefab;
 
     private Dictionary<string, string> cardInfo = new Dictionary<string, string>();    
 
@@ -1508,9 +1520,7 @@ public class Card : MonoBehaviour
 
     public void Awake()
     {
-        spikePrefab = Resources.Load<GameObject>("CombatPrefabs/Spike");
-        chainPrefab = Resources.Load<GameObject>("CombatPrefabs/Chain");
-        chainLinkPrefab = Resources.Load<GameObject>("CombatPrefabs/ChainLink");
+        spikePrefab = Resources.Load<GameObject>("CombatPrefabs/Gui/Spike");
     }
 
     public void New(Attack attack, Dictionary<string, string> cardInfo, Dictionary<string, float> cardSize, Character character)
@@ -1545,7 +1555,7 @@ public class Card : MonoBehaviour
     {
         float xPos = 9 * (index + 0.5f) / hand.Count - 2;
         float yPos = -0.05f * Mathf.Pow(xPos - 2.5f, 2) - 4;
-        float zPos = 0.1f * Mathf.Pow(xPos - 2.0f, 2) - 10;
+        float zPos = 0.15f * Mathf.Pow(xPos - 2.0f, 2) - 15;
         float rotation = -Mathf.Pow(xPos - 2.5f, 3) / 5;
 
         Vector3 newPos = new Vector3(xPos, yPos, zPos);
@@ -1594,7 +1604,7 @@ public class Card : MonoBehaviour
 
     private IEnumerator Visualize()
     {
-        if (visualDebounce)
+        if (visualDebounce || debounce)
         {
             yield break;
         }
@@ -1620,77 +1630,24 @@ public class Card : MonoBehaviour
         {
             Vector2Int targetPos = targetPosList[t];
 
-            chainObjects.Add(new List<GameObject>());
-
             if (targetPos.y + gridPos.y >= 0 && targetPos.y + gridPos.y <= 5)
             {
-                Vector3 endPos = CombatHandler.getNewPos(new Vector2Int(targetPos.x, targetPos.y + gridPos.y));
+                Vector3 pos = CombatHandler.getNewPos(new Vector2Int(targetPos.x, targetPos.y + gridPos.y));
 
-                int amount = Mathf.Clamp((int)(
-                    Vector3.Distance(transform.position, (transform.position + new Vector3(transform.position.x, endPos.y, 0)) / 2) +
-                    Vector3.Distance((transform.position + new Vector3(transform.position.x, endPos.y, 0)) / 2, endPos) * 2.5f + 0.5f),
-                    3, 30);
+                GameObject chainObject = Instantiate(spikePrefab, pos, Quaternion.identity);
+                SpriteRenderer chainRender = chainObject.transform.GetComponent<SpriteRenderer>();
 
-                if (amount % 2 == 0)
-                {
-                    amount++;
-                }
+                chainObjects.Add(chainObject);
 
-                Vector3[] bezeir = Bezeir.GetPointsAlongCurve(transform.position, endPos, amount);
+                chainObject.transform.position += new Vector3(0, Mathf.Abs(gridPos.x - targetPos.x) == 0 ? -1.5f : 3.2f, 0);
+                chainObject.transform.rotation = Quaternion.Euler(0, 0, Mathf.Abs(gridPos.x - targetPos.x) == 1 ? 180 : 0);
 
-                chainObjects[t].Add(Instantiate(chainPrefab, bezeir[0], Quaternion.identity));
+                chainRender.color = new Color32(0, 0, 0, 0);
 
-                for (int i = 1; i < amount - 1; i++)
-                {
-                    if (i == amount - 2)
-                    {
-                        chainObjects[t].Add(Instantiate(spikePrefab, bezeir[i], Quaternion.identity));
-                        chainObjects[t][i].transform.position += new Vector3(0, 0, -2);
-                    }
-                    else if(i%2 == 0)
-                    {
-                        chainObjects[t].Add(Instantiate(chainLinkPrefab, bezeir[i], Quaternion.identity));
-                        chainObjects[t][i].transform.position += new Vector3(0, 0, -1);
-                    }
-                    else
-                    {
-                        chainObjects[t].Add(Instantiate(chainPrefab, bezeir[i], Quaternion.identity));
-                    }
-
-                    float size = i / amount / 2;
-
-                    chainObjects[t][i].transform.localScale -= new Vector3(size, size, 0);
-
-                    //chainObjects[t][i].gameObject.SetActive(false);
-
-                    Vector2 direction = (bezeir[i - 1] - bezeir[i]).normalized;
-                    float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-
-                    direction = (bezeir[i + 1] - bezeir[i]).normalized;
-                    angle += (float)(Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg);
-
-                    angle /= 2;
-
-                    if (i != amount - 2)
-                    {
-                        angle -= 90;
-                    }
-
-                    chainObjects[t][i].transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-                }
-
+                StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), chainRender, 0.25f));
+                StartCoroutine(Tween.New(chainObject.transform.position + new Vector3(0, Mathf.Abs(gridPos.x - targetPos.x) == 0 ? 1 : -1.5f, 0), chainObject.transform, 0.25f));
             }
         }
-
-        /*foreach (List<GameObject> list in chainObjects)
-        {
-            for (int i = 0; i < chainObjects.Count && !debounce; i++)
-            {
-                list[i].SetActive(true);
-
-                yield return 0;
-            }
-        }*/
 
         yield return 0;
 
@@ -1699,22 +1656,15 @@ public class Card : MonoBehaviour
 
     private IEnumerator RemoveChain()
     {
-        //yield return new WaitUntil(() => !visualDebounce);
-
-        visualDebounce = true;
-        foreach (List<GameObject> list in chainObjects)
+        foreach(GameObject chainObject in chainObjects)
         {
-            for (int i = list.Count - 1; i >= 0; i--)
-            {
-                Destroy(list[i]);
-                list.RemoveAt(i);
-                //yield return 0;
-            }   
+            Destroy(chainObject, debounce ? 0 : 0.5f);
+            StartCoroutine(Tween.New(new Color32(0, 0, 0, 0), chainObject.transform.GetComponent<SpriteRenderer>(), 0.25f));
         }
 
-        chainObjects = new List<List<GameObject>>();
-        yield return 0;
-        visualDebounce = false;
+        chainObjects = new List<GameObject>();
+
+        yield return new WaitForSeconds(0.5f);
     }
 
     public IEnumerator Burn()
@@ -1724,7 +1674,6 @@ public class Card : MonoBehaviour
         Vector3 newPos = new Vector3(transform.position.x, transform.position.y - 0.5f, transform.position.z);
 
         StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), transform.Find("FrontCard").GetComponent<SpriteRenderer>(), 0.25f));
-        //StartCoroutine(Tween.New(transform.position + new Vector3(0, -0.5f, 0), transform, 1));
         StartCoroutine(Tween.New(newPos, transform, 1));
         StartCoroutine(Tween.New(Quaternion.Euler(0, 0, Random.Range(-4, 5) * 5), transform, 1));
 
@@ -1752,14 +1701,17 @@ public class Tween
 
         Vector3 startPos = transform.position;
 
-        while (Time.time - startTime <= tweenTime)
+        while (Time.time - startTime <= tweenTime && transform)
         {
             transform.position = Vector3.Lerp(startPos, targetPos, Mathf.Clamp((Time.time - startTime) / tweenTime, 0, 1));
 
             yield return null;
         }
 
-        transform.position = targetPos;
+        if (transform)
+        {
+            transform.position = targetPos;
+        }
     }
 
     public static IEnumerator New(Quaternion targetRot, Transform transform, float tweenTime)
@@ -1768,14 +1720,17 @@ public class Tween
 
         Quaternion startRot = transform.rotation;
 
-        while (Time.time - startTime <= tweenTime)
+        while (Time.time - startTime <= tweenTime && transform)
         {
             transform.rotation = Quaternion.Lerp(startRot, targetRot, Mathf.Clamp((Time.time - startTime) / tweenTime, 0, 1));
 
             yield return null;
         }
 
-        transform.rotation = targetRot;
+        if (transform)
+        {
+            transform.rotation = targetRot;
+        }
     }
 
     public static IEnumerator New(Color32 targetColor, SpriteRenderer spriteRenderer, float tweenTime)
@@ -1784,14 +1739,17 @@ public class Tween
 
         Color32 startColor = spriteRenderer.color;
 
-        while (Time.time - startTime <= tweenTime)
+        while (Time.time - startTime <= tweenTime && spriteRenderer)
         {
             spriteRenderer.color = Color32.Lerp(startColor, targetColor, Mathf.Clamp((Time.time - startTime) / tweenTime, 0, 1));
 
             yield return null;
         }
 
-        spriteRenderer.color = targetColor;
+        if (spriteRenderer)
+        {
+            spriteRenderer.color = targetColor;
+        }
     }
 }
 
@@ -1807,7 +1765,7 @@ public class Bezeir : MonoBehaviour
 
             Vector3 position = Mathf.Pow(1 - percent, 2) * startPos + 2 * (1 - percent) * percent * ((startPos + new Vector3(startPos.x, endPos.y, 0)) / 2) + Mathf.Pow(percent, 2) * endPos;
 
-            points[i] = new Vector3(position.x, position.y, -2f);
+            points[i] = new Vector3(position.x, position.y, -5f);
         }
 
         return points;

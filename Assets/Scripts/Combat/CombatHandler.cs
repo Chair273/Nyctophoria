@@ -11,14 +11,13 @@ using System.Reflection;
 
 public class CombatHandler : MonoBehaviour
 {
-    public GameObject _endTurnButton;//Static variables don't show in the inspector, so I have to do this to make it work.
     public static Button endTurnButton;
 
-    public GameObject _preTurnGui;
     public static GameObject preTurnGui;
-
-    public GameObject _exhaustionDC;
     public static GameObject exhaustionDC;
+    public static GameObject drawPile;
+
+    private Transform Gui;
 
     private bool gameEnded = false;
 
@@ -34,9 +33,12 @@ public class CombatHandler : MonoBehaviour
 
     void Start()//basically all of this is a placeholder for testing purposes
     {
-        endTurnButton = _endTurnButton.GetComponent<Button>();
-        preTurnGui = _preTurnGui;
-        exhaustionDC = _exhaustionDC;
+        Gui = transform.Find("Gui");
+
+        endTurnButton = Gui.Find("EndTurnButtonCanvas").Find("EndTurnButton").GetComponent<Button>();
+        preTurnGui = Gui.Find("PreTurnGui").gameObject;
+        exhaustionDC = Gui.Find("Exhaustion").Find("ExhaustionDC").gameObject;
+        drawPile = Gui.Find("DrawPile").gameObject;
 
         AttackHandler.Start();
 
@@ -287,7 +289,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         MakeCardIndex(new Dictionary<string, string>()
         {
             {"Name", "Guard"},
-            {"Description", "*The user gains the guarded status.\n*Repeated use increases the duration."}
+            {"Description", "*The user gains the guarded status for one turn.\n*Reduces damage by half."}
         }, new Dictionary<string, float>
         {
             {"Name", 0.15f},
@@ -300,11 +302,11 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         MakeCardIndex(new Dictionary<string, string>()
         {
             {"Name", "Contagion"},
-            {"Description", "*Call forth a terrible disease to inflict apon your target."}
+            {"Description", "*Call forth a terrible disease to inflict apon your target.\n*Increases damage based on amount.\n*Contagious."}
         }, new Dictionary<string, float>
         {
             {"Name", 0.15f},
-            {"Description",  0.12f}
+            {"Description",  0.1f}
         }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
         {
             {targetTypes["ForwardHit"], new List<Effect> { new ApplyStatus("Contagion", 1) } },
@@ -313,11 +315,11 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         MakeCardIndex(new Dictionary<string, string>()
         {
             {"Name", "Summon Bees"},
-            {"Description", "*Manifest a wave of bees."}
+            {"Description", "*Manifest a wave of bees.\n*Poisons and deals damage.\n*Effect diminishes with distance."}
         }, new Dictionary<string, float>
         {
             {"Name", 0.15f},
-            {"Description",  0.15f}
+            {"Description",  0.1f}
         }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
         {
             {targetTypes["ForwardHit"], new List<Effect> { new DamageDice(1, 4, 0), new ApplyStatus("Poison", 3) }},
@@ -327,7 +329,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         MakeCardIndex(new Dictionary<string, string>()
         {
             {"Name", "Lesser Ooze"},
-            {"Description", "*Coat your enemy in a debilitating slime."}
+            {"Description", "*Coat your enemy in a debilitating slime.\n*Reduces movement for 3 turns."}
         }, new Dictionary<string, float>
         {
             {"Name", 0.15f},
@@ -642,11 +644,24 @@ public class Player : Character
                 exhaustionChance = Mathf.Clamp(exhaustionChance - 1, 0, 20);
             }
 
+            CombatHandler.drawPile.GetComponent<Animator>().Play("Open");
+
+            yield return new WaitForSeconds(0.75f);
+
             exhaustedLastTurn = false;
             movement = 2;
             cardsUsed = 0;
 
             DrawCard(drawAmount);
+
+            if (drawPile.Count == 0)
+            {
+                CombatHandler.drawPile.transform.Find("Card").gameObject.SetActive(false);
+            }
+            else
+            {
+                CombatHandler.drawPile.transform.Find("Card").gameObject.SetActive(false);
+            }
 
             CombatHandler.exhaustionDC.GetComponent<TextMeshProUGUI>().text = "Exhaustion DC: " + exhaustionChance;
             CombatHandler.exhaustionDC.SetActive(true);
@@ -674,6 +689,9 @@ public class Player : Character
 
         CombatHandler.exhaustionDC.SetActive(false);
         CombatHandler.endTurnButton.gameObject.SetActive(false);
+        CombatHandler.drawPile.GetComponent<Animator>().SetBool("Open", false);
+
+        yield return new WaitForSeconds(1);
     }
 
     protected override IEnumerator Die()
@@ -745,9 +763,13 @@ public class Player : Character
             card.gameObject.SetActive(true);
 
             card.GetComponent<Animator>().Play("Card Flip");
-            StartCoroutine(Tween.New(new Vector3(-5, 0, 0), card.transform, 0.2f));
+            StartCoroutine(Tween.New(new Vector3(-4.25f, 0, 0), card.transform, 0.2f));
 
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.15f);
+
+            StartCoroutine(Tween.New(Quaternion.Euler(0, 0, 0), card.transform, 0.15f));
+
+            yield return new WaitForSeconds(0.2f);
 
             card.Organize(hand, hand.IndexOf(card));
         }
@@ -1511,8 +1533,6 @@ public class Card : MonoBehaviour
 
     public bool move = false;
 
-    public Vector3 goHere = new Vector3(-5, -4.3f, 0);
-
     public string GetName()
     {
         return cardInfo["Name"];
@@ -1529,15 +1549,16 @@ public class Card : MonoBehaviour
         this.cardInfo = cardInfo;
         this.character = character;
 
-        transform.position = goHere;
+        transform.position = new Vector3(-5, -3.8f, 0);
+        transform.rotation = Quaternion.Euler(0, 0, -10);
+
         gameObject.name = character.name + " " + cardInfo["Name"];
         animator = transform.GetComponent<Animator>();
-
-        Transform frontCard = transform.Find("FrontCard");
-
-        button = frontCard.GetComponent<Button>();
+        button = transform.Find("Root").GetComponent<Button>();
 
         button.onClick.AddListener(Activate);
+
+        Transform frontCard = transform.Find("Root").Find("FrontCard");
 
         TextMeshProUGUI nameText = frontCard.Find("NameCanvas").Find("Name").GetComponent<TextMeshProUGUI>();
         TextMeshProUGUI descriptionText = frontCard.Find("DescriptionCanvas").Find("Description").GetComponent<TextMeshProUGUI>();
@@ -1669,20 +1690,22 @@ public class Card : MonoBehaviour
 
     public IEnumerator Burn()
     {
-        Destroy(transform.Find("BackCard").gameObject);
+        Transform root = transform.Find("Root");
 
-        Vector3 newPos = new Vector3(transform.position.x, transform.position.y - 0.5f, transform.position.z);
+        Destroy(root.Find("BackCard").gameObject);
 
-        StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), transform.Find("FrontCard").GetComponent<SpriteRenderer>(), 0.25f));
+        Vector3 newPos = new Vector3(transform.position.x, -6, transform.position.z);
+
+        StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), root.Find("FrontCard").GetComponent<SpriteRenderer>(), 0.25f));
         StartCoroutine(Tween.New(newPos, transform, 1));
         StartCoroutine(Tween.New(Quaternion.Euler(0, 0, Random.Range(-4, 5) * 5), transform, 1));
 
         yield return new WaitForSeconds(0.3f);
 
-        Destroy(transform.Find("FrontCard").Find("NameCanvas").gameObject);
-        Destroy(transform.Find("FrontCard").Find("DescriptionCanvas").gameObject);
+        Destroy(root.Find("FrontCard").Find("NameCanvas").gameObject);
+        Destroy(root.Find("FrontCard").Find("DescriptionCanvas").gameObject);
 
-        StartCoroutine(Tween.New(new Color32(0, 0, 0, 0), transform.Find("FrontCard").GetComponent<SpriteRenderer>(), 0.8f));
+        StartCoroutine(Tween.New(new Color32(0, 0, 0, 0), root.Find("FrontCard").GetComponent<SpriteRenderer>(), 0.8f));
 
         yield return new WaitForSeconds(1.2f);
 

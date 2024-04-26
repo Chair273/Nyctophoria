@@ -635,8 +635,13 @@ public class Player : Character
         turnStage = 1;
 
         CombatHandler.preTurnGui.SetActive(true);
+        CombatHandler.preTurnGui.GetComponent<Animator>().Play("Enable");
 
         yield return new WaitUntil(() => turnStage != 1);
+
+        CombatHandler.preTurnGui.GetComponent<Animator>().Play("Disable");
+
+        yield return new WaitForSeconds(0.3f);
 
         CombatHandler.preTurnGui.SetActive(false);
 
@@ -657,17 +662,20 @@ public class Player : Character
             movement = 2;
             cardsUsed = 0;
 
-            DrawCard(drawAmount);
-
             CombatHandler.exhaustionDC.GetComponent<TextMeshProUGUI>().text = "Exhaustion\nRoll " + exhaustionChance + " or above.";
             CombatHandler.exhaustionDC.SetActive(true);
 
             CombatHandler.movementGui.text = "Movement remaining: " + movement;
             CombatHandler.movementGui.gameObject.SetActive(true);
 
+            yield return StartCoroutine(DrawCardCoroutine(drawAmount));
+
             CombatHandler.endTurnButton.gameObject.SetActive(true);
+            CombatHandler.endTurnButton.transform.GetComponent<Animator>().Play("Enable");
 
             yield return new WaitUntil(() => turnEnd);
+
+            CombatHandler.endTurnButton.transform.GetComponent<Animator>().Play("Disable");
         }
 
         turnStage = 0;
@@ -687,7 +695,7 @@ public class Player : Character
         }
 
         CombatHandler.exhaustionDC.SetActive(false);
-        CombatHandler.endTurnButton.gameObject.SetActive(false);
+        CombatHandler.endTurnButton.transform.parent.gameObject.SetActive(false);
         CombatHandler.movementGui.gameObject.SetActive(false);
 
         CombatHandler.drawPile.GetComponent<Animator>().SetBool("Open", false);
@@ -766,7 +774,7 @@ public class Player : Character
             card.GetComponent<Animator>().Play("Card Flip");
             StartCoroutine(Tween.New(new Vector3(-4.25f, 0, 0), card.transform, 0.2f));
 
-            yield return new WaitForSeconds(0.15f);
+            yield return new WaitForSeconds(0.1f);
 
             if (drawPile.Count == 0)
             {
@@ -1279,15 +1287,17 @@ public class PokeVFX : Effect
 
     private IEnumerator Poke(Character target, Character user)
     {
-        GameObject obj = VisualEffectHandler.MakeObject(spriteID, user.transform.position + new Vector3(0, 1.1f, 0.5f));
+        GameObject obj = VisualEffectHandler.MakeObject(spriteID, user.transform.position + new Vector3(0, 1.5f, -2));
 
         SpriteRenderer spriteRenderer = obj.transform.GetComponent<SpriteRenderer>();
 
         spriteRenderer.color = new Color32(255, 255, 255, 0);
-        obj.transform.right = user.transform.position - (target.transform.position + new Vector3(0, 0.5f, 0));
+
+        Vector3 targetPos = new Vector3(target.transform.position.x, target.transform.position.y + 0.75f, -2);
+        obj.transform.right = new Vector3(user.transform.position.x, user.transform.position.y, -2) - targetPos;
 
         user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), spriteRenderer, 0.1f));
-        user.StartCoroutine(Tween.New(target.transform.position + new Vector3(0, 0.5f, 0), obj.transform, 0.5f));
+        user.StartCoroutine(Tween.New(targetPos, obj.transform, 0.35f));
 
         yield return new WaitForSeconds(0.3f);
 

@@ -695,7 +695,7 @@ public class Player : Character
         }
 
         CombatHandler.exhaustionDC.SetActive(false);
-        CombatHandler.endTurnButton.transform.parent.gameObject.SetActive(false);
+        CombatHandler.endTurnButton.gameObject.SetActive(false);
         CombatHandler.movementGui.gameObject.SetActive(false);
 
         CombatHandler.drawPile.GetComponent<Animator>().SetBool("Open", false);
@@ -943,6 +943,11 @@ public class Enemy : Character
             if (target == null)
             {
                 target = CombatHandler.GetLowestHealth(Mathf.Abs(gridPos.x - 1));
+            }
+
+            if (target == null)
+            {
+                yield break;
             }
             Vector2Int targetPos = target.GetGridPos();
 
@@ -1287,21 +1292,21 @@ public class PokeVFX : Effect
 
     private IEnumerator Poke(Character target, Character user)
     {
-        GameObject obj = VisualEffectHandler.MakeObject(spriteID, user.transform.position + new Vector3(0, 1.5f, -2));
+        GameObject obj = VisualEffectHandler.MakeObject(spriteID, new Vector3(user.transform.position.x, user.transform.position.y + 0.75f, -2));
 
         SpriteRenderer spriteRenderer = obj.transform.GetComponent<SpriteRenderer>();
 
         spriteRenderer.color = new Color32(255, 255, 255, 0);
 
         Vector3 targetPos = new Vector3(target.transform.position.x, target.transform.position.y + 0.75f, -2);
-        obj.transform.right = new Vector3(user.transform.position.x, user.transform.position.y, -2) - targetPos;
+        obj.transform.right = new Vector3(user.transform.position.x, user.transform.position.y + 0.75f, -2) - targetPos;
 
         user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), spriteRenderer, 0.1f));
         user.StartCoroutine(Tween.New(targetPos, obj.transform, 0.35f));
 
         yield return new WaitForSeconds(0.3f);
 
-        user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), spriteRenderer, 0.2f));
+        user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), spriteRenderer, 0.2f));
         VisualEffectHandler.Destroy(obj, 0.3f);
     }
 }
@@ -1806,7 +1811,7 @@ public class Card : MonoBehaviour
         yield return new WaitForSeconds(1.2f);
 
         gameObject.SetActive(false);
-        Destroy(gameObject);
+        Destroy(gameObject, 0.8f);
     }
 }
 

@@ -19,6 +19,8 @@ public class CombatHandler : MonoBehaviour
 
     private Transform Gui;
 
+    public static TextMeshProUGUI movementGui;
+
     private bool gameEnded = false;
 
     private static List<Character> participants = new List<Character>();
@@ -39,6 +41,8 @@ public class CombatHandler : MonoBehaviour
         preTurnGui = Gui.Find("PreTurnGui").gameObject;
         exhaustionDC = Gui.Find("Exhaustion").Find("ExhaustionDC").gameObject;
         drawPile = Gui.Find("DrawPile").gameObject;
+
+        movementGui = Gui.Find("Movement").Find("Movement").GetComponent<TextMeshProUGUI>();
 
         AttackHandler.Start();
 
@@ -270,7 +274,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
             {"Description",  0.15f}
         }, new BasicAttack(new Dictionary<TargetType, List<Effect>> //the dictionary containing the cards target types, and the effects corrisponding to each
         {
-            {targetTypes["ForwardHit"], new List<Effect> { new DamageDice(1, 6, 2) } }//This card targets the character in the opposite column to the user, and deals 1d4 + 2 damage, thus it uses the ForwardHit target type and its only effect is a 1d4 + 2 DamageDice
+            {targetTypes["ForwardHit"], new List<Effect> { new DamageDice(1, 6, 2), new PokeVFX("Spear") } }//This card targets the character in the opposite column to the user, and deals 1d4 + 2 damage, thus it uses the ForwardHit target type and its only effect is a 1d4 + 2 DamageDice
         }));
 
         MakeCardIndex(new Dictionary<string, string>()
@@ -283,7 +287,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
             {"Description",  0.15f}
         }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
         {
-            {targetTypes["DiagonalHit"], new List<Effect> { new DamageDice(1, 4, 0) } }
+            {targetTypes["DiagonalHit"], new List<Effect> { new DamageDice(1, 4, 0), new PokeVFX("Spear") } }
         }));
 
         MakeCardIndex(new Dictionary<string, string>()
@@ -296,7 +300,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
             {"Description",  0.12f}
         }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
         {
-            {targetTypes["SelfEffect"], new List<Effect> { new ApplyStatus("Guarded", 1) } },
+            {targetTypes["SelfEffect"], new List<Effect> { new ApplyStatus("Guarded", 1), new SelfApplyAnimVFX("Guard") } },
         }));
 
         MakeCardIndex(new Dictionary<string, string>()
@@ -448,6 +452,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         spriteRenderer.sprite = sprite;
         spriteRenderer.color = baseColor;
 
+        transform.position = CombatHandler.getNewPos(gridPos);
         Move(gridPos, false);
     }
 
@@ -493,7 +498,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
             }
         }
 
-        transform.position = CombatHandler.getNewPos(moveTo);
+        StartCoroutine(Tween.New(CombatHandler.getNewPos(moveTo), transform, 0.2f));
         gridPos = moveTo;
     }
 
@@ -654,17 +659,11 @@ public class Player : Character
 
             DrawCard(drawAmount);
 
-            if (drawPile.Count == 0)
-            {
-                CombatHandler.drawPile.transform.Find("Card").gameObject.SetActive(false);
-            }
-            else
-            {
-                CombatHandler.drawPile.transform.Find("Card").gameObject.SetActive(false);
-            }
-
-            CombatHandler.exhaustionDC.GetComponent<TextMeshProUGUI>().text = "Exhaustion DC: " + exhaustionChance;
+            CombatHandler.exhaustionDC.GetComponent<TextMeshProUGUI>().text = "Exhaustion\nRoll " + exhaustionChance + " or above.";
             CombatHandler.exhaustionDC.SetActive(true);
+
+            CombatHandler.movementGui.text = "Movement remaining: " + movement;
+            CombatHandler.movementGui.gameObject.SetActive(true);
 
             CombatHandler.endTurnButton.gameObject.SetActive(true);
 
@@ -689,6 +688,8 @@ public class Player : Character
 
         CombatHandler.exhaustionDC.SetActive(false);
         CombatHandler.endTurnButton.gameObject.SetActive(false);
+        CombatHandler.movementGui.gameObject.SetActive(false);
+
         CombatHandler.drawPile.GetComponent<Animator>().SetBool("Open", false);
 
         yield return new WaitForSeconds(1);
@@ -767,6 +768,15 @@ public class Player : Character
 
             yield return new WaitForSeconds(0.15f);
 
+            if (drawPile.Count == 0)
+            {
+                CombatHandler.drawPile.transform.Find("Card").gameObject.SetActive(false);
+            }
+            else
+            {
+                CombatHandler.drawPile.transform.Find("Card").gameObject.SetActive(false);
+            }
+
             StartCoroutine(Tween.New(Quaternion.Euler(0, 0, 0), card.transform, 0.15f));
 
             yield return new WaitForSeconds(0.2f);
@@ -785,7 +795,7 @@ public class Player : Character
         {
             exhaustionChance = Mathf.Clamp(exhaustionChance + 1, 0, 20);
 
-            CombatHandler.exhaustionDC.GetComponent<TextMeshProUGUI>().text = "Exhaustion DC: " + exhaustionChance;
+            CombatHandler.exhaustionDC.GetComponent<TextMeshProUGUI>().text = "Exhaustion\nRoll " + exhaustionChance + " or higher.";
 
             int random = Random.Range(1, 21);
 
@@ -857,6 +867,7 @@ public class Player : Character
 
                 movement -= movementCost;
 
+                CombatHandler.movementGui.text = "Movement remaining: " + movement;
                 Debug.Log(name + " used " + movementCost + " movement points. " + movement + " remaining.");
 
                 Move(newPos, true);
@@ -1228,7 +1239,82 @@ public class DamageDice : Effect
     }
 }
 
+public class VisualEffectHandler : MonoBehaviour
+{
+    private static Dictionary<string, GameObject> VFXSprites = new Dictionary<string, GameObject>
+    {
+        { "Spear", Resources.Load<GameObject>("CombatPrefabs/VFX/Spear") },
+        { "Guard", Resources.Load<GameObject>("CombatPrefabs/VFX/Guard") }
+    };
 
+    public static GameObject MakeObject(string spriteId, Vector3 pos)
+    {
+        return Instantiate(VFXSprites[spriteId], pos, Quaternion.identity);
+    }
+
+    public static void Destroy(GameObject obj, float time)
+    {
+        Destroy(obj);
+    }
+}
+
+public class PokeVFX : Effect
+{
+    string spriteID;
+
+    public PokeVFX(string spriteID)
+    {
+        this.spriteID = spriteID;
+    }
+
+    public override void Activate(Character target, Character user)
+    {
+        if (!target || ! user)
+        {
+            return;
+        }
+
+        user.StartCoroutine(Poke(target, user));
+    }
+
+    private IEnumerator Poke(Character target, Character user)
+    {
+        GameObject obj = VisualEffectHandler.MakeObject(spriteID, user.transform.position + new Vector3(0, 1.1f, 0.5f));
+
+        SpriteRenderer spriteRenderer = obj.transform.GetComponent<SpriteRenderer>();
+
+        spriteRenderer.color = new Color32(255, 255, 255, 0);
+        obj.transform.right = user.transform.position - (target.transform.position + new Vector3(0, 0.5f, 0));
+
+        user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), spriteRenderer, 0.1f));
+        user.StartCoroutine(Tween.New(target.transform.position + new Vector3(0, 0.5f, 0), obj.transform, 0.5f));
+
+        yield return new WaitForSeconds(0.3f);
+
+        user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), spriteRenderer, 0.2f));
+        VisualEffectHandler.Destroy(obj, 0.3f);
+    }
+}
+
+public class SelfApplyAnimVFX : Effect//Realy complex code, this one is.
+{
+    string spriteID;
+
+    public SelfApplyAnimVFX(string spriteID)
+    {
+        this.spriteID = spriteID;
+    }
+
+    public override void Activate(Character target, Character user)
+    {
+        if (!target)
+        {
+            return;
+        }
+
+        VisualEffectHandler.MakeObject(spriteID, user.transform.position + new Vector3(0, 0.75f, -0.5f));
+    }
+}
 //----------Status Effects----------\\
 
 public class StatusEffect
@@ -1663,7 +1749,7 @@ public class Card : MonoBehaviour
                 chainObject.transform.position += new Vector3(0, Mathf.Abs(gridPos.x - targetPos.x) == 0 ? -1.5f : 3.2f, 0);
                 chainObject.transform.rotation = Quaternion.Euler(0, 0, Mathf.Abs(gridPos.x - targetPos.x) == 1 ? 180 : 0);
 
-                chainRender.color = new Color32(0, 0, 0, 0);
+                chainRender.color = new Color32(255, 0, 0, 0);
 
                 StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), chainRender, 0.25f));
                 StartCoroutine(Tween.New(chainObject.transform.position + new Vector3(0, Mathf.Abs(gridPos.x - targetPos.x) == 0 ? 1 : -1.5f, 0), chainObject.transform, 0.25f));

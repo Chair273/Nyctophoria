@@ -127,7 +127,7 @@ public class CombatHandler : MonoBehaviour
             foreach (Character character in turnOrder)
             {
                 Debug.Log(character.name + " speed: " + character.GetSpeed());
-                yield return new WaitForSeconds(1);
+                yield return new WaitForSeconds(0.5f);
             }
 
             foreach (Character character in turnOrder)
@@ -246,7 +246,7 @@ public class CombatHandler : MonoBehaviour
 
 public class AttackHandler : MonoBehaviour//handles the creation and storage of each card
 {
-    private static Dictionary<string, Attack> attacks = new Dictionary<string, Attack>();//stores the actuall code behind each card
+    public static Dictionary<string, Attack> attacks = new Dictionary<string, Attack>();//stores the actuall code behind each card
 
     private static Dictionary<string, Dictionary<string, string>> cardInfo = new Dictionary<string, Dictionary<string, string>>();//stores the information of each card (used for player gui)
 
@@ -262,6 +262,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         targetTypes["ForwardHit"] = new BasicTarget(new List<int> { 0 }, new List<int> { 1 });
         targetTypes["DiagonalHit"] = new BasicTarget(new List<int> { -1, 1 }, new List<int> { 1 });
         targetTypes["SelfEffect"] = new BasicTarget(new List<int> { 0 }, new List<int> { 0 }, new List<int> {-1, 0, 1});
+        targetTypes["SmallRangedAttack"] = new RangedTarget(new List<int> {-1, 0, 1}, new List<int> { 1 });
 
         //attacks initialization
         MakeCardIndex(new Dictionary<string, string>() //the name and description on the card
@@ -285,7 +286,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         {
             {"Name", 0.11f},
             {"Description",  0.15f}
-        }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
+        }, new BasicAttack(0.2f, new Dictionary<TargetType, List<Effect>> //optional argument to add a delay between each character effected by the attack.
         {
             {targetTypes["DiagonalHit"], new List<Effect> { new DamageDice(1, 4, 0), new PokeVFX("Spear") } }
         }));
@@ -324,7 +325,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         {
             {"Name", 0.15f},
             {"Description",  0.1f}
-        }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
+        }, new BasicAttack(0.3f, new Dictionary<TargetType, List<Effect>>
         {
             {targetTypes["ForwardHit"], new List<Effect> { new DamageDice(1, 4, 0), new ApplyStatus("Poison", 3) }},
             {targetTypes["DiagonalHit"], new List<Effect> {new DamageDice(1, 2, 0), new ApplyStatus("Poison", 2) }}
@@ -333,20 +334,15 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         MakeCardIndex(new Dictionary<string, string>()
         {
             {"Name", "Lesser Ooze"},
-            {"Description", "*Coat your enemy in a debilitating slime.\n*Reduces movement for 3 turns."}
+            {"Description", "*Coat your enemy in a debilitating slime.\n*Reduces movement for 3 turns.\n*Short range"}
         }, new Dictionary<string, float>
         {
             {"Name", 0.15f},
-            {"Description",  0.12f}
+            {"Description",  0.1f}
         }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
         {
-            {targetTypes["ForwardHit"], new List<Effect> { new ApplyStatus("Oozed", 2) } },
+            {targetTypes["SmallRangedAttack"], new List<Effect> { new ApplyStatus("Oozed", 2) } },
         }));
-    }
-
-    public static void UseAttack(Vector2Int userPos, Character character, string attackName) //allows characters to use cards
-    {
-        attacks[attackName].Activate(userPos, character);
     }
 
     public static List<int> GetStandPositions(string attackName)//remember to add a way to distinguish between cards that help and cards that hurt.
@@ -396,6 +392,8 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
 
 public class Character : MonoBehaviour //the superclass of both enemies and players
 {
+    public bool usingCard;
+
     protected static Dictionary<string, Color32> CharacterColors = new Dictionary<string, Color32>
     {
         //-----Players-----\\
@@ -458,31 +456,32 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     public virtual IEnumerator Turn(bool first)//signals that it is this character's turn
     {
-        int i = 0;
+        exhaustedLastTurn = false;
+        movement = 2;
+        cardsUsed = 0;
 
-        while (i < statusEffects.Count)//loops through and activates/reduces any status effects that have an effect at the begining of a turn
+        for (int i = 0; i < statusEffects.Count; i++)//loops through and activates/reduces any status effects that have an effect at the begining of a turn
         {
             StatusEffect status = statusEffects[i];
 
-            if (status.triggers.Contains("ReduceOnTurnStart"))
+            if (status.triggers.Contains("ModifyMovement"))
             {
-                if (status.Reduce())
-                {
-                    i++;
-                }
+                movement = Mathf.Clamp(status.Activate(movement), 0, int.MaxValue);
             }
 
-            if (status.triggers.Contains("ModifySpeed"))
+            if (status.triggers.Contains("ReduceOnTurnStart"))
             {
-                speed = status.Activate(speed);
+                if (!status.Reduce())
+                {
+                    i--;
+                }
             }
         }
-        yield return 0;
+        yield return new WaitForFixedUpdate();
     }
 
     public virtual void DrawCard(int amount)
     {
-        Debug.Log("DrawCard used on Character superclass, use subclass instead.");
     }
 
     public void Move(Vector2Int moveTo, bool moveOthers)//changes the grid position to the argument, and updates the world position using getNewPos()
@@ -558,7 +557,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
     protected virtual IEnumerator Die()
     {
         Destroy(gameObject);
-        yield return 0;
+        yield return new WaitForFixedUpdate();
     }
 
     public void RemoveStatus(StatusEffect status)
@@ -568,7 +567,6 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     public virtual void RemoveCard(Card card)
     {
-        Debug.LogWarning("RemoveCard called on character superclass, use subclass isntead");
     }
 
     public int GetSpeed()//returns the character's speed
@@ -601,6 +599,16 @@ public class Player : Character
     private bool dragging = false;
 
     private List<Card> hand = new List<Card>();
+    private static Dictionary<string, Sprite> Emblems;
+
+    private void Awake()
+    {
+        Emblems = new Dictionary<string, Sprite>
+        {
+            {"One Armed Knight", Sprite.Create(Resources.Load<Texture2D>("CombatPrefabs/CharacterSprites/Emblems/OneArmedKnight"), new Rect(0, 0, 81, 81), new Vector2(0.5f, 0.5f)) },
+            {"Plague Caster", Sprite.Create(Resources.Load<Texture2D>("CombatPrefabs/CharacterSprites/Emblems/PlagueCaster"), new Rect(0, 0, 81, 81), new Vector2(0.5f, 0.5f))  }
+        };
+    }
 
     public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawPile)//player constructor
     {
@@ -655,12 +663,9 @@ public class Player : Character
             }
 
             CombatHandler.drawPile.GetComponent<Animator>().Play("Open");
+            CombatHandler.drawPile.transform.Find("Deck").Find("Emblem").GetComponent<SpriteRenderer>().sprite = Emblems.ContainsKey(name) ? Emblems[name] : null;
 
             yield return new WaitForSeconds(0.75f);
-
-            exhaustedLastTurn = false;
-            movement = 2;
-            cardsUsed = 0;
 
             CombatHandler.exhaustionDC.GetComponent<TextMeshProUGUI>().text = "Exhaustion\nRoll " + exhaustionChance + " or above.";
             CombatHandler.exhaustionDC.SetActive(true);
@@ -903,6 +908,7 @@ public class Enemy : Character
     public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawPile)
     {
         base.New(health, gridPos, name, sprite, drawPile);
+        DrawCard(5);
     }
 
     public override IEnumerator Turn(bool first)
@@ -914,27 +920,21 @@ public class Enemy : Character
             yield break;
         }
 
-        if (first)
-        {
-            DrawCard(5);
-        }
-
         if (Random.Range(1, 5) == 4)
         {
             DrawCard(2);
 
             Debug.Log(name + " folded.");
 
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(0.5f);
             yield break;
         }
 
-        DrawCard(first == true ? 5 : 1);
+        DrawCard(1);
 
-        movement = 2;
         bool usedCard = true;
 
-        while (usedCard == true && hand.Count > 0)
+        while (usedCard == true && hand.Count > 0 && Random.Range(1, 5) != 1) //they end their turn under 1 of 3 conditions, 1: if they werent able to use the last card they selected, 2: if they ran out of cards, 3:random 25% chance
         {
             usedCard = false;
 
@@ -949,6 +949,7 @@ public class Enemy : Character
             {
                 yield break;
             }
+
             Vector2Int targetPos = target.GetGridPos();
 
             string randomCard = hand[Random.Range(0, hand.Count)];
@@ -965,16 +966,15 @@ public class Enemy : Character
             }
 
             targetPos = new Vector2Int(targetPos.x, targetPos.y + closestPos);
-            int movementCost = Mathf.Abs(targetPos.y - gridPos.y);
+            int moveDirection = Mathf.Clamp(targetPos.y - gridPos.y, -movement, movement);
 
-            if (movementCost > 0 && movement > 0)
+            if (Mathf.Abs(moveDirection) > 0 && movement > 0)
             {
-                Move(new Vector2Int(gridPos.x, gridPos.y + Mathf.Clamp(targetPos.y - gridPos.y, -movement, movement)), true);
+                Move(new Vector2Int(gridPos.x, gridPos.y + moveDirection), true);
 
-                movement = Mathf.Clamp(movementCost, 0, movement);
-                movement -= movementCost;
+                movement -= Mathf.Abs(moveDirection);
 
-                Debug.Log(name + " used " + movementCost + " movement points. " + movement + " remaining.");
+                Debug.Log(name + " used " + Mathf.Abs(moveDirection) + " movement points. " + movement + " remaining.");
 
                 yield return new WaitForSeconds(1);
             }
@@ -985,7 +985,7 @@ public class Enemy : Character
 
             if (gridPos.y == targetPos.y)//if the enemy is in range to use the card
             {
-                AttackHandler.UseAttack(gridPos, this, randomCard);
+                StartCoroutine(AttackHandler.attacks[randomCard].Activate(this));
                 hand.Remove(randomCard);
 
                 if (!discardPile.ContainsKey(randomCard))
@@ -1017,7 +1017,7 @@ public class Enemy : Character
                     {
                         Debug.Log(name + " used " + nextCard + " again.");
 
-                        AttackHandler.UseAttack(gridPos, this, nextCard);
+                        StartCoroutine(AttackHandler.attacks[randomCard].Activate(this));
                         hand.Remove(nextCard);
                         discardPile[nextCard]++;
 
@@ -1120,16 +1120,15 @@ public class TargetType
         return returnThis;
     }
 
-    public virtual List<Character> GetTargets(Vector2Int userPos)
+    public virtual IEnumerator GetTargets(Vector2Int userPos, Action<List<Character>> callback)
     {
-        Debug.Log("Get targets called on TargetType superclass, use subclass instead.");
         return null;
     }
 }
 
 public class BasicTarget : TargetType
 {
-    public override List<Character> GetTargets(Vector2Int userPos)
+    public override IEnumerator GetTargets(Vector2Int userPos, Action<List<Character>> callback)
     {
         List<Character> targets = new List<Character>();
 
@@ -1141,7 +1140,9 @@ public class BasicTarget : TargetType
             }
         }
 
-        return targets;
+        yield return new WaitForFixedUpdate();
+
+        callback(targets);
     }
 
     public BasicTarget(List<int> hitPositions, List<int> columnPositions)
@@ -1163,13 +1164,110 @@ public class BasicTarget : TargetType
     }
 }
 
+public class RangedTarget : TargetType
+{
+    public RangedTarget(List<int> hitPositions, List<int> columnPositions)
+    {
+        this.hitPositions = hitPositions;
+        this.columnPositions = columnPositions;
+
+        foreach (int i in hitPositions)
+        {
+            standPositions.Add(-i);
+        }
+    }
+
+    public override IEnumerator GetTargets(Vector2Int userPos, Action<List<Character>> callback)
+    {
+        if (userPos.x == 0)//if the user is a player
+        {
+            yield return new WaitUntil(() => !Input.GetMouseButtonDown(0));
+
+            GameObject chainObject = MonoBehaviour.Instantiate(Resources.Load<GameObject>("CombatPrefabs/Gui/Spike"), new Vector3(0, 0, -2), Quaternion.identity);
+            Vector3 closestPos = new Vector3(-100, 0, 0);
+            Vector2Int closestGrid = new Vector2Int();
+
+            while (!Input.GetMouseButtonDown(0))
+            {
+                Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                mouseWorldPos.z = -2;
+
+                float closest = Vector3.Distance(mouseWorldPos, closestPos);
+
+                foreach (int offset in hitPositions)
+                {
+                    if (userPos.y + offset >= 0 && userPos.y + offset <= 5)
+                    {
+                        foreach (int column in columnPositions)
+                        {
+                            Vector3 worldPos = CombatHandler.getNewPos(new Vector2Int((int)MathF.Abs(userPos.x - column), userPos.y + offset));
+                            float newDistance = Vector3.Distance(mouseWorldPos, worldPos);
+
+                            if (newDistance < closest)
+                            {
+                                closestPos = worldPos;
+                                closestGrid = new Vector2Int(Mathf.Abs(userPos.x - column), userPos.y + offset);
+                            }
+                        }
+                    }
+                }
+
+                chainObject.transform.position = CombatHandler.getNewPos(closestGrid) + new Vector3(0, closestGrid.x == 0 ? -0.5f : 1.7f, 0);
+                chainObject.transform.rotation = Quaternion.Euler(0, 0, closestGrid.x == 0 ? 0 : 180);
+
+                yield return new WaitForFixedUpdate();
+            }
+            UnityEngine.Object.Destroy(chainObject);
+
+            callback(new List<Character> { CombatHandler.GetCharacter(closestGrid) });
+        }
+        else//if the user is a enemy
+        {
+            Character target = CombatHandler.GetCharacter(new Vector2Int(0, userPos.y));
+
+            if (target != null)
+            {
+                callback(new List<Character> { target });
+            }
+            else
+            {
+                int lowestHealth = int.MaxValue;
+
+                foreach (int offset in hitPositions)
+                {
+                    Character newTarget = CombatHandler.GetCharacter(new Vector2Int(0, userPos.y + offset));
+
+                    if (target == null || newTarget != null && newTarget.GetHealth() < lowestHealth)
+                    {
+                        target = newTarget;
+                        lowestHealth = newTarget.GetHealth();
+                    }
+                }
+
+                callback(new List<Character> { target });
+            }
+        }
+    }
+}
+
 //----------Effect Types----------\\
 
 public class Effect
 {
+    float waitTime;
+
+    public Effect(float waitTime)
+    {
+        this.waitTime = waitTime;
+    }
+
     public virtual void Activate(Character target, Character user)
     {
-        Debug.Log("Activate called on Effect superclass, use subclass instead");
+    }
+
+    public float GetWaitTime()
+    {
+        return waitTime;
     }
 }
 
@@ -1179,6 +1277,7 @@ public class ApplyStatus : Effect
     {
         {"Guarded", typeof(Guarded)},
         {"Contagion", typeof(Contagion)},
+        {"Oozed", typeof(Oozed)},
         {"Poison", typeof(Poison)}
     };
 
@@ -1186,7 +1285,13 @@ public class ApplyStatus : Effect
 
     private int amount;
 
-    public ApplyStatus(string statusIndex, int amount)
+    public ApplyStatus(string statusIndex, int amount) : base(0)
+    {
+        this.statusIndex = statusIndex;
+        this.amount = amount;
+    }
+
+    public ApplyStatus(string statusIndex, int amount, float waitTime) : base(waitTime)
     {
         this.statusIndex = statusIndex;
         this.amount = amount;
@@ -1194,27 +1299,24 @@ public class ApplyStatus : Effect
 
     public override void Activate(Character target, Character user)
     {
-        if (target != null)
+        if (target != null && statusEffects.TryGetValue(statusIndex, out Type statusType))
         {
-            if (statusEffects.TryGetValue(statusIndex, out Type statusType))
+            ConstructorInfo cons = statusType.GetConstructor(new[] { typeof(int), typeof(Character) });
+
+            if (cons != null)
             {
-                ConstructorInfo cons = statusType.GetConstructor(new[] { typeof(int), typeof(Character) });
+                StatusEffect status = (StatusEffect)cons.Invoke(new object[] { amount, target });
 
-                if (cons != null)
+                target.AddStatus(status);
+
+                if (target.Equals(user))
                 {
-                    StatusEffect status = (StatusEffect)cons.Invoke(new object[] { amount, target });
+                    Debug.Log(target.name + " applied " + status.ToString() + " to themself.");
+                }
+                else
+                {
+                    Debug.Log(user.name + " inflicted " + status.ToString() + " on " + target.name + ".");
 
-                    target.AddStatus(status);
-
-                    if (target.Equals(user))
-                    {
-                        Debug.Log(target.name + " applied " + status.ToString() + " to themself.");
-                    }
-                    else
-                    {
-                        Debug.Log(user.name + " inflicted " + status.ToString() + " on " + target.name + ".");
-
-                    }
                 }
             }
         }
@@ -1227,7 +1329,14 @@ public class DamageDice : Effect
     private int faces;
     private int modifier;
 
-    public DamageDice(int amount, int faces, int modifier)
+    public DamageDice(int amount, int faces, int modifier) : base(0)
+    {
+        this.amount = amount;
+        this.faces = faces;
+        this.modifier = modifier;
+    }
+
+    public DamageDice(int amount, int faces, int modifier, float waitTime) : base(waitTime)
     {
         this.amount = amount;
         this.faces = faces;
@@ -1252,30 +1361,16 @@ public class DamageDice : Effect
     }
 }
 
-public class VisualEffectHandler : MonoBehaviour
-{
-    private static Dictionary<string, GameObject> VFXSprites = new Dictionary<string, GameObject>
-    {
-        { "Spear", Resources.Load<GameObject>("CombatPrefabs/VFX/Spear") },
-        { "Guard", Resources.Load<GameObject>("CombatPrefabs/VFX/Guard") }
-    };
-
-    public static GameObject MakeObject(string spriteId, Vector3 pos)
-    {
-        return Instantiate(VFXSprites[spriteId], pos, Quaternion.identity);
-    }
-
-    public static void Destroy(GameObject obj, float time)
-    {
-        Destroy(obj);
-    }
-}
-
 public class PokeVFX : Effect
 {
     string spriteID;
 
-    public PokeVFX(string spriteID)
+    public PokeVFX(string spriteID) : base(0)
+    { 
+        this.spriteID = spriteID;
+    }
+
+    public PokeVFX(string spriteID, float waitTime) : base(waitTime)
     {
         this.spriteID = spriteID;
     }
@@ -1311,11 +1406,26 @@ public class PokeVFX : Effect
     }
 }
 
+public class Wait : Effect
+{
+    public Wait(float waitTime) : base(waitTime) { }
+
+    public override void Activate(Character target, Character user)
+    {
+
+    }
+}
+
 public class SelfApplyAnimVFX : Effect//Realy complex code, this one is.
 {
     string spriteID;
 
-    public SelfApplyAnimVFX(string spriteID)
+    public SelfApplyAnimVFX(string spriteID) : base(0)
+    {
+        this.spriteID = spriteID;
+    }
+
+    public SelfApplyAnimVFX(string spriteID, float waitTime) : base(waitTime)
     {
         this.spriteID = spriteID;
     }
@@ -1351,23 +1461,19 @@ public class StatusEffect
 
     public virtual void Stack(int amount)
     {
-        Debug.Log("Stack called on StatusEffect superclass, use subclass isntead");
     }
 
     public virtual void Activate()
     {
-        Debug.Log("void Activate called on StatusEffect superclass, use subclass instead.");
     }
 
     public virtual int Activate(int armount)
     {
-        Debug.Log("int Activate called on StatusEffect superclass, use subclass instead.");
         return 0;
     }
 
     public virtual bool Reduce()
     {
-        Debug.Log("Reduce called on StatusEffect superclass, use subclass isntead.");
         return true;
     }
 }
@@ -1431,7 +1537,7 @@ public class Contagion : StatusEffect
 
             if (newTarget != null)
             {
-                AttackHandler.UseAttack(newTarget.GetGridPos(), target, "Contagion");
+                newTarget.StartCoroutine(AttackHandler.attacks["Contagion"].Activate(target));
 
                 if (health[0] <= 0)
                 {
@@ -1525,14 +1631,15 @@ public class Poison : StatusEffect
 
 public class Oozed : StatusEffect
 {
-    public Oozed(int duration, Character target) : base("Oozed", target, new List<string> { "ReduceOnTurnStart", "ModifySpeed" })
+    public Oozed(int duration, Character target) : base("Oozed", target, new List<string> { "ReduceOnTurnStart", "ModifyMovement" })
     {
         this.duration = duration;
     }
 
-    public override int Activate(int speed)
+    public override int Activate(int movement)
     {
-        return Mathf.Clamp(speed - 1, 0, int.MaxValue);
+        Debug.Log("Reduced movement");
+        return Mathf.Clamp(movement - 1, 0, int.MaxValue);
     }
 
     public override bool Reduce()
@@ -1569,6 +1676,8 @@ public class Attack
 {
     protected Dictionary<TargetType, List<Effect>> targetEffects;
 
+    protected float waitTime;
+
     public List<TargetType> GetTargetTypes()
     {
         List<TargetType> targetTypes = new List<TargetType>();
@@ -1581,35 +1690,56 @@ public class Attack
         return targetTypes;
     }
 
-    public Attack(Dictionary<TargetType, List<Effect>> targetEffects)
+    public Attack(Dictionary<TargetType, List<Effect>> targetEffects, float waitTime)
     {
         this.targetEffects = targetEffects;
+        this.waitTime = waitTime;
     }
 
-    public virtual void Activate(Vector2Int userPos, Character user)
+    public virtual IEnumerator Activate(Character user)
     {
-        Debug.Log("Activate called on Attack superclass, use subclass isntead.");
+        return null;
     }
 }
 
 public class BasicAttack : Attack
 {
-    public BasicAttack(Dictionary<TargetType, List<Effect>> targetEffects) : base(targetEffects) {}
+    public BasicAttack(Dictionary<TargetType, List<Effect>> targetEffects) : base(targetEffects, 0) { }
 
-    public override void Activate(Vector2Int userPos, Character user)
+    public BasicAttack(float waitTime, Dictionary<TargetType, List<Effect>> targetEffects) : base(targetEffects, waitTime) { }
+
+    public override IEnumerator Activate(Character user)
     {
         foreach (TargetType targetType in targetEffects.Keys)
         {
-            List<Character> targets = targetType.GetTargets(userPos);
+            //After much prayer and sacrafice to the dark sphagetti gods, I have been gifted vile arcane knowledge on coroutine returns. God helps us all.
+            List<Character> targets = null;
+
+            yield return user.StartCoroutine(targetType.GetTargets(user.GetGridPos(), callback =>
+            {
+                targets = callback;
+            }));
 
             foreach (Character character in targets)
             {
                 foreach (Effect effect in targetEffects[targetType])
                 {
                     effect.Activate(character, user);
+
+                    if (effect.GetWaitTime() > 0)
+                    {
+                        yield return new WaitForSeconds(effect.GetWaitTime());
+                    }
+                }
+
+                if (waitTime > 0)
+                {
+                    yield return new WaitForSeconds(waitTime);
                 }
             }
         }
+
+        user.usingCard = false;
     }
 }
 
@@ -1657,7 +1787,7 @@ public class Card : MonoBehaviour
         animator = transform.GetComponent<Animator>();
         button = transform.Find("Root").GetComponent<Button>();
 
-        button.onClick.AddListener(Activate);
+        button.onClick.AddListener(() => StartCoroutine(Activate()));
 
         Transform frontCard = transform.Find("Root").Find("FrontCard");
 
@@ -1690,36 +1820,42 @@ public class Card : MonoBehaviour
 
     public void OnMouseEnter()
     {
-        animator.SetBool("Selected", true);
-        animator.Play("Select");
+        if (!character.usingCard)
+        {
+            animator.SetBool("Selected", true);
+            animator.Play("Select");
 
-        StartCoroutine(Visualize());
+            StartCoroutine(Visualize());
+        }
     }
 
     public void OnMouseExit()
     {
-        StartCoroutine(RemoveChain());
+        if (!debounce)
+        {
+            StartCoroutine(RemoveChain());
 
-        animator.SetBool("Selected", false);
-        List<Card> hand = ((Player)character).GetHand();
+            animator.SetBool("Selected", false);
+            List<Card> hand = ((Player)character).GetHand();
 
-        Organize(hand, hand.IndexOf(this));
+            Organize(hand, hand.IndexOf(this));
+        }
     }
 
-    private void Activate()
+    protected virtual IEnumerator Activate()
     {
-        if (debounce)
+        if (debounce || character.usingCard)
         {
-            return;
+            yield break;
         }
 
         Debug.Log(character.name + " used " + cardInfo["Name"] + ".");
 
         debounce = true;
+        character.usingCard = true;
 
         StartCoroutine(RemoveChain());
-
-        attack.Activate(character.GetGridPos(), character);
+        yield return StartCoroutine(attack.Activate(character));
 
         character.RemoveCard(this);
     }
@@ -1771,7 +1907,7 @@ public class Card : MonoBehaviour
             }
         }
 
-        yield return 0;
+        yield return new WaitForFixedUpdate();
 
         visualDebounce = false;
     }
@@ -1815,6 +1951,7 @@ public class Card : MonoBehaviour
     }
 }
 
+
 //----------Misc----------\\
 
 public class Tween
@@ -1829,7 +1966,7 @@ public class Tween
         {
             transform.position = Vector3.Lerp(startPos, targetPos, Mathf.Clamp((Time.time - startTime) / tweenTime, 0, 1));
 
-            yield return null;
+            yield return new WaitForFixedUpdate();
         }
 
         if (transform)
@@ -1848,7 +1985,7 @@ public class Tween
         {
             transform.rotation = Quaternion.Lerp(startRot, targetRot, Mathf.Clamp((Time.time - startTime) / tweenTime, 0, 1));
 
-            yield return null;
+            yield return new WaitForFixedUpdate();
         }
 
         if (transform)
@@ -1867,7 +2004,7 @@ public class Tween
         {
             spriteRenderer.color = Color32.Lerp(startColor, targetColor, Mathf.Clamp((Time.time - startTime) / tweenTime, 0, 1));
 
-            yield return null;
+            yield return new WaitForFixedUpdate();
         }
 
         if (spriteRenderer)
@@ -1877,21 +2014,21 @@ public class Tween
     }
 }
 
-public class Bezeir : MonoBehaviour
+public class VisualEffectHandler : MonoBehaviour
 {
-    public static Vector3[] GetPointsAlongCurve(Vector3 startPos, Vector3 endPos, int amount)
+    private static Dictionary<string, GameObject> VFXSprites = new Dictionary<string, GameObject>
     {
-        Vector3[] points = new Vector3[amount];
+        { "Spear", Resources.Load<GameObject>("CombatPrefabs/VFX/Spear") },
+        { "Guard", Resources.Load<GameObject>("CombatPrefabs/VFX/Guard") }
+    };
 
-        for (int i = 0; i < amount; i++)
-        {
-            float percent = i / (float)(amount - 1);
+    public static GameObject MakeObject(string spriteId, Vector3 pos)
+    {
+        return Instantiate(VFXSprites[spriteId], pos, Quaternion.identity);
+    }
 
-            Vector3 position = Mathf.Pow(1 - percent, 2) * startPos + 2 * (1 - percent) * percent * ((startPos + new Vector3(startPos.x, endPos.y, 0)) / 2) + Mathf.Pow(percent, 2) * endPos;
-
-            points[i] = new Vector3(position.x, position.y, -5f);
-        }
-
-        return points;
+    public static void Destroy(GameObject obj, float time)
+    {
+        Destroy(obj);
     }
 }

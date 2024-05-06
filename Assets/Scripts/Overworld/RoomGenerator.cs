@@ -145,7 +145,9 @@ public class RoomGenerator : MonoBehaviour
 
     IEnumerator PaintTile(Vector3Int pos)//paint the argument tile as a floor, loop through neighbors and paint them depending on previous tile and relative position compared to the argument tile
     {
-        for (int x = -1; x <= 1; x++)
+        tilemap.SetTile(pos, tileTemplate[1, 1, 0]);
+        yield return new WaitForEndOfFrame();
+        /*for (int x = -1; x <= 1; x++)
         {
             for (int y = -1; y <= 1; y++)
             {
@@ -207,7 +209,7 @@ public class RoomGenerator : MonoBehaviour
                 }
 
             }
-        }
+        }*/
 
     }
 

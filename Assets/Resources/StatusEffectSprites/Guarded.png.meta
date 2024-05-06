@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 1593c6da49f6342e790885898d173191
+guid: 88f81c388b1be4ce18400a5588eb6740
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1585670646664300459
-    second: OneArmedKnightV2_0
+      213: -6630434682187501487
+    second: guarded_0
   externalObjects: {}
   serializedVersion: 12
   mipmaps:
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 150
+  spritePixelsToUnits: 100
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
@@ -98,22 +98,22 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: OneArmedKnightV2_0
+      name: guarded_0
       rect:
         serializedVersion: 2
-        x: 6
-        y: 20
-        width: 201
-        height: 241
-      alignment: 9
-      pivot: {x: 0.65, y: 0.05}
+        x: 0
+        y: 0
+        width: 49
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ba780394d0f610610800000000000000
-      internalID: 1585670646664300459
+      spriteID: 150b8cd39c6fbf3a0800000000000000
+      internalID: -6630434682187501487
       vertices: []
       indices: 
       edges: []
@@ -121,7 +121,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: 21b36ea63afeb40a3b0fa8519211bc54
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -129,7 +129,7 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      OneArmedKnightV2_0: 1585670646664300459
+      guarded_0: -6630434682187501487
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

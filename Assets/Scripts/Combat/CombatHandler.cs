@@ -26,7 +26,7 @@ public class CombatHandler : MonoBehaviour
     private static List<Character> participants = new List<Character>();
     private List<Character> turnOrder = new List<Character>();
 
-    private static float[,] xReference = { { 0, 1, 2, 3, 4, 5 }, { 0.7f, 1.3f, 2.1f, 2.9f, 3.7f, 4.3f } }; //used to convert a grid position to a world position, first index is the valid player x positions, second index is the valid enemy x positions
+    private static float[,] xReference = { { -0.75f, 0.5f, 1.9f, 3.1f, 4.5f, 5.75f }, { 0.25f, 1.1f, 2.1f, 2.9f, 3.9f, 4.75f } }; //used to convert a grid position to a world position, first index is the valid player x positions, second index is the valid enemy x positions
 
     public static float getXPos(int x, int y)//returns the world x position of a grid position
     {
@@ -237,9 +237,9 @@ public class CombatHandler : MonoBehaviour
     {
         float xPos = getXPos(moveTo.x, moveTo.y);
 
-        return new Vector3(xPos, moveTo.x == 0 ?
-            0.1f * Mathf.Pow(xPos - 2.5f, 2) - 0.525f :
-            0.145f * Mathf.Pow(xPos - 2.5f, 2) + 0.518f,
+        return new Vector3(xPos, moveTo.x == 0 ? 
+            0.1f * Mathf.Pow(xPos - 2.5f, 2) - 1.25f : //player equation
+            0.145f * Mathf.Pow(xPos - 2.5f, 2) + 0.518f, //enemy equation
             moveTo.x == 0 ? -3: -1);
     }
 }
@@ -262,6 +262,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         targetTypes["ForwardHit"] = new BasicTarget(new List<int> { 0 }, new List<int> { 1 });
         targetTypes["DiagonalHit"] = new BasicTarget(new List<int> { -1, 1 }, new List<int> { 1 });
         targetTypes["SelfEffect"] = new BasicTarget(new List<int> { 0 }, new List<int> { 0 }, new List<int> {-1, 0, 1});
+        targetTypes["DiagonalSelfChoice"] = new RangedTarget(new List<int> { -1, 1 }, new List<int> { 0 });
         targetTypes["SmallRangedAttack"] = new RangedTarget(new List<int> {-1, 0, 1}, new List<int> { 1 });
 
         //attacks initialization
@@ -325,7 +326,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         {
             {"Name", 0.15f},
             {"Description",  0.1f}
-        }, new BasicAttack(0.3f, new Dictionary<TargetType, List<Effect>>
+        }, new BasicAttack(0.1f, new Dictionary<TargetType, List<Effect>>
         {
             {targetTypes["ForwardHit"], new List<Effect> { new DamageDice(1, 4, 0), new ApplyStatus("Poison", 3) }},
             {targetTypes["DiagonalHit"], new List<Effect> {new DamageDice(1, 2, 0), new ApplyStatus("Poison", 2) }}
@@ -378,7 +379,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
             return null;
         }
 
-        GameObject cardObject = Instantiate(cardPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+        GameObject cardObject = Instantiate(cardPrefab);
         cardObject.transform.parent = character.transform.parent;
 
         Card card = cardObject.AddComponent<Card>();
@@ -397,7 +398,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
     protected static Dictionary<string, Color32> CharacterColors = new Dictionary<string, Color32>
     {
         //-----Players-----\\
-        {"One Armed Knight", new Color32(0, 200, 100, 255)},
+        {"One Armed Knight", new Color32(255, 255, 255, 255)},
         {"Plague Caster", new Color32(170, 50, 0, 255) },
         //-----Enemies-----\\
         {"Skeleton", new Color32(255, 255, 255, 255)},
@@ -408,6 +409,8 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     protected Dictionary<string, int> drawPile;//when drawing a card, they pull from this list
     protected Dictionary<string, int> discardPile;//when using a card, it moves to this (if it doesnt proc exhaustion)
+
+    protected Dictionary<String, Sprite> statusSymbols;
 
     protected bool exhaustedLastTurn;
 
@@ -422,7 +425,11 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     protected SpriteRenderer spriteRenderer;
 
-    protected List<StatusEffect> statusEffects = new List<StatusEffect>();//list of status effects applied to this character
+    protected GameObject effectTemplate;
+
+    protected Transform statusContainer;
+
+    protected List<StatusEffect> statusEffects;//list of status effects applied to this character
 
     protected Vector2Int gridPos;//the grid position of the character.
 
@@ -433,6 +440,17 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         this.name = name;
         characterName = name;
         this.drawPile = drawPile;
+
+        statusSymbols = new Dictionary<string, Sprite>
+        {
+            {"Guarded", Sprite.Create(Resources.Load<Texture2D>("StatusEffectSprites/Guarded"), new Rect(0, 0, 49, 49), new Vector2(0.5f, 0.5f)) },
+            {"Contagion", Sprite.Create(Resources.Load<Texture2D>("StatusEffectSprites/Contagion"), new Rect(0, 0, 49, 49), new Vector2(0.5f, 0.5f)) },
+        };
+
+        statusEffects = new List<StatusEffect>();
+
+        statusContainer = transform.Find("StatusContainer");
+        effectTemplate = Resources.Load<GameObject>("CombatPrefabs/GUI/StatusEffect");
 
         discardPile = new Dictionary<string, int>();
 
@@ -499,6 +517,14 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
         StartCoroutine(Tween.New(CombatHandler.getNewPos(moveTo), transform, 0.2f));
         gridPos = moveTo;
+        if (gridPos.y >= 3)
+        {
+            transform.localScale = new Vector3(-1, 1, 1);
+        }
+        else
+        {
+            transform.localScale = new Vector3(1, 1, 1);
+        }
     }
 
     public void RollSpeed()//rolls a random speed between 1 and 20, then adds the speedMod to that number
@@ -542,27 +568,83 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     public void AddStatus(StatusEffect status)
     {
+        string effectName = status.type;
+        bool found = false;
+
         foreach (StatusEffect i in statusEffects)
         {
-            if (i.type.Equals(status.type))
+            if (i.type.Equals(effectName))
             {
                 i.Stack(status.duration);
-                return;
+                found = true;
             }
         }
 
-        statusEffects.Add(status);
+        if (!found)
+        {
+            statusEffects.Add(status);
+
+            GameObject effectVisual = Instantiate(effectTemplate, statusContainer, false);
+
+            effectVisual.name = effectName;
+            effectVisual.transform.Find("Canvas").Find("Amount").GetComponent<TextMeshProUGUI>().text = status.duration.ToString();
+            status.effectVisual = effectVisual;
+
+            if (statusSymbols.ContainsKey(effectName))
+            {
+                effectVisual.GetComponent<SpriteRenderer>().sprite = statusSymbols[effectName];
+            }
+
+            OrganizeStatusEffects();
+        }
+    }
+
+    public void RemoveStatus(StatusEffect status)
+    {
+        statusEffects.Remove(status);
+        OrganizeStatusEffects();
+    }
+
+    private void OrganizeStatusEffects()
+    {
+        {
+            int i = 0;
+
+            while (i < statusContainer.childCount)
+            {
+                Transform v = statusContainer.GetChild(i);
+                string effectName = v.name;
+                bool found = false;
+
+                foreach (StatusEffect effect in statusEffects)
+                {
+                    if (effect.type.Equals(effectName))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    Destroy(v.gameObject);
+                }
+
+                i++;
+            }
+        }
+
+        int childCount = statusContainer.childCount;
+        for (int i = 0; i < childCount; i++)
+        {
+            statusContainer.GetChild(i).localPosition = new Vector3(-(childCount - 1) / 4f + (i * 0.5f), 0, 0);
+        }
     }
 
     protected virtual IEnumerator Die()
     {
         Destroy(gameObject);
         yield return new WaitForFixedUpdate();
-    }
-
-    public void RemoveStatus(StatusEffect status)
-    {
-        statusEffects.Remove(status);
     }
 
     public virtual void RemoveCard(Card card)
@@ -599,6 +681,9 @@ public class Player : Character
     private bool dragging = false;
 
     private List<Card> hand = new List<Card>();
+
+    private List<Card> discardObjects = new List<Card>(); //not actually objects, it contains the list of half destroyed cards that need to be used to show refilling the draw pile.
+
     private static Dictionary<string, Sprite> Emblems;
 
     private void Awake()
@@ -613,6 +698,8 @@ public class Player : Character
     public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawPile)//player constructor
     {
         base.New(health, gridPos, name, sprite, drawPile);
+
+        transform.Find("StatusContainer").localPosition = new Vector3(0, -0.3f, -1);
 
         CombatHandler.endTurnButton.onClick.AddListener(Click);
 
@@ -642,6 +729,14 @@ public class Player : Character
         turnEnd = false;
         turnStage = 1;
 
+        CombatHandler.drawPile.GetComponent<Animator>().Play("Open");
+        CombatHandler.drawPile.transform.Find("Deck").Find("Emblem").GetComponent<SpriteRenderer>().sprite = Emblems.ContainsKey(name) ? Emblems[name] : null;
+
+        if (drawPile.Count > 0)
+        {
+            CombatHandler.drawPile.transform.Find("Card").gameObject.SetActive(true);
+        }
+
         CombatHandler.preTurnGui.SetActive(true);
         CombatHandler.preTurnGui.GetComponent<Animator>().Play("Enable");
 
@@ -661,9 +756,6 @@ public class Player : Character
             {
                 exhaustionChance = Mathf.Clamp(exhaustionChance - 1, 0, 20);
             }
-
-            CombatHandler.drawPile.GetComponent<Animator>().Play("Open");
-            CombatHandler.drawPile.transform.Find("Deck").Find("Emblem").GetComponent<SpriteRenderer>().sprite = Emblems.ContainsKey(name) ? Emblems[name] : null;
 
             yield return new WaitForSeconds(0.75f);
 
@@ -697,6 +789,15 @@ public class Player : Character
         {
             drawPile = discardPile;
             discardPile = new Dictionary<string, int>();
+
+            int amount = discardObjects.Count;
+            for (int i = 0; i < amount; i ++)//Remove every card and make it do the return visuals one by one
+            {
+                StartCoroutine(discardObjects[0].Return());
+                discardObjects.RemoveAt(0);
+
+                yield return new WaitForSeconds(0.1f / amount);
+            }
         }
 
         CombatHandler.exhaustionDC.SetActive(false);
@@ -739,13 +840,12 @@ public class Player : Character
         List<Card> flipThese = new List<Card>();
         List<string> keys = new List<string>(drawPile.Keys);
 
-        for (int i = 0; i < amount && drawPile.Count > 0; i++)//create new random cards and remove it from the draw pile
+        for (int i = 0; i < amount && drawPile.Count > 0; i++)//create new random cards and remove them from the draw pile
         {
             string randomCard = keys[Random.Range(0, keys.Count)];
             drawPile[randomCard]--;
 
             Card card = AttackHandler.MakeCardObject(randomCard, this);
-
 
             if (drawPile[randomCard] <= 0)
             {
@@ -753,18 +853,13 @@ public class Player : Character
                 keys.Remove(randomCard);
             }
 
-            hand.Add(card);
+            hand.Add(card);//prematurely add them to the hand list so other cards will organize properly
             flipThese.Add(card);
         }
 
         drawAmount = 0;
 
-        if (drawPile.Count == 0)
-        {
-            Debug.Log(name + " ran out of cards in their draw pile.");
-        }
-
-        foreach(Card card in hand)//loop through all the cards already in the characters hand to instantly organize them.
+        foreach (Card card in hand)//loop through all the cards already in the characters hand to instantly organize them.
         {
             if (!flipThese.Contains(card))
             {
@@ -772,7 +867,13 @@ public class Player : Character
             }
         }
 
-        foreach(Card card in flipThese)//loop through all the new cards and play the flip animation on them.
+        if (drawPile.Count == 0)
+        {
+            Debug.Log(name + " ran out of cards in their draw pile.");
+            CombatHandler.drawPile.transform.Find("Card").gameObject.SetActive(false);
+        }
+
+        foreach (Card card in flipThese)//loop through all the new cards and play the flip animation on them.
         {
             card.gameObject.SetActive(true);
 
@@ -780,15 +881,6 @@ public class Player : Character
             StartCoroutine(Tween.New(new Vector3(-4.25f, 0, 0), card.transform, 0.2f));
 
             yield return new WaitForSeconds(0.1f);
-
-            if (drawPile.Count == 0)
-            {
-                CombatHandler.drawPile.transform.Find("Card").gameObject.SetActive(false);
-            }
-            else
-            {
-                CombatHandler.drawPile.transform.Find("Card").gameObject.SetActive(false);
-            }
 
             StartCoroutine(Tween.New(Quaternion.Euler(0, 0, 0), card.transform, 0.15f));
 
@@ -806,7 +898,7 @@ public class Player : Character
 
         if (cardsUsed > 1)
         {
-            exhaustionChance = Mathf.Clamp(exhaustionChance + 1, 0, 20);
+            exhaustionChance = Mathf.Clamp(exhaustionChance + 2, 0, 20);
 
             CombatHandler.exhaustionDC.GetComponent<TextMeshProUGUI>().text = "Exhaustion\nRoll " + exhaustionChance + " or higher.";
 
@@ -843,8 +935,9 @@ public class Player : Character
             otherCard.Organize(hand, hand.IndexOf(otherCard));
         }
 
-        card.gameObject.SetActive(false);
-        Destroy(card.gameObject);
+        discardObjects.Add(card);
+
+        StartCoroutine(card.Remove());
     }
 
     public List<Card> GetHand()
@@ -908,6 +1001,8 @@ public class Enemy : Character
     public override void New(int health, Vector2Int gridPos, string name, Sprite sprite, Dictionary<string, int> drawPile)
     {
         base.New(health, gridPos, name, sprite, drawPile);
+        transform.Find("StatusContainer").localPosition = new Vector3(0, 1.5f, -1);
+
         DrawCard(5);
     }
 
@@ -920,7 +1015,7 @@ public class Enemy : Character
             yield break;
         }
 
-        if (Random.Range(1, 5) == 4)
+        if ((Random.Range(1, 11) == 1 || Random.Range(1, 5) == 1 && hand.Count <= 2) && drawPile.Count > 0 )
         {
             DrawCard(2);
 
@@ -1250,6 +1345,7 @@ public class RangedTarget : TargetType
     }
 }
 
+
 //----------Effect Types----------\\
 
 public class Effect
@@ -1396,13 +1492,13 @@ public class PokeVFX : Effect
         Vector3 targetPos = new Vector3(target.transform.position.x, target.transform.position.y + 0.75f, -2);
         obj.transform.right = new Vector3(user.transform.position.x, user.transform.position.y + 0.75f, -2) - targetPos;
 
-        user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), spriteRenderer, 0.1f));
-        user.StartCoroutine(Tween.New(targetPos, obj.transform, 0.35f));
+        user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), spriteRenderer, 0.2f));
+        user.StartCoroutine(Tween.New(targetPos, obj.transform, 0.6f));
 
         yield return new WaitForSeconds(0.3f);
 
-        user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), spriteRenderer, 0.2f));
-        VisualEffectHandler.Destroy(obj, 0.3f);
+        user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), spriteRenderer, 0.3f));
+        VisualEffectHandler.Destroy(obj, 0.35f);
     }
 }
 
@@ -1440,6 +1536,14 @@ public class SelfApplyAnimVFX : Effect//Realy complex code, this one is.
         VisualEffectHandler.MakeObject(spriteID, user.transform.position + new Vector3(0, 0.75f, -0.5f));
     }
 }
+
+public class MoveUser : Effect
+{
+    public MoveUser() : base(0)
+    {
+
+    }
+}
 //----------Status Effects----------\\
 
 public class StatusEffect
@@ -1452,11 +1556,19 @@ public class StatusEffect
 
     public List<string> triggers;
 
+    public GameObject effectVisual;
+
     public StatusEffect(string type, Character target, List<string> triggers)
     {
         this.type = type;
         this.target = target;
         this.triggers = triggers;
+    }
+
+    protected void UpdateAmount()
+    {
+        if (effectVisual == null) {return;}
+        effectVisual.transform.Find("Canvas").Find("Amount").GetComponent<TextMeshProUGUI>().text = duration.ToString();
     }
 
     public virtual void Stack(int amount)
@@ -1483,11 +1595,13 @@ public class Guarded : StatusEffect
     public Guarded(int duration, Character target) : base("Guarded", target, new List<string> { "ModifyTakenDamage", "ReduceOnTurnStart" })
     { 
         this.duration = duration;
+        UpdateAmount();
     }
 
     public override bool Reduce()
     {
         duration--;
+        UpdateAmount();
 
         Debug.Log("Guarded decreased, new value: " + duration);
 
@@ -1504,8 +1618,9 @@ public class Guarded : StatusEffect
 
     public override void Stack(int duration)
     {
-        Debug.Log("Stacked Guarded, new value: " + this.duration);
         this.duration += duration;
+        Debug.Log("Stacked Guarded, new value: " + this.duration);
+        UpdateAmount();
     }
 
     public override int Activate(int damage)
@@ -1524,6 +1639,7 @@ public class Contagion : StatusEffect
     public Contagion(int duration, Character target) : base("Contagion", target, new List<string> { "ModifyTakenDamage",  "ReduceOnTurnStart" })
     {
         this.duration = duration;
+        UpdateAmount();
     }
 
     private void Explode()
@@ -1556,6 +1672,7 @@ public class Contagion : StatusEffect
     public override bool Reduce()
     {
         duration++;
+        UpdateAmount();
 
         Debug.Log("Increased contagion, new value: " + duration);
 
@@ -1572,6 +1689,7 @@ public class Contagion : StatusEffect
     public override void Stack(int duration)
     {
         this.duration += duration;
+        UpdateAmount();
         Debug.Log("Stacked contagion, new value: " + this.duration);
 
         if (this.duration >= 4)
@@ -1601,6 +1719,7 @@ public class Poison : StatusEffect
     public override bool Reduce()
     {
         duration--;
+        UpdateAmount();
 
         target.TakeDamage(Random.Range(1, 5));
 
@@ -1619,8 +1738,9 @@ public class Poison : StatusEffect
 
     public override void Stack(int duration)
     {
-        Debug.Log("Stacked Poison, new value: " + this.duration);
         this.duration += duration;
+        Debug.Log("Stacked Poison, new value: " + this.duration);
+        UpdateAmount();
     }
 
     public override string ToString()
@@ -1645,7 +1765,7 @@ public class Oozed : StatusEffect
     public override bool Reduce()
     {
         duration--;
-
+        UpdateAmount();
         Debug.Log("Oozed decreased, new duration: " + duration);
 
         if (duration <= 0)
@@ -1661,8 +1781,9 @@ public class Oozed : StatusEffect
 
     public override void Stack(int duration)
     {
-        Debug.Log("Stacked Oozed, new value: " + this.duration);
         this.duration += duration;
+        Debug.Log("Stacked Oozed, new value: " + this.duration);
+        UpdateAmount();
     }
 
     public override string ToString()
@@ -1702,7 +1823,7 @@ public class Attack
     }
 }
 
-public class BasicAttack : Attack
+public class BasicAttack : Attack//simple relationship between the target and effects, only communication is who is being effected.
 {
     public BasicAttack(Dictionary<TargetType, List<Effect>> targetEffects) : base(targetEffects, 0) { }
 
@@ -1732,7 +1853,7 @@ public class BasicAttack : Attack
                     }
                 }
 
-                if (waitTime > 0)
+                if (waitTime > 0 && character != null)
                 {
                     yield return new WaitForSeconds(waitTime);
                 }
@@ -1748,6 +1869,9 @@ public class Card : MonoBehaviour
     private List<GameObject> chainObjects = new List<GameObject>();
 
     private GameObject spikePrefab;
+
+    private Transform frontCard;
+    private Transform backCard;
 
     private Dictionary<string, string> cardInfo = new Dictionary<string, string>();    
 
@@ -1780,7 +1904,7 @@ public class Card : MonoBehaviour
         this.cardInfo = cardInfo;
         this.character = character;
 
-        transform.position = new Vector3(-5, -3.8f, 0);
+        transform.position = new Vector3(-5, -3.8f, 1);
         transform.rotation = Quaternion.Euler(0, 0, -10);
 
         gameObject.name = character.name + " " + cardInfo["Name"];
@@ -1789,7 +1913,8 @@ public class Card : MonoBehaviour
 
         button.onClick.AddListener(() => StartCoroutine(Activate()));
 
-        Transform frontCard = transform.Find("Root").Find("FrontCard");
+        frontCard = transform.Find("Root").Find("FrontCard");
+        backCard = transform.Find("Root").Find("BackCard");
 
         TextMeshProUGUI nameText = frontCard.Find("NameCanvas").Find("Name").GetComponent<TextMeshProUGUI>();
         TextMeshProUGUI descriptionText = frontCard.Find("DescriptionCanvas").Find("Description").GetComponent<TextMeshProUGUI>();
@@ -1948,6 +2073,32 @@ public class Card : MonoBehaviour
 
         gameObject.SetActive(false);
         Destroy(gameObject, 0.8f);
+    }
+
+    public IEnumerator Remove()
+    {
+        StartCoroutine(Tween.New(transform.position + new Vector3(0, 2.5f, 0), transform, 0.1f));
+
+        yield return new WaitForSeconds(0.1f);
+
+        StartCoroutine(Tween.New(transform.position + new Vector3(15, -2, 0), transform, 0.5f));
+        StartCoroutine(Tween.New(Quaternion.Euler(0, 0, -30), transform, 0.5f));
+        StartCoroutine(Tween.New(new Color32(200, 200, 200, 0), frontCard.GetComponent<SpriteRenderer>(), 0.5f));
+
+        Destroy(backCard.gameObject);
+    }
+
+    public IEnumerator Return()
+    {
+        transform.position = new Vector3(13.5f, -2.5f, -1);
+        StartCoroutine(Tween.New(new Vector3(-10, -2.5f, -0.5f), transform, 0.5f));
+        StartCoroutine(Tween.New(Quaternion.Euler(0, 0, 30), transform, 0.5f));
+        StartCoroutine(Tween.New(new Color32(200, 200, 200, 255), frontCard.GetComponent<SpriteRenderer>(), 0.2f));
+
+        yield return new WaitForSeconds(0.3f);
+
+        StartCoroutine(Tween.New(new Color32(200, 200, 200, 0), frontCard.GetComponent<SpriteRenderer>(), 0.2f));
+        Destroy(gameObject, 0.3f);
     }
 }
 

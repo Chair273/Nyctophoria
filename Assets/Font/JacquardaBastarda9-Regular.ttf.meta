@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 752bfe1e86b404b9c9b148b88b151141
+guid: 0152bf43cc6304e7282803534bd095a4
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Jacquard 12 Charted
+  - Jacquarda Bastarda 9
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0

@@ -3,9 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using Random = UnityEngine.Random;
 using UnityEngine.UI;
 using System.Reflection;
+
+using Random = UnityEngine.Random;
 
 //----------Game----------\\
 
@@ -261,6 +262,7 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
         //targetTypes initialization
         targetTypes["ForwardHit"] = new BasicTarget(new List<int> { 0 }, new List<int> { 1 });
         targetTypes["DiagonalHit"] = new BasicTarget(new List<int> { -1, 1 }, new List<int> { 1 });
+        targetTypes["AdjacentHit"] = new BasicTarget(new List<int> { -1, 1 }, new List<int> { 0 });
         targetTypes["SelfEffect"] = new BasicTarget(new List<int> { 0 }, new List<int> { 0 }, new List<int> {-1, 0, 1});
         targetTypes["DiagonalSelfChoice"] = new RangedTarget(new List<int> { -1, 1 }, new List<int> { 0 });
         targetTypes["SmallRangedAttack"] = new RangedTarget(new List<int> {-1, 0, 1}, new List<int> { 1 });
@@ -315,6 +317,20 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
             {"Description",  0.1f}
         }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
         {
+            {targetTypes["ForwardHit"], new List<Effect> { new ApplyStatus("Contagion", 1) } },
+        }));
+
+        MakeCardIndex(new Dictionary<string, string>()
+        {
+            {"Name", "ContagionSpread"},
+            {"Description", "*The user's contagion becomes too much to bear, infesting those nearby.\n*You aren't supposed to be here."}
+        }, new Dictionary<string, float>
+        {
+            {"Name", 0.15f},
+            {"Description",  0.15f}
+        }, new BasicAttack(new Dictionary<TargetType, List<Effect>>
+        {
+            {targetTypes["AdjacentHit"], new List<Effect> { new ApplyStatus("Contagion", 2) } },
             {targetTypes["ForwardHit"], new List<Effect> { new ApplyStatus("Contagion", 1) } },
         }));
 
@@ -492,6 +508,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
                 if (!status.Reduce())
                 {
                     i--;
+                    OrganizeStatusEffects();
                 }
             }
         }
@@ -517,13 +534,16 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
         StartCoroutine(Tween.New(CombatHandler.getNewPos(moveTo), transform, 0.2f));
         gridPos = moveTo;
+
         if (gridPos.y >= 3)
         {
             transform.localScale = new Vector3(-1, 1, 1);
+            statusContainer.localScale = new Vector3(-1, 1, 1);
         }
         else
         {
             transform.localScale = new Vector3(1, 1, 1);
+            statusContainer.localScale = new Vector3(1, 1, 1);
         }
     }
 
@@ -571,13 +591,21 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         string effectName = status.type;
         bool found = false;
 
-        foreach (StatusEffect i in statusEffects)
+        int i = 0;
+        while (i < statusEffects.Count)
         {
-            if (i.type.Equals(effectName))
+            if (statusEffects[i].type.Equals(effectName))
             {
-                i.Stack(status.duration);
+                if (!statusEffects[i].Stack(status.duration))
+                {
+                    OrganizeStatusEffects();
+                    return;
+                }
+               
                 found = true;
+                break;
             }
+            i++;
         }
 
         if (!found)
@@ -669,6 +697,16 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
     public string GetName()// returns the character's name
     {
         return name;
+    }
+
+    private void OnMouseEnter()
+    {
+        statusContainer.gameObject.SetActive(true);
+    }
+
+    private void OnMouseExit()
+    {
+        statusContainer.gameObject.SetActive(false);
     }
 }
 
@@ -796,7 +834,7 @@ public class Player : Character
                 StartCoroutine(discardObjects[0].Return());
                 discardObjects.RemoveAt(0);
 
-                yield return new WaitForSeconds(0.1f / amount);
+                yield return new WaitForSeconds(0.2f / amount);
             }
         }
 
@@ -1276,13 +1314,13 @@ public class RangedTarget : TargetType
     {
         if (userPos.x == 0)//if the user is a player
         {
-            yield return new WaitUntil(() => !Input.GetMouseButtonDown(0));
+            yield return new WaitUntil(() => !Input.GetMouseButton(0));
 
             GameObject chainObject = MonoBehaviour.Instantiate(Resources.Load<GameObject>("CombatPrefabs/Gui/Spike"), new Vector3(0, 0, -2), Quaternion.identity);
             Vector3 closestPos = new Vector3(-100, 0, 0);
             Vector2Int closestGrid = new Vector2Int();
 
-            while (!Input.GetMouseButtonDown(0))
+            while (!Input.GetMouseButton(0))
             {
                 Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 mouseWorldPos.z = -2;
@@ -1492,13 +1530,16 @@ public class PokeVFX : Effect
         Vector3 targetPos = new Vector3(target.transform.position.x, target.transform.position.y + 0.75f, -2);
         obj.transform.right = new Vector3(user.transform.position.x, user.transform.position.y + 0.75f, -2) - targetPos;
 
-        user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), spriteRenderer, 0.2f));
-        user.StartCoroutine(Tween.New(targetPos, obj.transform, 0.6f));
+        user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), spriteRenderer, 0.25f));
+        user.StartCoroutine(Tween.New(targetPos, obj.transform, 0.8f));
 
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(0.4f);
 
-        user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), spriteRenderer, 0.3f));
-        VisualEffectHandler.Destroy(obj, 0.35f);
+        user.StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), spriteRenderer, 0.4f));
+
+        yield return new WaitForSeconds(0.5f);
+
+        VisualEffectHandler.Destroy(obj);
     }
 }
 
@@ -1571,8 +1612,9 @@ public class StatusEffect
         effectVisual.transform.Find("Canvas").Find("Amount").GetComponent<TextMeshProUGUI>().text = duration.ToString();
     }
 
-    public virtual void Stack(int amount)
+    public virtual bool Stack(int amount)
     {
+        return true;
     }
 
     public virtual void Activate()
@@ -1616,11 +1658,12 @@ public class Guarded : StatusEffect
         return true;
     }
 
-    public override void Stack(int duration)
+    public override bool Stack(int duration)
     {
         this.duration += duration;
         Debug.Log("Stacked Guarded, new value: " + this.duration);
         UpdateAmount();
+        return true;
     }
 
     public override int Activate(int damage)
@@ -1645,28 +1688,12 @@ public class Contagion : StatusEffect
     private void Explode()
     {
         Debug.Log(target.name + "'s infection progressed to its final stage.");
-        List<int> health = target.TakeDamage(Random.Range(1, 11));
+        int damage = Random.Range(2, 13);//2d6
 
-        for (int i = -1; i < 3; i += 2)
-        {
-            Character newTarget = CombatHandler.GetCharacter(target.GetGridPos() + new Vector2Int(0, i));
-
-            if (newTarget != null)
-            {
-                newTarget.StartCoroutine(AttackHandler.attacks["Contagion"].Activate(target));
-
-                if (health[0] <= 0)
-                {
-                    target.TakeDamage(Random.Range(1, 8));
-                }
-                else
-                {
-                    target.TakeDamage(Random.Range(1, 4));
-                }
-            }
-        }
+        target.StartCoroutine(AttackHandler.attacks["ContagionSpread"].Activate(target));
 
         target.RemoveStatus(this);
+        target.TakeDamage(damage);
     }
 
     public override bool Reduce()
@@ -1686,7 +1713,7 @@ public class Contagion : StatusEffect
         return true;
     }
 
-    public override void Stack(int duration)
+    public override bool Stack(int duration)
     {
         this.duration += duration;
         UpdateAmount();
@@ -1695,7 +1722,10 @@ public class Contagion : StatusEffect
         if (this.duration >= 4)
         {
             Explode();
+            return false;
         }
+
+        return true;
     }
 
     public override int Activate(int damage)
@@ -1736,11 +1766,13 @@ public class Poison : StatusEffect
         return true;
     }
 
-    public override void Stack(int duration)
+    public override bool Stack(int duration)
     {
         this.duration += duration;
         Debug.Log("Stacked Poison, new value: " + this.duration);
         UpdateAmount();
+
+        return true;
     }
 
     public override string ToString()
@@ -1779,11 +1811,13 @@ public class Oozed : StatusEffect
         return true;
     }
 
-    public override void Stack(int duration)
+    public override bool Stack(int duration)
     {
         this.duration += duration;
         Debug.Log("Stacked Oozed, new value: " + this.duration);
         UpdateAmount();
+
+        return true;
     }
 
     public override string ToString()
@@ -2077,11 +2111,11 @@ public class Card : MonoBehaviour
 
     public IEnumerator Remove()
     {
-        StartCoroutine(Tween.New(transform.position + new Vector3(0, 2.5f, 0), transform, 0.1f));
+        StartCoroutine(Tween.New(transform.position + new Vector3(0, 2.5f, 0), transform, 0.15f));
 
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(0.15f);
 
-        StartCoroutine(Tween.New(transform.position + new Vector3(15, -2, 0), transform, 0.5f));
+        StartCoroutine(Tween.New(new Vector3(13.5f, -2.5f, -1), transform, 0.5f));
         StartCoroutine(Tween.New(Quaternion.Euler(0, 0, -30), transform, 0.5f));
         StartCoroutine(Tween.New(new Color32(200, 200, 200, 0), frontCard.GetComponent<SpriteRenderer>(), 0.5f));
 
@@ -2098,7 +2132,10 @@ public class Card : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
 
         StartCoroutine(Tween.New(new Color32(200, 200, 200, 0), frontCard.GetComponent<SpriteRenderer>(), 0.2f));
-        Destroy(gameObject, 0.3f);
+
+        yield return new WaitForSeconds(0.3f);
+
+        Destroy(gameObject);
     }
 }
 

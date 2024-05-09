@@ -139,7 +139,7 @@ public class CombatHandler : MonoBehaviour
                     Debug.Log(character.GetName() + "'s turn.");
 
                     yield return StartCoroutine(character.Turn(round == 1));
-                    yield return new WaitForSeconds(1);
+                    yield return new WaitForSeconds(0.5f);
 
                     bool foundPlayer = false;
                     bool foundEnemy = false;
@@ -461,6 +461,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         {
             {"Guarded", Sprite.Create(Resources.Load<Texture2D>("StatusEffectSprites/Guarded"), new Rect(0, 0, 49, 49), new Vector2(0.5f, 0.5f)) },
             {"Contagion", Sprite.Create(Resources.Load<Texture2D>("StatusEffectSprites/Contagion"), new Rect(0, 0, 49, 49), new Vector2(0.5f, 0.5f)) },
+            {"Poison", Sprite.Create(Resources.Load<Texture2D>("StatusEffectSprites/Poison"), new Rect(0, 0, 49, 49), new Vector2(0.5f, 0.5f)) }
         };
 
         statusEffects = new List<StatusEffect>();
@@ -947,6 +948,7 @@ public class Player : Character
             if (random == 1 || random < exhaustionChance && random != 20)
             {
                 exhaustedLastTurn = true;
+                Debug.Log(name + " exhausted their " + card.GetName() + " card.");
 
                 StartCoroutine(card.Burn());
 
@@ -1053,7 +1055,7 @@ public class Enemy : Character
             yield break;
         }
 
-        if ((Random.Range(1, 11) == 1 || Random.Range(1, 5) == 1 && hand.Count <= 2) && drawPile.Count > 0 )
+        if (Random.Range(1, 5) == 1 && hand.Count <= 3 && drawPile.Count >= 2)
         {
             DrawCard(2);
 
@@ -1067,7 +1069,9 @@ public class Enemy : Character
 
         bool usedCard = true;
 
-        while (usedCard == true && hand.Count > 0 && Random.Range(1, 5) != 1) //they end their turn under 1 of 3 conditions, 1: if they werent able to use the last card they selected, 2: if they ran out of cards, 3:random 25% chance
+        int bravery = Random.Range(2, 21); //end turn if exaustion is above this
+
+        while (usedCard == true && hand.Count > 0 && !(Random.Range(1, 3) == 1 && exhaustionChance > bravery)) //they end their turn under 1 of 3 conditions, 1: if they werent able to use the last card they selected, 2: if they ran out of cards, 3:random 50% chance after exeeding bravery
         {
             usedCard = false;
 
@@ -1121,14 +1125,29 @@ public class Enemy : Character
                 StartCoroutine(AttackHandler.attacks[randomCard].Activate(this));
                 hand.Remove(randomCard);
 
-                if (!discardPile.ContainsKey(randomCard))
-                {
-                    discardPile.Add(randomCard, 0);
-                }
-
-                discardPile[randomCard]++;
-
                 usedCard = true;
+                cardsUsed++;
+                exhaustionChance = Mathf.Clamp(exhaustionChance + 2, 0, 20);
+
+                if (Random.Range(1, 21) < exhaustionChance)
+                {
+                    exhaustedLastTurn = true;
+                    Debug.Log(name + " exhausted their " + randomCard + " card.");
+
+                }
+                else 
+                {
+                    if (!discardPile.ContainsKey(randomCard))
+                    {
+                        discardPile.Add(randomCard, 1);
+                    }
+                    else
+                    {
+                        discardPile[randomCard]++;
+                    }
+
+                    
+                }
 
                 yield return new WaitForSeconds(1);
 
@@ -1152,7 +1171,24 @@ public class Enemy : Character
 
                         StartCoroutine(AttackHandler.attacks[randomCard].Activate(this));
                         hand.Remove(nextCard);
-                        discardPile[nextCard]++;
+
+                        exhaustionChance = Mathf.Clamp(exhaustionChance + 2, 0, 20);
+
+                        if (Random.Range(1, 21) < exhaustionChance)
+                        {
+                            exhaustedLastTurn = true;
+                            Debug.Log(name + " exhausted their " + randomCard + " card.");
+
+                        }
+                        else
+                        {
+                            if (!discardPile.ContainsKey(randomCard))
+                            {
+                                discardPile.Add(randomCard, 0);
+                            }
+
+                            discardPile[randomCard]++;
+                        }
 
                         random = Random.Range(0, 2);
 

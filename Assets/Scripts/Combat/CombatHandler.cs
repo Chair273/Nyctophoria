@@ -13,6 +13,8 @@ using Object = UnityEngine.Object;
 
 public class CombatHandler : MonoBehaviour
 {
+    public bool LowGraphicsMode;
+
     public static Button endTurnButton;
 
     public static GameObject preTurnGui;
@@ -44,6 +46,12 @@ public class CombatHandler : MonoBehaviour
         itemGui = Gui.Find("Items").Find("Main").gameObject;
 
         movementGui = Gui.Find("Movement").Find("Movement").GetComponent<TextMeshProUGUI>();
+
+        if (LowGraphicsMode)
+        {
+            Gui.Find("Background").Find("Fog").gameObject.SetActive(false);
+            Gui.Find("Background").Find("Void").Find("Fog").gameObject.SetActive(false);
+        }
 
         AttackHandler.Start();
 
@@ -506,6 +514,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
     protected GameObject effectTemplate;
 
     protected Transform statusContainer;
+    protected Transform diceContainer;
 
     protected List<StatusEffect> statusEffects;//list of status effects applied to this character
 
@@ -532,6 +541,8 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         statusEffects = new List<StatusEffect>();
 
         statusContainer = transform.Find("StatusContainer");
+        diceContainer = transform.Find("DiceContainer");
+
         effectTemplate = Resources.Load<GameObject>("CombatPrefabs/GUI/StatusEffect");
 
         discardPile = new Dictionary<string, int>();
@@ -612,10 +623,12 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         if (gridPos.y >= 3)
         {
             statusContainer.localScale = new Vector3(-1, 1, 1);
+            diceContainer.localScale = new Vector3(-1, 1, 1);
         }
         else
         {
             statusContainer.localScale = new Vector3(1, 1, 1);
+            diceContainer.localScale = new Vector3(1, 1, 1);
         }
     }
 
@@ -1767,7 +1780,10 @@ public class DamageDice : Effect
 
             for (int i = 0; i < amount; i++)
             {
-                damage += Random.Range(1, faces + 1);
+                int currentDamage = Random.Range(1, faces + 1);
+                damage += currentDamage;
+
+                new DiceVFX(target, target.transform.Find("DiceContainer"), currentDamage, faces);
             }
 
             List<int> health = target.TakeDamage(damage);
@@ -1912,7 +1928,7 @@ public class PokeVFX : Effect
 
     private IEnumerator Poke(Vector3 target, Character user)
     {
-        GameObject obj = VisualEffectHandler.MakeObject(spriteID, new Vector3(user.transform.position.x, user.transform.position.y + 0.75f * user.transform.localScale.y, -2));
+        GameObject obj = VFXHandler.MakeObject(spriteID, new Vector3(user.transform.position.x, user.transform.position.y + 0.75f * user.transform.localScale.y, -2));
         SpriteRenderer spriteRenderer = obj.transform.GetComponent<SpriteRenderer>();
 
         Color32 baseColor = spriteRenderer.color;
@@ -1964,7 +1980,7 @@ public class AnimVFX : Effect//Realy complex code, this one is.
 
         foreach (Character target in targetList)
         {
-            GameObject vfxObject = VisualEffectHandler.MakeObject(spriteID, target.transform.position + new Vector3(0, 0.75f * target.transform.localScale.y, -0.5f));
+            GameObject vfxObject = VFXHandler.MakeObject(spriteID, target.transform.position + new Vector3(0, 0.75f * target.transform.localScale.y, -0.5f));
             vfxObject.transform.localScale = target.transform.localScale;
 
             if (vfxObject.GetComponent<Animator>() == null)
@@ -1973,6 +1989,52 @@ public class AnimVFX : Effect//Realy complex code, this one is.
             }
         }
     }
+}
+
+public class DiceVFX : Effect //While this is an effect, it is intended to only be used by other effects, not attacks.
+{
+    private int faces;
+
+    private static List<AudioClip> rollNoises = new List<AudioClip> {Resources.Load<AudioClip>("CombatPrefabs/Sounds/SFX/Dice_1"), Resources.Load<AudioClip>("CombatPrefabs/Sounds/SFX/Dice_2"), Resources.Load<AudioClip>("CombatPrefabs/Sounds/SFX/Dice_3")};
+
+    public DiceVFX(Character user, Transform parent, int damage, int faces) : base(0)
+    {
+        user.StartCoroutine(Activate(parent, damage));
+
+        this.faces = faces;
+    }
+
+    private IEnumerator Activate(Transform parent, int damage)
+    {
+        WaitForEndOfFrame waitTime = new WaitForEndOfFrame();
+
+        GameObject diceObject = Object.Instantiate(Resources.Load<GameObject>("CombatPrefabs/VFX/DamageDice"), parent);
+        AudioSource diceAudio = diceObject.transform.GetComponent<AudioSource>();
+
+        diceAudio.clip = rollNoises[Random.Range(0, 3)];
+        diceAudio.Play();
+
+        TextMeshProUGUI text = diceObject.transform.Find("Text").GetComponent<TextMeshProUGUI>();
+
+        float endTime = Time.time + 0.5f;
+
+        while (Time.time < endTime)
+        {
+            text.text = Random.Range(1, faces + 1).ToString();
+
+            yield return waitTime;
+
+        }
+
+        yield return waitTime;
+
+        text.text = damage.ToString();
+
+        yield return new WaitForSecondsRealtime(2.5f);
+
+        Object.Destroy(diceObject);
+    }
+
 }
 
 //----------Status Effects----------\\
@@ -2099,12 +2161,17 @@ public class Contagion : StatusEffect
     private void Explode()
     {
         Debug.Log(target.name + "'s infection progressed to its final stage.");
-        int damage = Random.Range(2, 13);//2d6
+        for (int i = 0; i < 2; i++)
+        {
+            int damage = Random.Range(1, 7);
+
+            new DiceVFX(target, target.transform.Find("DiceContainer"), damage, 6);
+            target.TakeDamage(damage);
+        }
 
         target.StartCoroutine(AttackHandler.attacks["ContagionSpread"].Activate(target));
 
         target.RemoveStatus(this);
-        target.TakeDamage(damage);
     }
 
     public override bool Reduce()
@@ -2180,7 +2247,11 @@ public class Poison : StatusEffect
         duration--;
         UpdateAmount();
 
-        target.TakeDamage(Random.Range(1, 5));
+        int damage = Random.Range(1, 5);
+
+        target.TakeDamage(damage);
+
+        new DiceVFX(target, target.transform.Find("DiceContainer"), damage, 4);
 
         Debug.Log("Poison decreased, new duration: " + duration);
 
@@ -2703,7 +2774,7 @@ public class Tween
     }
 }
 
-public class VisualEffectHandler : MonoBehaviour
+public class VFXHandler : MonoBehaviour
 {
     private static Dictionary<string, GameObject> VFXSprites = new Dictionary<string, GameObject>
     {
@@ -2726,9 +2797,8 @@ public class VisualEffectHandler : MonoBehaviour
         }
     }
 
-    private static IEnumerator DestroyCoroutine(GameObject obj, float waitTime)
+    public static GameObject InstantiatePrefab(GameObject prefab)
     {
-        yield return new WaitForSecondsRealtime(waitTime);
-        Destroy(obj);
+        return Instantiate(prefab);
     }
 }

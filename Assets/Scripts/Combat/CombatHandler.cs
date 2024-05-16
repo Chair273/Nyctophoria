@@ -6,16 +6,16 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Reflection;
 using UnityEngine.SceneManagement;
+using UnityEngine.Rendering;
 
 using Random = UnityEngine.Random;
 using Object = UnityEngine.Object;
+using UnityEngine.Rendering.Universal;
 
 //----------Game----------\\
 
 public class CombatHandler : MonoBehaviour
 {
-    public bool LowGraphicsMode;
-
     public static Button endTurnButton;
 
     public static GameObject preTurnGui;
@@ -23,15 +23,22 @@ public class CombatHandler : MonoBehaviour
     public static GameObject drawPile;
     public static GameObject itemGui;
 
+    public static TextMeshProUGUI movementGui;
+
+    public bool LowGraphicsMode;
+
     private static Character currentCharacter;
+
+    private static List<Character> participants = new List<Character>();
 
     private Transform Gui;
 
-    public static TextMeshProUGUI movementGui;
-
     private bool gameEnded = false;
 
-    private static List<Character> participants = new List<Character>();
+    private static int totalPlayerHealth;
+
+    private static VolumeProfile volumeProfile;
+
     private List<Character> turnOrder = new List<Character>();
 
     private static float[,] xReference = { { -0.8f, 0.5f, 1.9f, 3.1f, 4.5f, 5.8f }, { 0.2f, 1.1f, 2.1f, 2.9f, 3.9f, 4.8f } }; //used to convert a grid position to a world position, first index is the valid player x positions, second index is the valid enemy x positions
@@ -48,11 +55,15 @@ public class CombatHandler : MonoBehaviour
 
         movementGui = Gui.Find("Movement").Find("Movement").GetComponent<TextMeshProUGUI>();
 
+        volumeProfile = Gui.Find("PostProcessing").GetComponent<Volume>().profile;
+
         if (LowGraphicsMode)
         {
             Gui.Find("Background").Find("Fog").gameObject.SetActive(false);
             Gui.Find("Background").Find("Void").Find("Fog").gameObject.SetActive(false);
         }
+
+        totalPlayerHealth = 0;
 
         AttackHandler.Start();
 
@@ -69,6 +80,8 @@ public class CombatHandler : MonoBehaviour
             { {"Spear Strike", 4 }, {"Lunge", 3 }, {"Guard", 2 } }, new Dictionary<string, int>//the cards they have acess to, and the amount of each.
             { { "Placebo", 1 } });//the items they have, and the amount of each.
 
+            totalPlayerHealth += 40;
+
             participants.Add(OAK);
 
             GameObject PCObject = Instantiate(prefab, new Vector3Int(), Quaternion.identity);//Plague Caster
@@ -79,6 +92,8 @@ public class CombatHandler : MonoBehaviour
             PC.New(30, new Vector2Int(0, Random.Range(0, 3)), "Plague Caster", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/PlagueCaster"), new Dictionary<string, int>
             { {"Summon Bees", 3 }, {"Contagion", 2}, {"Lesser Ooze", 2} }, new Dictionary<string, int>
             { { "Placebo", 2 } });
+
+            totalPlayerHealth += 30;
 
             participants.Add(PC);
         }
@@ -186,6 +201,25 @@ public class CombatHandler : MonoBehaviour
             0.095f * Mathf.Pow(xPos - 2.5f, 2) - 1.25f : //player equation
             0.085f * Mathf.Pow(xPos - 2.5f, 2) + 0.4f, //enemy equation
             moveTo.x == 0 ? -3: -1);
+    }
+
+    public static void UpdateHealthVignette()
+    {
+        float currentHealth = 0f;
+
+        foreach (Character character in participants)
+        {
+            if (character.GetGridPos().x == 0)
+            {
+                currentHealth += character.GetHealth();
+            }
+        }
+
+        Vignette vignette;
+
+        if (!volumeProfile.TryGet(out vignette)) throw new System.NullReferenceException(nameof(vignette));
+
+        vignette.intensity.Override(0.6f - (currentHealth / totalPlayerHealth) / 2);
     }
 
     IEnumerator Combat()
@@ -592,6 +626,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
                 }
             }
         }
+
         yield return new WaitForFixedUpdate();
     }
 
@@ -643,7 +678,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
     }
 
 
-    public List<int> TakeDamage(int damage)//updates the character's health, and destroys them if it is at or below 0
+    public virtual List<int> TakeDamage(int damage)//updates the character's health, and destroys them if it is at or below 0
     {
         foreach (StatusEffect status in statusEffects)
         {
@@ -917,6 +952,13 @@ public class Player : Character
 
         StartCoroutine(base.Turn(first));//trigger any begining-of-turn status effects
 
+        if (drawPile.Count == 0 && discardPile.Count == 0 && hand.Count == 0)
+        {
+            int damage = Random.Range(1, 11);
+            TakeDamage(damage);
+            new DiceVFX(this, transform.Find("DiceContainer"), damage, 10);
+        }
+
         if (turnStage == 2)//if the player did not forfeit their turn (didnt fold)
         {
             if (!exhaustedLastTurn)
@@ -974,6 +1016,15 @@ public class Player : Character
         CombatHandler.drawPile.GetComponent<Animator>().SetBool("Open", false);
 
         yield return new WaitForSeconds(1);
+    }
+
+    public override List<int> TakeDamage(int damage)
+    {
+        List<int> returnVal = base.TakeDamage(damage);
+
+        CombatHandler.UpdateHealthVignette();
+
+        return returnVal;
     }
 
     protected override IEnumerator Die()
@@ -1215,6 +1266,13 @@ public class Enemy : Character
     public override IEnumerator Turn(bool first)
     {
         StartCoroutine(base.Turn(first));
+
+        if (drawPile.Count == 0 && discardPile.Count == 0 && hand.Count == 0)
+        {
+            int damage = Random.Range(1, 11);
+            TakeDamage(damage);
+            new DiceVFX(this, transform.Find("DiceContainer"), damage, 10);
+        }
 
         if (health <= 0)
         {
@@ -1573,7 +1631,7 @@ public class RangedTarget : TargetType
                 {
                     Character newTarget = CombatHandler.GetCharacter(new Vector2Int(0, userPos.y + offset));
 
-                    if (target == null || newTarget != null && newTarget.GetHealth() < lowestHealth)
+                    if (newTarget != null && newTarget.GetHealth() < lowestHealth)
                     {
                         target = newTarget;
                         lowestHealth = newTarget.GetHealth();

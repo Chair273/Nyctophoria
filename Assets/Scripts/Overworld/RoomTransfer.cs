@@ -1,22 +1,21 @@
-using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class RoomTransfer : MonoBehaviour
 {
-    public Transform player;
-
-    private List<Vector3> roomPositions = new List<Vector3> { new Vector3(-2.82f, 19.53f, 0), new Vector3(-2.99f, 28.87f, 0), new Vector3(-3.08f, 38.57f, 0) };
-
-    private int roomNum = 0;
+    private Vector2Int roomIndex;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && roomIndex != null)
         {
-            roomNum++;
-
-            other.transform.position = roomPositions[roomNum];
-            Camera.main.transform.position = roomPositions[roomNum];
+            RoomGenerator.ChangeRoom(roomIndex);
         }
+    }
+
+    public void SetRoomIndex(Vector2Int roomIndex)
+    {
+        this.roomIndex = roomIndex;
+        transform.Find("Canvas").Find("Text").GetComponent<TextMeshProUGUI>().text = "(" + roomIndex.x + "," + roomIndex.y + ")";
     }
 }

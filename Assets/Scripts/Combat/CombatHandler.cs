@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Reflection;
+using UnityEngine.SceneManagement;
 
 using Random = UnityEngine.Random;
 using Object = UnityEngine.Object;
@@ -199,7 +200,11 @@ public class CombatHandler : MonoBehaviour
             {
                 character.RollSpeed();
 
+                Debug.Log(character.name + " speed: " + character.GetSpeed());
+
                 turnOrder.Add(character);
+
+                yield return new WaitForSeconds(0.5f);
             }
 
             {
@@ -220,12 +225,6 @@ public class CombatHandler : MonoBehaviour
                         index++;
                     }
                 }
-            }
-
-            foreach (Character character in turnOrder)
-            {
-                Debug.Log(character.name + " speed: " + character.GetSpeed());
-                yield return new WaitForSeconds(0.5f);
             }
 
             foreach (Character character in turnOrder)
@@ -272,6 +271,10 @@ public class CombatHandler : MonoBehaviour
         }
 
         Debug.Log("Combat Ended");
+
+        yield return new WaitForSeconds(5);
+
+        SceneManager.LoadScene("RoomGenerator");
     }
 }
 
@@ -635,6 +638,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
     public void RollSpeed()//rolls a random speed between 1 and 20, then adds the speedMod to that number
     {
         speed = Random.Range(1, 20) + speedMod;
+        new DiceVFX(this, transform.Find("DiceContainer"), speed - speedMod, 20);
         speedMod = 0;
     }
 
@@ -769,9 +773,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     public virtual void DrawCard(int amount) { }
 
-    public virtual void RemoveCard(Card card)
-    {
-    }
+    public virtual void RemoveCard(Card card) { }
 
 
     public int GetSpeed()//returns the character's speed
@@ -2009,7 +2011,10 @@ public class DiceVFX : Effect //While this is an effect, it is intended to only 
         WaitForEndOfFrame waitTime = new WaitForEndOfFrame();
 
         GameObject diceObject = Object.Instantiate(Resources.Load<GameObject>("CombatPrefabs/VFX/DamageDice"), parent);
+        Animator diceAnimator = diceObject.transform.GetComponent<Animator>();
         AudioSource diceAudio = diceObject.transform.GetComponent<AudioSource>();
+
+        diceAnimator.Play("Roll");
 
         diceAudio.clip = rollNoises[Random.Range(0, 3)];
         diceAudio.Play();
@@ -2026,11 +2031,13 @@ public class DiceVFX : Effect //While this is an effect, it is intended to only 
 
         }
 
+        diceAnimator.Play("Idle");
+
         yield return waitTime;
 
         text.text = damage.ToString();
 
-        yield return new WaitForSecondsRealtime(2.5f);
+        yield return new WaitForSecondsRealtime(Random.Range(1, 2.5f));
 
         Object.Destroy(diceObject);
     }
@@ -2495,12 +2502,12 @@ public class Card : MonoBehaviour
 
         gameObject.name = character.name + " " + cardInfo["Name"];
         animator = transform.GetComponent<Animator>();
-        button = transform.Find("Root").GetComponent<Button>();
-
-        button.onClick.AddListener(() => StartCoroutine(Activate()));
 
         frontCard = transform.Find("Root").Find("FrontCard");
         backCard = transform.Find("Root").Find("BackCard");
+
+        button = frontCard.GetComponent<Button>();
+        button.onClick.AddListener(() => StartCoroutine(Activate()));
 
         TextMeshProUGUI nameText = frontCard.Find("NameCanvas").Find("Name").GetComponent<TextMeshProUGUI>();
         TextMeshProUGUI descriptionText = frontCard.Find("DescriptionCanvas").Find("Description").GetComponent<TextMeshProUGUI>();

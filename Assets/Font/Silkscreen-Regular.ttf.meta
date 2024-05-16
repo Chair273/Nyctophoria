@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 0152bf43cc6304e7282803534bd095a4
+guid: 0f432a120367f4c89991b74effe1f74a
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Jacquarda Bastarda 9
+  - Silkscreen
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 3

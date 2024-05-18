@@ -11,6 +11,7 @@ using UnityEngine.Rendering;
 using Random = UnityEngine.Random;
 using Object = UnityEngine.Object;
 using UnityEngine.Rendering.Universal;
+using JetBrains.Annotations;
 
 //----------Game----------\\
 
@@ -51,8 +52,8 @@ public class CombatHandler : MonoBehaviour
     {
         Gui = transform.Find("Gui");
 
-        Gui.Find("Background").Find("Fog").gameObject.SetActive(!LowGraphicsMode);
-        Gui.Find("Background").Find("Void").Find("Fog").gameObject.SetActive(!LowGraphicsMode);
+        Gui.Find("Background").Find("Fog").gameObject.SetActive(LowGraphicsMode);
+        Gui.Find("Background").Find("Void").Find("Fog").gameObject.SetActive(LowGraphicsMode);
 
         movementGui = Gui.Find("Movement").Find("Movement").GetComponent<TextMeshProUGUI>();
         volumeProfile = Gui.Find("PostProcessing").GetComponent<Volume>().profile;
@@ -221,6 +222,7 @@ public class CombatHandler : MonoBehaviour
     protected IEnumerator Combat()
     {
         int round = 1;
+        bool loss = false;
 
         while (!gameEnded)//while there is at least 1 player and 1 enemy alive
         {
@@ -286,6 +288,10 @@ public class CombatHandler : MonoBehaviour
                     if (!foundPlayer || !foundEnemy)
                     {
                         gameEnded = true;
+                        if (!foundPlayer)
+                        {
+                            loss = true;
+                        }
                         break;
                     }
                 }
@@ -304,7 +310,16 @@ public class CombatHandler : MonoBehaviour
 
         yield return new WaitForSeconds(5);
 
-        SceneManager.LoadScene("RoomGenerator");
+        if (!loss)
+        {
+            SceneManager.LoadScene("RoomGenerator");
+        }
+        else
+        {
+            this.GetComponent<UIController>().FadeToWhite();
+            yield return new WaitForSeconds(5);
+            SceneManager.LoadScene("Title");
+        }
         SceneManager.UnloadSceneAsync("Combat");
     }
 }

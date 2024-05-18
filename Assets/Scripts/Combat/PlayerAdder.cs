@@ -10,6 +10,9 @@ public class PlayerAdder : MonoBehaviour
         {
             Manager.AddCharacter(characterName);
             Destroy(gameObject);
+
+            Vector2Int currentRoom = Manager.GetCurrentRoom();
+            Manager.GetArea()[currentRoom.x, currentRoom.y].RemoveObject(gameObject);
         }
     }
 }

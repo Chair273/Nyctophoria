@@ -125,6 +125,22 @@ public class RoomGenerator : MonoBehaviour
             room.AddDoors( GetDoors( room.GetRoomIndex() ) );
         }
 
+        GameObject plagueCaster = Instantiate(Resources.Load<GameObject>("CombatPrefabs/PlayerAdder"));
+
+        Debug.Log(allRooms.Count);
+
+        allRooms[Random.Range(0, allRooms.Count)].AddObject(plagueCaster);
+
+        GameObject enemyPrefab = Resources.Load<GameObject>("CombatPrefabs/Enemy");
+
+        int amount = Random.Range(5, 9);
+
+        for (int i = 0; i < amount; i++)
+        {
+            GameObject enemy = Instantiate<GameObject>(enemyPrefab);
+            allRooms[Random.Range(0, allRooms.Count)].AddObject(enemy);
+        }
+
         return area;
     }
 
@@ -169,6 +185,8 @@ public class Room
     private List<Vector2Int> doorIndexes;//indicates which doors the room should have
 
     private Dictionary<Vector2Int, Vector3> doorPositions;//world positions of each door
+
+    private List<GameObject> roomContents = new List<GameObject>();
 
     private static Dictionary<string, Vector2Int> wallToIndex = new Dictionary<string, Vector2Int>//converts a tile name to the doorIndex it corrisponds too
     {
@@ -218,8 +236,8 @@ public class Room
             Vector2Int randomSize = new Vector2Int(Random.Range(4, 7), Random.Range(4, 7));
             Vector2Int randomPoint = new Vector2Int
                 (
-                    Random.Range(-baseSize.x / 2 - randomSize.x  / 2 + 1, baseSize.x / 2 + randomSize.x  / 2 - 2),
-                    Random.Range(-baseSize.y / 2 - randomSize.y / 2 + 1, baseSize.y / 2 + randomSize.y  / 2 - 2)
+                    Random.Range((randomSize.x - baseSize.x) / 2 + 1, (baseSize.x + randomSize.x)  / 2 - 1),
+                    Random.Range((randomSize.y - baseSize.y) / 2 + 1, (baseSize.y + randomSize.y)  / 2 - 1)
                 );
 
             roomPoints[randomPoint] = randomSize;
@@ -244,6 +262,7 @@ public class Room
         if(!loadedBefore)
         {
             Dictionary<Vector2Int, List<Vector3Int>> validWalls = new Dictionary<Vector2Int, List<Vector3Int>>();
+            List<Vector3Int> floorPositions = new List<Vector3Int>();
 
             foreach (Vector2Int doorIndex in doorIndexes)
             {
@@ -262,6 +281,11 @@ public class Room
                     }
 
                     string tileName = tilemap.GetSprite(new Vector3Int(x, y, 0)).name;
+
+                    if (tileName.Equals("Floor"))
+                    {
+                        floorPositions.Add(new Vector3Int(x, y, 0));
+                    }
 
                     if (!wallToIndex.ContainsKey(tileName))
                     {
@@ -299,6 +323,16 @@ public class Room
 
             }
 
+            foreach (GameObject thing in roomContents)
+            {
+                int randomIndex = Random.Range(0, floorPositions.Count);
+
+                thing.transform.position = tilemap.CellToWorld(floorPositions[randomIndex]) + new Vector3(0, 0, -1);
+                floorPositions.RemoveAt(randomIndex);
+
+                thing.SetActive(true);
+            }
+
             loadedBefore = true;
         }
 
@@ -329,7 +363,6 @@ public class Room
     }
 
 
-
     public Vector3 getDoorPos(Vector2Int doorIndex)
     {
         return doorPositions[doorIndex];
@@ -355,5 +388,21 @@ public class Room
         }
 
         doors = new List<GameObject>();
+
+        foreach(GameObject thing in roomContents)
+        {
+            thing.SetActive(false);
+        }
+    }
+
+    public void AddObject(GameObject newObject)
+    {
+        roomContents.Add(newObject);
+    }
+
+    public void RemoveObject(GameObject newObject)
+    {
+        roomContents.Remove(newObject);
+        Object.Destroy(newObject);
     }
 }

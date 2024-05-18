@@ -562,7 +562,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
     {
         //-----Players-----\\
         {"One Armed Knight", new Color32(255, 255, 255, 255)},
-        {"Plague Caster", new Color32(170, 50, 0, 255) },
+        {"Plague Caster", new Color32(255, 255, 255, 255) },
         //-----Enemies-----\\
         {"Skeleton", new Color32(255, 255, 255, 255)},
         {"Crypt Keeper", new Color32(200, 180, 210, 255) }
@@ -983,7 +983,7 @@ public class Player : Character
 
         CombatHandler.preTurnGui.transform.Find("Item").GetComponent<Button>().onClick.AddListener(() =>
         {
-            if (turnStage == 1)
+            if (turnStage == 1 && items.Count > 0)
             {
                 CombatHandler.itemGui.transform.parent.gameObject.SetActive(true);
 

@@ -25,11 +25,12 @@ public class PlayerController : MonoBehaviour
 
         animator.SetBool("Moving", !MoveVector.Equals(Vector3.zero));
 
-        Rigidbody2D.MovePosition(transform.position + MoveVector * Time.deltaTime * Speed);
+        Rigidbody2D.MovePosition(transform.position + new Vector3(MoveVector.x, MoveVector.y * (86f / 150f), 0) * Time.deltaTime * Speed);
 
         if (horizontalAxis != 0)
         {
-            transform.localScale = new Vector3(MoveVector.x * MoveVector.y * 0.4f, 0.4f, 1);
+            float yScale = MoveVector.y != 0 ? MoveVector.y : -1;
+            transform.localScale = new Vector3(MoveVector.x * yScale * 0.4f, 0.4f, 1);
         }
         else
         {

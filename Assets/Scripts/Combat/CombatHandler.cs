@@ -94,12 +94,19 @@ public class CombatHandler : MonoBehaviour
                 }
             }
 
+            Dictionary<string, int> cards = new Dictionary<string, int>();
+
+            foreach (string key in ((Dictionary<string, int>) charStats[i]["Cards"]).Keys)
+            {
+                cards.Add(key, ((Dictionary<string, int>)charStats[i]["Cards"])[key]);
+            }
+
             character.New(
                 (int)charStats[i]["Health"],
                 pos,
                 (string)charStats[i]["Name"],
                 (Sprite)charStats[i]["CombatSprite"],
-                (Dictionary<string, int>)charStats[i]["Cards"],
+                cards,
                 (Dictionary<string, int>)charStats[i]["Items"]);
 
             participants.Add(character);
@@ -302,35 +309,41 @@ public class CombatHandler : MonoBehaviour
 
         Debug.Log("Combat Ended");
 
+        Vignette vignette;
+
+        if (!volumeProfile.TryGet(out vignette)) throw new System.NullReferenceException(nameof(vignette));
+
+        StartCoroutine(Tween.New(1, vignette, 3f));
+
+        yield return new WaitForSeconds(3f);
+
         List<Dictionary<string, object>> charInfo = Manager.GetCharacters();
         bool survivors = false;
 
         for (int i = 0; i < charInfo.Count; i = i)
         {
-            if (((GameObject)charInfo[i]["ObjectReference"]).GetComponent<Character>().GetGridPos().x == 1)
+            if (charInfo[i]["ObjectReference"].Equals(null) || ((GameObject)charInfo[i]["ObjectReference"]).GetComponent<Character>().GetGridPos().x == 1)
             {
                 charInfo.RemoveAt(i);
             }
             else
             {
+                charInfo[i]["Health"] = ((GameObject)charInfo[i]["ObjectReference"]).GetComponent<Character>().GetHealth();
+                charInfo[i]["ObjectReference"] = null;
+
                 survivors = true;
+
                 i++;
             }
         }
 
-        Vignette vignette;
+        string nextRoom = survivors ? "RoomGenerator" : "Title";
 
-        if (!volumeProfile.TryGet(out vignette)) throw new System.NullReferenceException(nameof(vignette));
-
-        StartCoroutine(Tween.New(1, vignette, 5f));
-
-        yield return new WaitForSeconds(5);
-
-        AsyncOperation loaded = SceneManager.LoadSceneAsync("RoomGenerator");
+        AsyncOperation loaded = SceneManager.LoadSceneAsync(nextRoom);
 
         yield return new WaitUntil(() => loaded.isDone);
 
-        SceneManager.SetActiveScene(SceneManager.GetSceneByName("RoomGenerator"));
+        SceneManager.SetActiveScene(SceneManager.GetSceneByName(nextRoom));
         SceneManager.UnloadSceneAsync("Combat");
     }
 }

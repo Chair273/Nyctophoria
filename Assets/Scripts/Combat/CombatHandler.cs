@@ -31,9 +31,11 @@ public class CombatHandler : MonoBehaviour
 
     private static List<Character> participants = new List<Character>();
 
-    private Transform Gui;
+    private static Transform Gui;
 
-    private bool gameEnded = false;
+    private static GameObject charPrefab;
+
+    private static bool gameEnded = false;
 
     private static int totalPlayerHealth;
 
@@ -41,87 +43,81 @@ public class CombatHandler : MonoBehaviour
 
     private List<Character> turnOrder = new List<Character>();
 
+    public static CombatHandler main;
+
     private static float[,] xReference = { { -0.8f, 0.5f, 1.9f, 3.1f, 4.5f, 5.8f }, { 0.2f, 1.1f, 2.1f, 2.9f, 3.9f, 4.8f } }; //used to convert a grid position to a world position, first index is the valid player x positions, second index is the valid enemy x positions
 
-    void Start()//basically all of this is a placeholder for testing purposes
+    void Start()
     {
         Gui = transform.Find("Gui");
 
+        Gui.Find("Background").Find("Fog").gameObject.SetActive(!LowGraphicsMode);
+        Gui.Find("Background").Find("Void").Find("Fog").gameObject.SetActive(!LowGraphicsMode);
+
+        movementGui = Gui.Find("Movement").Find("Movement").GetComponent<TextMeshProUGUI>();
+        volumeProfile = Gui.Find("PostProcessing").GetComponent<Volume>().profile;
         endTurnButton = Gui.Find("EndTurnButtonCanvas").Find("EndTurnButton").GetComponent<Button>();
         preTurnGui = Gui.Find("PreTurnGui").gameObject;
         exhaustionDC = Gui.Find("Exhaustion").Find("ExhaustionDC").gameObject;
         drawPile = Gui.Find("DrawPile").gameObject;
         itemGui = Gui.Find("Items").Find("Main").gameObject;
 
-        movementGui = Gui.Find("Movement").Find("Movement").GetComponent<TextMeshProUGUI>();
+        charPrefab = Resources.Load<GameObject>("CombatPrefabs/CharacterPlaceholder");
 
-        volumeProfile = Gui.Find("PostProcessing").GetComponent<Volume>().profile;
+        List<Dictionary<string, object>> charStats = Manager.GetCharacters();
+        participants = new List<Character>();
 
-        if (LowGraphicsMode)
-        {
-            Gui.Find("Background").Find("Fog").gameObject.SetActive(false);
-            Gui.Find("Background").Find("Void").Find("Fog").gameObject.SetActive(false);
-        }
+        main = this;
 
         totalPlayerHealth = 0;
 
-        AttackHandler.Start();
+        bool[,] takenPositions = new bool[2, 6];
 
-        GameObject prefab = Resources.Load<GameObject>("CombatPrefabs/CharacterPlaceholder");
-
-        //players
+        for (int i = 0; i < charStats.Count; i++)
         {
-            GameObject OAKObject = Instantiate(prefab, new Vector3Int(), Quaternion.identity);//One Armed Knight
-            OAKObject.transform.parent = transform;
+            bool isPlayer = (bool)charStats[i]["IsPlayer"];
 
-            Player OAK = OAKObject.AddComponent(typeof(Player)) as Player;
+            GameObject charObject = Instantiate(charPrefab, Gui);
+            Type type = isPlayer ? typeof(Player) : typeof(Enemy);
+            Character character = charObject.AddComponent(type) as Character;
 
-            OAK.New(40, new Vector2Int(0, Random.Range(3, 5)), "One Armed Knight", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/OneArmedKnight"), new Dictionary<string, int>//the name and sprite of the character
-            { {"Spear Strike", 4 }, {"Lunge", 3 }, {"Guard", 2 } }, new Dictionary<string, int>//the cards they have acess to, and the amount of each.
-            { { "Placebo", 1 } });//the items they have, and the amount of each.
+            Vector2Int pos = new Vector2Int(isPlayer? 0 : 1, 0);
 
-            totalPlayerHealth += 40;
+            for (int v = 0; v < 6; v++)
+            {
+                pos = new Vector2Int(pos.x, Random.Range(v, 5));
 
-            participants.Add(OAK);
+                if (!takenPositions[pos.x, pos.y])
+                {
+                    takenPositions[pos.x, pos.y] = true;
+                    break;
+                }
+            }
 
-            GameObject PCObject = Instantiate(prefab, new Vector3Int(), Quaternion.identity);//Plague Caster
-            PCObject.transform.parent = transform;
+            character.New(
+                (int)charStats[i]["Health"],
+                pos,
+                (string)charStats[i]["Name"],
+                (Sprite)charStats[i]["CombatSprite"],
+                (Dictionary<string, int>)charStats[i]["Cards"],
+                (Dictionary<string, int>)charStats[i]["Items"]);
 
-            Player PC = PCObject.AddComponent(typeof(Player)) as Player;
+            participants.Add(character);
+            charStats[i]["ObjectReference"] = charObject;
 
-            PC.New(30, new Vector2Int(0, Random.Range(0, 3)), "Plague Caster", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/PlagueCaster"), new Dictionary<string, int>
-            { {"Summon Bees", 3 }, {"Contagion", 2}, {"Lesser Ooze", 2} }, new Dictionary<string, int>
-            { { "Placebo", 2 } });
+            if (isPlayer)
+            {
+                totalPlayerHealth += (int)charStats[i]["MaxHealth"];
+            }
 
-            totalPlayerHealth += 30;
-
-            participants.Add(PC);
         }
 
-        //enemies
-        {
-            GameObject skeletonObject = Instantiate(prefab, new Vector3Int(), Quaternion.identity);
-            skeletonObject.transform.parent = transform;
+        gameEnded = false;
 
-            Enemy skeleton = skeletonObject.AddComponent(typeof(Enemy)) as Enemy;
-            skeleton.New(25, new Vector2Int(1, Random.Range(0, 3)), "Skeleton", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/Skeleton"), new Dictionary<string, int>
-            {{"Spear Strike", 3 }, {"Bifurcated Strike", 3 }, {"Guard", 1 } }, new Dictionary<string, int>
-            { });
+        AttackHandler.DefineCards();
 
-            participants.Add(skeleton);
-
-            GameObject CKObject = Instantiate(prefab, new Vector3Int(), Quaternion.identity);
-            CKObject.transform.parent = transform;
-
-            Enemy cryptKeeper = CKObject.AddComponent(typeof(Enemy)) as Enemy;
-            cryptKeeper.New(45, new Vector2Int(1, Random.Range(3, 5)), "Crypt Keeper", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/CryptKeeper"), new Dictionary<string, int>
-            {{"Spear Strike", 4 }, {"Bifurcated Strike", 2 }, {"Contagion", 1}, {"Lesser Ooze", 1} }, new Dictionary<string, int>
-            { });
-
-            participants.Add(cryptKeeper);
-        }
-
-        StartCoroutine(Combat());//starts the combat encounter
+        UpdateHealthVignette();
+        StartCoroutine(Combat());
     }
 
     public static float getXPos(int x, int y)//returns the world x position of a grid position
@@ -222,7 +218,7 @@ public class CombatHandler : MonoBehaviour
         vignette.intensity.Override(0.6f - (currentHealth / totalPlayerHealth) / 2);
     }
 
-    IEnumerator Combat()
+    protected IEnumerator Combat()
     {
         int round = 1;
 
@@ -309,6 +305,7 @@ public class CombatHandler : MonoBehaviour
         yield return new WaitForSeconds(5);
 
         SceneManager.LoadScene("RoomGenerator");
+        SceneManager.UnloadSceneAsync("Combat");
     }
 }
 
@@ -323,148 +320,6 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
     private static Dictionary<string, TargetType> targetTypes = new Dictionary<string, TargetType>();//stores the different target types that cards can use
 
     private static GameObject cardPrefab = Resources.Load<GameObject>("CombatPrefabs/Gui/Card");
-
-    public static void Start()
-    {
-        //targetTypes initialization
-        targetTypes["ForwardHit"] = new BasicTarget(new List<int> { 0 }, new List<int> { 1 });
-        targetTypes["DiagonalHit"] = new BasicTarget(new List<int> { -1, 1 }, new List<int> { 1 });
-
-        targetTypes["AdjacentHit"] = new BasicTarget(new List<int> { -1, 1 }, new List<int> { 0 });
-        targetTypes["AdjacentChoice"] = new RangedTarget(new List<int> { -1, 1 }, new List<int> { 0 });
-
-
-        targetTypes["SelfEffect"] = new BasicTarget(new List<int> { 0 }, new List<int> { 0 }, new List<int> {-1, 0, 1});
-
-        targetTypes["SmallRangedAttack"] = new RangedTarget(new List<int> {-1, 0, 1}, new List<int> { 1 });
-
-
-        //attacks
-        {
-            MakeCardIndex(new Dictionary<string, string>() //the name and description on the card
-            {
-                {"Name", "Spear Strike"},
-                {"Description", "*The user deals 1d6 + 2 damage." }
-            }, new Dictionary<string, float> //the font size of the name and description
-            {
-                {"Name", 0.15f},
-                {"Description",  0.15f}
-            }, new Attack(new Dictionary<TargetType, List<Effect>> //the dictionary containing the cards target types, and the effects corrisponding to each
-            {
-                {targetTypes["ForwardHit"], new List<Effect> { new DamageDice(1, 6, 2), new PokeVFX("Spear") } }//This card targets the character in the opposite column to the user, and deals 1d4 + 2 damage, thus it uses the ForwardHit target type and its only effect is a 1d4 + 2 DamageDice
-            }));
-
-            MakeCardIndex(new Dictionary<string, string>()
-            {
-                {"Name", "Bifurcated Strike"},
-                {"Description", "*The user deals 1d4 damage along both diagonals."}
-            }, new Dictionary<string, float>
-            {
-                {"Name", 0.11f},
-                {"Description",  0.15f}
-            }, new Attack(0.2f, new Dictionary<TargetType, List<Effect>> //optional argument to add a delay between each character effected by the attack.
-            {
-                {targetTypes["DiagonalHit"], new List<Effect> { new DamageDice(1, 4, 0), new PokeVFX("Spear") } }
-            }));
-
-            MakeCardIndex(new Dictionary<string, string>()
-            {
-                {"Name", "Guard"},
-                {"Description", "*The user gains the guarded status for one turn.\n*Reduces damage by half."}
-            }, new Dictionary<string, float>
-            {
-                {"Name", 0.15f},
-                {"Description",  0.12f}
-            }, new Attack(new Dictionary<TargetType, List<Effect>>
-            {
-                {targetTypes["SelfEffect"], new List<Effect> { new ApplyStatus("Guarded", 1), new AnimVFX("Guard") } },
-            }));
-
-            MakeCardIndex(new Dictionary<string, string>()
-            {
-                {"Name", "Contagion"},
-                {"Description", "*Call forth a terrible disease to inflict apon your target.\n*Increases damage based on amount.\n*Contagious."}
-            }, new Dictionary<string, float>
-            {
-                {"Name", 0.15f},
-                {"Description",  0.1f}
-            }, new Attack(new Dictionary<TargetType, List<Effect>>
-            {
-                {targetTypes["ForwardHit"], new List<Effect> { new ApplyStatus("Contagion", 1), new PokeVFX("Contagion") } },
-            }));
-
-            MakeCardIndex(new Dictionary<string, string>()
-            {
-                {"Name", "ContagionSpread"},
-                {"Description", "*The user's contagion becomes too much to bear, infesting those nearby.\n*You aren't supposed to be here."}
-            }, new Dictionary<string, float>
-            {
-                {"Name", 0.15f},
-                {"Description",  0.15f}
-            }, new Attack(new Dictionary<TargetType, List<Effect>>
-            {
-                {targetTypes["AdjacentHit"], new List<Effect> { new ApplyStatus("Contagion", 2), new PokeVFX("Contagion"), new ResetTargetList() } },
-                {targetTypes["ForwardHit"], new List<Effect> { new ApplyStatus("Contagion", 1), new PokeVFX("Contagion"), new ResetTargetList() } },
-                {targetTypes["SelfEffect"], new List<Effect> { new WaitEffect(0.2f) } }
-            }));
-
-            MakeCardIndex(new Dictionary<string, string>()
-            {
-                {"Name", "Summon Bees"},
-                {"Description", "*Manifest a wave of bees.\n*Poisons and deals damage.\n*Effect diminishes with distance."}
-            }, new Dictionary<string, float>
-            {
-                {"Name", 0.15f},
-                {"Description",  0.1f}
-            }, new Attack(0.1f, new Dictionary<TargetType, List<Effect>>
-            {
-                {targetTypes["ForwardHit"], new List<Effect> { new DamageDice(1, 4, 0), new ApplyStatus("Poison", 3), new PokeVFX("Bees"), new ResetTargetList() } },
-                {targetTypes["DiagonalHit"], new List<Effect> {new DamageDice(1, 2, 0), new ApplyStatus("Poison", 2), new PokeVFX("Bees") } }
-            }));
-
-            MakeCardIndex(new Dictionary<string, string>()
-            {
-                {"Name", "Lesser Ooze"},
-                {"Description", "*Coat your enemy in a debilitating slime.\n*Reduces movement for 3 turns.\n*Short range"}
-            }, new Dictionary<string, float>
-            {
-                {"Name", 0.15f},
-                {"Description",  0.1f}
-            }, new Attack(new Dictionary<TargetType, List<Effect>>
-            {
-                {targetTypes["SmallRangedAttack"], new List<Effect> { new ApplyStatus("Oozed", 2), new AnimVFX("Ooze") } },
-            }));
-
-            MakeCardIndex(new Dictionary<string, string>()
-            {
-                {"Name", "Lunge"},
-                {"Description", "*Lunge forwards and deal heavy damage.\n*Directional choice.\n*Strike diagonally in direction of movement."}
-            }, new Dictionary<string, float>
-            {
-                {"Name", 0.15f},
-                {"Description",  0.1f}
-            }, new Attack(new Dictionary<TargetType, List<Effect>>
-            {
-                {targetTypes["AdjacentChoice"], new List<Effect> { new RecordUserPos(), new MoveUser(0.15f), new RetargetFromMovement(1, 1), new DamageDice(1, 10, 0), new PokeVFX("Spear") } },
-            }));
-        }
-
-        //items
-        {
-            MakeCardIndex(new Dictionary<string, string>()
-            {
-                {"Name", "Placebo"},
-                {"Description", "*Decreases negative status effects.\n*All in your head."}
-            }, new Dictionary<string, float>
-            {
-                {"Name", 0.15f},
-                {"Description",  0.12f}
-            }, new Attack(new Dictionary<TargetType, List<Effect>>
-            {
-                {targetTypes["SelfEffect"], new List<Effect> { new ModifyStatus(new Dictionary<string, int> { { "Contagion", -2 }, { "Poison", -2 }, { "Oozed", -1 } }) } },
-            }));
-        }
-    }
 
     public static List<int> GetStandPositions(string attackName)//remember to add a way to distinguish between cards that help and cards that hurt.
     {
@@ -507,6 +362,168 @@ public class AttackHandler : MonoBehaviour//handles the creation and storage of 
 
         return card;
     }
+
+    public static void DefineCards()
+    {
+        targetTypes = new Dictionary<string, TargetType>();
+        attacks = new Dictionary<string, Attack>();
+        cardInfo = new Dictionary<string, Dictionary<string, string>>();
+        cardSize = new Dictionary<string, Dictionary<string, float>>();
+
+        //targetTypes initialization
+        {
+            targetTypes["ForwardHit"] = new BasicTarget(new List<int> { 0 }, new List<int> { 1 });
+            targetTypes["DiagonalHit"] = new BasicTarget(new List<int> { -1, 1 }, new List<int> { 1 });
+
+            targetTypes["AdjacentHit"] = new BasicTarget(new List<int> { -1, 1 }, new List<int> { 0 });
+            targetTypes["AdjacentChoice"] = new RangedTarget(new List<int> { -1, 1 }, new List<int> { 0 });
+
+
+            targetTypes["SelfEffect"] = new BasicTarget(new List<int> { 0 }, new List<int> { 0 }, new List<int> { -1, 0, 1 });
+
+            targetTypes["SmallRangedAttack"] = new RangedTarget(new List<int> { -1, 0, 1 }, new List<int> { 1 });
+        }
+
+
+        //attacks
+        {
+            MakeCardIndex(new Dictionary<string, string>() //the name and description on the card
+                {
+                    {"Name", "Spear Strike"},
+                    {"Description", "*The user deals 1d6 + 2 damage." }
+                }, new Dictionary<string, float> //the font size of the name and description
+                {
+                    {"Name", 0.15f},
+                    {"Description",  0.15f}
+                }, new Attack(new Dictionary<TargetType, List<Effect>> //the dictionary containing the cards target types, and the effects corrisponding to each
+                {
+                    {targetTypes["ForwardHit"], new List<Effect> { new DamageDice(1, 6, 2), new PokeVFX("Spear"), new Weight(-1) } }//This card targets the character in the opposite column to the user, and deals 1d4 + 2 damage, thus it uses the ForwardHit target type and its only effect is a 1d4 + 2 DamageDice
+                }));
+
+            MakeCardIndex(new Dictionary<string, string>()
+                {
+                    {"Name", "Bifurcated Strike"},
+                    {"Description", "*The user deals 1d4 damage along both diagonals."}
+                }, new Dictionary<string, float>
+                {
+                    {"Name", 0.11f},
+                    {"Description",  0.15f}
+                }, new Attack(0.2f, new Dictionary<TargetType, List<Effect>> //optional argument to add a delay between each character effected by the attack.
+                {
+                    {targetTypes["DiagonalHit"], new List<Effect> { new DamageDice(1, 4, 0), new PokeVFX("Spear"), new Weight(-2) } }
+                }));
+
+            MakeCardIndex(new Dictionary<string, string>()
+                {
+                    {"Name", "Guard"},
+                    {"Description", "*The user gains the guarded status for one turn.\n*Reduces damage by half."}
+                }, new Dictionary<string, float>
+                {
+                    {"Name", 0.15f},
+                    {"Description",  0.12f}
+                }, new Attack(new Dictionary<TargetType, List<Effect>>
+                {
+                    {targetTypes["SelfEffect"], new List<Effect> { new ApplyStatus("Guarded", 1), new AnimVFX("Guard", new Vector3(0, 0.75f, -1f)), new Weight(-4) } },
+                }));
+
+            MakeCardIndex(new Dictionary<string, string>()
+                {
+                    {"Name", "Contagion"},
+                    {"Description", "*Call forth a terrible disease to inflict apon your target.\n*Increases damage based on amount.\n*Contagious."}
+                }, new Dictionary<string, float>
+                {
+                    {"Name", 0.15f},
+                    {"Description",  0.1f}
+                }, new Attack(new Dictionary<TargetType, List<Effect>>
+                {
+                    {targetTypes["ForwardHit"], new List<Effect> { new ApplyStatus("Contagion", 1), new PokeVFX("Contagion"), new Weight(-2) } },
+                }));
+
+            MakeCardIndex(new Dictionary<string, string>()
+                {
+                    {"Name", "ContagionSpread"},
+                    {"Description", "*The user's contagion becomes too much to bear, infesting those nearby.\n*You aren't supposed to be here."}
+                }, new Dictionary<string, float>
+                {
+                    {"Name", 0.15f},
+                    {"Description",  0.15f}
+                }, new Attack(new Dictionary<TargetType, List<Effect>>
+                {
+                    {targetTypes["AdjacentHit"], new List<Effect> { new ApplyStatus("Contagion", 2), new PokeVFX("Contagion"), new ResetTargetList() } },
+                    {targetTypes["ForwardHit"], new List<Effect> { new ApplyStatus("Contagion", 1), new PokeVFX("Contagion"), new ResetTargetList() } },
+                    {targetTypes["SelfEffect"], new List<Effect> { new WaitEffect(0.2f), new Weight(-5) } }
+                }));
+
+            MakeCardIndex(new Dictionary<string, string>()
+                {
+                    {"Name", "Summon Bees"},
+                    {"Description", "*Manifest a wave of bees.\n*Poisons and deals damage.\n*Effect diminishes with distance."}
+                }, new Dictionary<string, float>
+                {
+                    {"Name", 0.15f},
+                    {"Description",  0.1f}
+                }, new Attack(0.1f, new Dictionary<TargetType, List<Effect>>
+                {
+                    {targetTypes["ForwardHit"], new List<Effect> { new DamageDice(1, 4, 0), new ApplyStatus("Poison", 3), new PokeVFX("BeeLarge"), new ResetTargetList() } },
+                    {targetTypes["DiagonalHit"], new List<Effect> {new DamageDice(1, 2, 0), new ApplyStatus("Poison", 2), new PokeVFX("BeeSmall"), new Weight(-2) } }
+                }));
+
+            MakeCardIndex(new Dictionary<string, string>()
+                {
+                    {"Name", "Lesser Ooze"},
+                    {"Description", "*Coat your enemy in a debilitating slime.\n*Reduces movement for 3 turns.\n*Short range"}
+                }, new Dictionary<string, float>
+                {
+                    {"Name", 0.15f},
+                    {"Description",  0.1f}
+                }, new Attack(new Dictionary<TargetType, List<Effect>>
+                {
+                    {targetTypes["SmallRangedAttack"], new List<Effect> { new ApplyStatus("Oozed", 2), new AnimVFX("Ooze", new Vector3(0, 0, -0.5f)), new Weight(-1) } },
+                }));
+
+            MakeCardIndex(new Dictionary<string, string>()
+                {
+                    {"Name", "Lunge"},
+                    {"Description", "*Lunge forwards and deal heavy damage.\n*Directional choice.\n*Strike diagonally in direction of movement."}
+                }, new Dictionary<string, float>
+                {
+                    {"Name", 0.15f},
+                    {"Description",  0.1f}
+                }, new Attack(new Dictionary<TargetType, List<Effect>>
+                {
+                    {targetTypes["AdjacentChoice"], new List<Effect> { new RecordUserPos(), new MoveUser(0.15f), new RetargetFromMovement(1, 1), new DamageDice(1, 10, 0), new PokeVFX("Spear"), new Weight(-3) } },
+                }));
+        }
+
+        //items
+        {
+            MakeCardIndex(new Dictionary<string, string>()
+                {
+                    {"Name", "Placebo"},
+                    {"Description", "*Decreases negative status effects.\n*All in your head."}
+                }, new Dictionary<string, float>
+                {
+                    {"Name", 0.15f},
+                    {"Description",  0.12f}
+                }, new Attack(new Dictionary<TargetType, List<Effect>>
+                {
+                    {targetTypes["SelfEffect"], new List<Effect> { new ModifyStatus(new Dictionary<string, int> { { "Contagion", -2 }, { "Poison", -2 }, { "Oozed", -1 } }) } },
+                }));
+
+            MakeCardIndex(new Dictionary<string, string>()
+                {
+                    {"Name", "Rabbit Bones"},
+                    {"Description", "*Ameliorates the weight of combat."}
+                }, new Dictionary<string, float>
+                {
+                    {"Name", 0.13f},
+                    {"Description",  0.15f}
+                }, new Attack(new Dictionary<TargetType, List<Effect>>
+                {
+                    {targetTypes["SelfEffect"], new List<Effect> { new ChangeExhaustionDC(-2), new Weight(-5) } },
+                }));
+        }
+    }
 }
 
 //----------Characters----------\\
@@ -531,7 +548,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
     protected Dictionary<string, int> discardPile;//when using a card, it moves to this (if it doesnt proc exhaustion)
     protected Dictionary<string, int> items;
 
-    protected Dictionary<String, Sprite> statusSymbols;
+    protected Dictionary<string, Sprite> statusSymbols;
 
     private static float[,] scaleReference = { { 1, 1.1f, 1.15f, -1.15f, -1.1f, -1 }, { 0.85f, 1, 1.1f, -1.1f, -1, -0.85f } };//size of the character based on grid position
 
@@ -572,7 +589,8 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         {
             {"Guarded", Sprite.Create(Resources.Load<Texture2D>("StatusEffectSprites/Guarded"), new Rect(0, 0, 49, 49), new Vector2(0.5f, 0.5f)) },
             {"Contagion", Sprite.Create(Resources.Load<Texture2D>("StatusEffectSprites/Contagion"), new Rect(0, 0, 49, 49), new Vector2(0.5f, 0.5f)) },
-            {"Poison", Sprite.Create(Resources.Load<Texture2D>("StatusEffectSprites/Poison"), new Rect(0, 0, 49, 49), new Vector2(0.5f, 0.5f)) }
+            {"Poison", Sprite.Create(Resources.Load<Texture2D>("StatusEffectSprites/Poison"), new Rect(0, 0, 49, 49), new Vector2(0.5f, 0.5f)) },
+            {"Oozed", Sprite.Create(Resources.Load<Texture2D>("StatusEffectSprites/Oozed"), new Rect(0, 0, 49, 49), new Vector2(0.5f, 0.5f)) }
         };
 
         statusEffects = new List<StatusEffect>();
@@ -677,6 +695,16 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         speedMod = 0;
     }
 
+    public void AddSpeed(int speedMod)
+    {
+        this.speedMod += speedMod;
+    }
+
+    public virtual void AddExhaustionDC(int amount)
+    {
+        exhaustionChance = Mathf.Clamp(exhaustionChance + amount, 0, 20);
+    }
+
 
     public virtual List<int> TakeDamage(int damage)//updates the character's health, and destroys them if it is at or below 0
     {
@@ -713,8 +741,20 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
     protected virtual IEnumerator Die()
     {
-        Destroy(gameObject);
+        List<Dictionary<string, object>> charInfo = Manager.GetCharacters();
+
+        for (int i = 0; i < charInfo.Count; i++)
+        {
+            if ( ((GameObject) charInfo[i]["ObjectReference"]).Equals(gameObject))
+            {
+                charInfo.RemoveAt(i);
+                break;
+            }
+        }
+
         yield return new WaitForFixedUpdate();
+
+        Destroy(gameObject);
     }
 
 
@@ -1044,8 +1084,7 @@ public class Player : Character
 
         yield return new WaitForSeconds(0.6f);
 
-        gameObject.SetActive(false);
-        Destroy(gameObject);
+        StartCoroutine(base.Die());
     }
 
     public override void DrawCard(int amount)
@@ -1114,7 +1153,7 @@ public class Player : Character
 
         cardsUsed++;
 
-        if (cardsUsed > 1)
+        if (cardsUsed > 1 || hand.Count == 0)
         {
             exhaustionChance = Mathf.Clamp(exhaustionChance + 2, 0, 20);
 
@@ -1249,6 +1288,12 @@ public class Player : Character
 
         CombatHandler.itemGui.transform.parent.gameObject.SetActive(false);
     }
+
+    public override void AddExhaustionDC(int amount)
+    {
+        exhaustionChance = Mathf.Clamp(exhaustionChance + amount, 0, 20);
+        CombatHandler.exhaustionDC.GetComponent<TextMeshProUGUI>().text = "Exhaustion\nRoll " + exhaustionChance + " or higher.";
+    }
 }
 
 public class Enemy : Character
@@ -1292,12 +1337,12 @@ public class Enemy : Character
         DrawCard(1);
 
         bool usedCard = true;
-
-        int bravery = Random.Range(2, 21); //end turn if exaustion is above this
+        int bravery = Random.Range(2, 21); //change to end turn if exaustion is above this
 
         while (usedCard == true && hand.Count > 0 && !(Random.Range(1, 3) == 1 && exhaustionChance > bravery)) //they end their turn under 1 of 3 conditions, 1: if they werent able to use the last card they selected, 2: if they ran out of cards, 3:random 50% chance after exeeding bravery
         {
             usedCard = false;
+            bravery = Random.Range(2, 21);
 
             Character target = CombatHandler.GetCharacter(new Vector2Int(Mathf.Abs(gridPos.x - 1), gridPos.y));
 
@@ -1457,8 +1502,7 @@ public class Enemy : Character
 
         yield return new WaitForSeconds(0.6f);
 
-        gameObject.SetActive(false);
-        Destroy(gameObject);
+        StartCoroutine(base.Die());
     }
 
     public override void DrawCard(int amount)
@@ -1876,6 +1920,52 @@ public class MoveUser : Effect
     }
 }
 
+public class Weight : Effect
+{
+    private int speedMod;
+
+    public Weight(int speedMod) : base(0)
+    {
+        this.speedMod = speedMod;
+    }
+
+    public Weight(int speedMod, float waitTime) : base(waitTime)
+    {
+        this.speedMod = speedMod;
+    }
+
+    public override void Activate(Attack attack)
+    {
+        Dictionary<string, object> info = attack.GetInfo();
+        Character user = (Character)info["User"];
+
+        user.AddSpeed(speedMod);
+    }
+}
+
+public class ChangeExhaustionDC : Effect
+{
+    private int amount;
+
+    public ChangeExhaustionDC(int amount) : base(0)
+    {
+        this.amount = amount;
+    }
+
+    public ChangeExhaustionDC(int amount, float waitTime) : base(waitTime)
+    {
+        this.amount = amount;
+    }
+
+    public override void Activate(Attack attack)
+    {
+        Dictionary<string, object> info = attack.GetInfo();
+        Character user = (Character)info["User"];
+
+        user.AddExhaustionDC(amount);
+    }
+}
+
 
 public class RecordUserPos : Effect
 {
@@ -2013,15 +2103,18 @@ public class PokeVFX : Effect
 public class AnimVFX : Effect//Realy complex code, this one is.
 {
     string spriteID;
+    Vector3 offset;
 
-    public AnimVFX(string spriteID) : base(0)
+    public AnimVFX(string spriteID, Vector3 offset) : base(0)
     {
         this.spriteID = spriteID;
+        this.offset = offset;
     }
 
-    public AnimVFX(string spriteID, float waitTime) : base(waitTime)
+    public AnimVFX(string spriteID, Vector3 offset, float waitTime) : base(waitTime)
     {
         this.spriteID = spriteID;
+        this.offset = offset;
     }
 
     public override void Activate(Attack attack)
@@ -2040,7 +2133,7 @@ public class AnimVFX : Effect//Realy complex code, this one is.
 
         foreach (Character target in targetList)
         {
-            GameObject vfxObject = VFXHandler.MakeObject(spriteID, target.transform.position + new Vector3(0, 0.75f * target.transform.localScale.y, -0.5f));
+            GameObject vfxObject = VFXHandler.MakeObject(spriteID, target.transform.position + new Vector3(offset.x, offset.y * target.transform.localScale.y, offset.x));
             vfxObject.transform.localScale = target.transform.localScale;
 
             if (vfxObject.GetComponent<Animator>() == null)
@@ -2845,7 +2938,11 @@ public class VFXHandler : MonoBehaviour
     {
         { "Missing", Resources.Load<GameObject>("CombatPrefabs/VFX/Missing")},
         { "Spear", Resources.Load<GameObject>("CombatPrefabs/VFX/Spear") },
-        { "Guard", Resources.Load<GameObject>("CombatPrefabs/VFX/Guard") }
+        { "Guard", Resources.Load<GameObject>("CombatPrefabs/VFX/Guard") },
+        { "Contagion", Resources.Load<GameObject>("CombatPrefabs/VFX/Contagion") },
+        { "BeeLarge", Resources.Load<GameObject>("CombatPrefabs/VFX/BeeLarge") },
+        { "BeeSmall", Resources.Load<GameObject>("CombatPrefabs/VFX/BeeSmall") },
+        { "Ooze", Resources.Load<GameObject>("CombatPrefabs/VFX/Ooze") }
     };
 
     public static GameObject MakeObject(string spriteId, Vector3 pos)

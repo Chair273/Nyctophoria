@@ -1,4 +1,5 @@
 
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -8,14 +9,17 @@ public class RoomGenerator : MonoBehaviour
     public TileBase _tile;
     public static TileBase tile;
 
+    public TileBase _doorTile;
+    public static TileBase doorTile;
+
     public Transform _player;
     public static Transform player;
 
     public static Tilemap tilemap;
 
-    private static Room[,] area = new Room[7, 7];
-
     private static Vector2Int currentRoom;
+
+    private static Room[,] area;
 
     public static void ChangeRoom(Vector2Int roomIndex)
     {
@@ -25,25 +29,41 @@ public class RoomGenerator : MonoBehaviour
         Vector2Int roomVector = new Vector2Int(currentRoom.x - roomIndex.x, currentRoom.y - roomIndex.y);
         Vector3 doorPos = area[roomIndex.x, roomIndex.y].getDoorPos(roomVector);
 
-        player.position = tilemap.CellToWorld(tilemap.WorldToCell(doorPos) - 2 * new Vector3Int(roomVector.x, roomVector.y, 0));
+        player.position = tilemap.CellToWorld(tilemap.WorldToCell(doorPos) -  new Vector3Int(roomVector.x, roomVector.y, 0)) + new Vector3(0, 0.5f, 0);
 
         currentRoom = roomIndex;
+        Manager.SetCurrentRoom(currentRoom);
+    }
+
+    public static void ChangeRoom()
+    {
+        area[currentRoom.x, currentRoom.y].LoadRoom();
     }
 
     private void Start()
     {
         tilemap = transform.GetComponent<Tilemap>();
         tile = _tile;
+        doorTile = _doorTile;
         player = _player;
 
-        Begin();
+        if (area == null)
+        {
+            area = Manager.GetArea();
+            currentRoom = Manager.GetCurrentRoom();
+        }
+
+        area[currentRoom.x, currentRoom.y].LoadRoom();
     }
 
-    protected static void Begin()
+    public static Room[,] GenerateArea()
     {
+        area = new Room[7, 7];
+
         Room startRoom = new Room( new Vector2Int( Random.Range(1, 6), Random.Range(1, 3) ) );
         Vector2Int startIndex = startRoom.GetRoomIndex();
         currentRoom = startIndex;
+        Manager.SetCurrentRoom(currentRoom);
 
         Room endRoom = new Room( new Vector2Int( Random.Range(1, 6), Random.Range(4, 6) ) );
         Vector2Int endIndex = endRoom.GetRoomIndex();
@@ -53,7 +73,7 @@ public class RoomGenerator : MonoBehaviour
 
         Vector2Int currentIndex = startIndex;
         List<Room> mainPath = new List<Room> { startRoom };
-        List<Room> allRooms = new List<Room> { startRoom };
+        List<Room> allRooms = new List<Room> { startRoom , endRoom };
 
         while (!currentIndex.Equals(endIndex))
         {
@@ -105,7 +125,7 @@ public class RoomGenerator : MonoBehaviour
             room.AddDoors( GetDoors( room.GetRoomIndex() ) );
         }
 
-        startRoom.LoadRoom();
+        return area;
     }
 
     public static List<Vector2Int> GetDoors(Vector2Int roomIndex)
@@ -158,13 +178,7 @@ public class Room
         {"LeftWall" ,new Vector2Int(0, 1)}
     };
 
-    private static Dictionary<string, string> wallToDoor = new Dictionary<string, string> //Keys are the names of tiles, values are the doors that can be generated from them.
-    {
-        {"FrontWall", "FrontDoor"},
-        {"BackWall", "BackDoor"},
-        {"LeftWall", "LeftDoor"},
-        {"RightWall", "RightDoor"}
-    };//I could probably just check for the direction in the name using substring but having it be manual is safer
+    private static Dictionary<Vector2Int, TileBase> IndexToTile;
 
     private Dictionary<Vector2Int, Vector2Int> roomPoints;//keys are the position of the point, values are the size. Used to create random room shapes
 
@@ -179,25 +193,33 @@ public class Room
 
     public void Generate()
     {
+        IndexToTile = new Dictionary<Vector2Int, TileBase>
+        {
+            {new Vector2Int(1, 0), Resources.Load<TileBase>("OverWorld/Tiles/FrontDoor")},
+            {new Vector2Int(-1, 0), Resources.Load<TileBase>("OverWorld/Tiles/BackDoor")},
+            {new Vector2Int(0, -1), Resources.Load<TileBase>("OverWorld/Tiles/RightDoor")},
+            {new Vector2Int(0, 1), Resources.Load<TileBase>("OverWorld/Tiles/LeftDoor")}
+        };
+
         doorPositions = new Dictionary<Vector2Int, Vector3>();
         doors = new List<GameObject>();
 
-        Vector2Int baseSize = new Vector2Int(Random.Range(3, 5) * 3, Random.Range(3, 5) * 3);
+        Vector2Int baseSize = new Vector2Int(Random.Range(4, 9), Random.Range(4, 9));
 
         roomPoints = new Dictionary<Vector2Int, Vector2Int>
         {
             {Vector2Int.zero, baseSize}
         };
 
-        int pointAmount = Random.Range(2, 5);
+        int pointAmount = Random.Range(3, 6);
 
         for (int i = 0; i < pointAmount; i++)
         {
-            Vector2Int randomSize = new Vector2Int(Random.Range(2, 5) * 3, Random.Range(2, 5) * 3);
+            Vector2Int randomSize = new Vector2Int(Random.Range(4, 7), Random.Range(4, 7));
             Vector2Int randomPoint = new Vector2Int
                 (
-                    Random.Range(-baseSize.x / 2, baseSize.x / 2),
-                    Random.Range(-baseSize.y / 2, baseSize.y / 2)
+                    Random.Range(-baseSize.x / 2 - randomSize.x  / 2 + 1, baseSize.x / 2 + randomSize.x  / 2 - 2),
+                    Random.Range(-baseSize.y / 2 - randomSize.y / 2 + 1, baseSize.y / 2 + randomSize.y  / 2 - 2)
                 );
 
             roomPoints[randomPoint] = randomSize;
@@ -261,7 +283,7 @@ public class Room
                 {
                     Vector3Int randomDoor = doorList[Random.Range(0, doorList.Count)];
 
-                    doorPositions[doorIndex] = tilemap.CellToWorld(randomDoor) + new Vector3(0, 0, -1);
+                    doorPositions[doorIndex] = tilemap.CellToWorld(randomDoor);
                 }
                 else
                 {
@@ -289,14 +311,24 @@ public class Room
 
         foreach (Vector2Int doorIndex in doorIndexes)
         {
-            GameObject doorObject = Object.Instantiate(doorPrefab);
-            doorObject.transform.position = doorPositions[doorIndex];
+            Vector3 doorPosition = doorPositions[doorIndex];
+            Vector3Int tilePosition = tilemap.WorldToCell(doorPosition);
 
+            tilemap.SetTile(tilePosition + new Vector3Int(0, 0, -1), IndexToTile[doorIndex]);
+
+            tilemap.SetTileFlags(tilePosition, TileFlags.None);
+            tilemap.SetColor(tilePosition, new Color32(255, 255, 255, 0));
+
+
+            GameObject doorObject = Object.Instantiate(doorPrefab);
+            doorObject.transform.position = (tilemap.CellToWorld(tilePosition) + tilemap.CellToWorld(tilePosition - new Vector3Int(doorIndex.x, doorIndex.y, 0))) / 2 + new Vector3(0, 0.5f, 0);
             doorObject.GetComponent<RoomTransfer>().SetRoomIndex(roomIndex + doorIndex);
 
             doors.Add(doorObject);
         }
     }
+
+
 
     public Vector3 getDoorPos(Vector2Int doorIndex)
     {

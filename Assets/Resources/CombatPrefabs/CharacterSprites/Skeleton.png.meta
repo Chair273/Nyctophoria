@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 8012efb38d7ef4bbf9cca3663d429ca6
+guid: 6fbf79674757648fd90e5e8103ed6edf
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -964824239653993824
-    second: skeleton_0
+      213: 7441923930620040638
+    second: Skeleton 1_0
   externalObjects: {}
   serializedVersion: 12
   mipmaps:
@@ -46,14 +46,14 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 0
   spriteMeshType: 1
-  alignment: 0
-  spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 500
+  alignment: 9
+  spritePivot: {x: 0.5405405, y: 0.0625}
+  spritePixelsToUnits: 225
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spriteGenerateFallbackPhysicsShape: 1
+  spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
   alphaIsTransparency: 1
   spriteTessellationDetail: -1
@@ -98,22 +98,22 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: skeleton_0
+      name: Skeleton 1_0
       rect:
         serializedVersion: 2
-        x: 2
-        y: 0
-        width: 441
-        height: 705
+        x: 18
+        y: 14
+        width: 259
+        height: 353
       alignment: 9
-      pivot: {x: 0.61678004, y: 0.09078014}
+      pivot: {x: 0.63706565, y: 0.014164306}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0a2ccb447714c92f0800000000000000
-      internalID: -964824239653993824
+      spriteID: eb5161ac266074760800000000000000
+      internalID: 7441923930620040638
       vertices: []
       indices: 
       edges: []
@@ -121,15 +121,15 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: cf4b4a6ddbcd04fb4b96933ad9049591
-    internalID: 0
+    spriteID: d20b3c18cb9884e9cabc82d3175fc35b
+    internalID: -916476472
     vertices: []
     indices: 
     edges: []
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      skeleton_0: -964824239653993824
+      Skeleton 1_0: 7441923930620040638
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

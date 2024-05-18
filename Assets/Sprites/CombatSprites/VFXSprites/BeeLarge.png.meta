@@ -1,0 +1,2062 @@
+fileFormatVersion: 2
+guid: 8edfd6a8dc6a3456096a9486bd92fbf4
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5668806442640638095
+    second: BeeLarge_0
+  - first:
+      213: 8208922022466618219
+    second: BeeLarge_1
+  - first:
+      213: 1085769702395922441
+    second: BeeLarge_2
+  - first:
+      213: -3121162072354890813
+    second: BeeLarge_3
+  - first:
+      213: 8361869055663669060
+    second: BeeLarge_4
+  - first:
+      213: -9208588881340759412
+    second: BeeLarge_5
+  - first:
+      213: 3502582591257710476
+    second: BeeLarge_6
+  - first:
+      213: -7247002392188725808
+    second: BeeLarge_7
+  - first:
+      213: 7770819284066438920
+    second: BeeLarge_8
+  - first:
+      213: -7860886198976625082
+    second: BeeLarge_9
+  - first:
+      213: 6522209563595059180
+    second: BeeLarge_10
+  - first:
+      213: 5294427574462342243
+    second: BeeLarge_11
+  - first:
+      213: -1476692809672008854
+    second: BeeLarge_12
+  - first:
+      213: -7352800415741949026
+    second: BeeLarge_13
+  - first:
+      213: 6552830574936360413
+    second: BeeLarge_14
+  - first:
+      213: 3020225809315899791
+    second: BeeLarge_15
+  - first:
+      213: -3603451897210876598
+    second: BeeLarge_16
+  - first:
+      213: -351770414578262470
+    second: BeeLarge_17
+  - first:
+      213: -198964964632262388
+    second: BeeLarge_18
+  - first:
+      213: -6754061673155558397
+    second: BeeLarge_19
+  - first:
+      213: -8905950598052243818
+    second: BeeLarge_20
+  - first:
+      213: -777249249330601818
+    second: BeeLarge_21
+  - first:
+      213: 8362873100947771419
+    second: BeeLarge_22
+  - first:
+      213: -903266793790467290
+    second: BeeLarge_23
+  - first:
+      213: -2974606035730511233
+    second: BeeLarge_24
+  - first:
+      213: -4658602214999315222
+    second: BeeLarge_25
+  - first:
+      213: -1726603346538695268
+    second: BeeLarge_26
+  - first:
+      213: 8229769347601226579
+    second: BeeLarge_27
+  - first:
+      213: 8992913993629529930
+    second: BeeLarge_28
+  - first:
+      213: 5149564518204357139
+    second: BeeLarge_29
+  - first:
+      213: -8885639794684714657
+    second: BeeLarge_30
+  - first:
+      213: 2145263735925477831
+    second: BeeLarge_31
+  - first:
+      213: -9217391697366668479
+    second: BeeLarge_32
+  - first:
+      213: 4733328071615044928
+    second: BeeLarge_33
+  - first:
+      213: -1078154882320501022
+    second: BeeLarge_34
+  - first:
+      213: 3931876479555437060
+    second: BeeLarge_35
+  - first:
+      213: -8129259938851589169
+    second: BeeLarge_36
+  - first:
+      213: -2464939073560486329
+    second: BeeLarge_37
+  - first:
+      213: 1896616833528857270
+    second: BeeLarge_38
+  - first:
+      213: -5876784842817993960
+    second: BeeLarge_39
+  - first:
+      213: -5984951487194974386
+    second: BeeLarge_40
+  - first:
+      213: -6120744438601519436
+    second: BeeLarge_41
+  - first:
+      213: -781163197771940573
+    second: BeeLarge_42
+  - first:
+      213: 1640109524138362907
+    second: BeeLarge_43
+  - first:
+      213: 4315802404344111675
+    second: BeeLarge_44
+  - first:
+      213: 275673652309043666
+    second: BeeLarge_45
+  - first:
+      213: 9183989353964584318
+    second: BeeLarge_46
+  - first:
+      213: -425661304416493362
+    second: BeeLarge_47
+  - first:
+      213: -4217439977439359192
+    second: BeeLarge_48
+  - first:
+      213: 262684210760007102
+    second: BeeLarge_49
+  - first:
+      213: -8802966220530613018
+    second: BeeLarge_50
+  - first:
+      213: -5727533233971985164
+    second: BeeLarge_51
+  - first:
+      213: 4976470992149533820
+    second: BeeLarge_52
+  - first:
+      213: -4292105547204470423
+    second: BeeLarge_53
+  - first:
+      213: 7037270914283877901
+    second: BeeLarge_54
+  - first:
+      213: 1460991738959312547
+    second: BeeLarge_55
+  - first:
+      213: -2482070569340277279
+    second: BeeLarge_56
+  - first:
+      213: 1001387262572777360
+    second: BeeLarge_57
+  - first:
+      213: -6452968744892590604
+    second: BeeLarge_58
+  - first:
+      213: 6403457737897598253
+    second: BeeLarge_59
+  - first:
+      213: 5090742730426204302
+    second: BeeLarge_60
+  - first:
+      213: 602185745451950659
+    second: BeeLarge_61
+  - first:
+      213: -4230080732246663730
+    second: BeeLarge_62
+  - first:
+      213: 1055676525575857436
+    second: BeeLarge_63
+  - first:
+      213: 98929069108595012
+    second: BeeLarge_64
+  - first:
+      213: 8531372919925023234
+    second: BeeLarge_65
+  - first:
+      213: 7337424212869607141
+    second: BeeLarge_66
+  - first:
+      213: -857520292460145670
+    second: BeeLarge_67
+  - first:
+      213: 2374273244523106704
+    second: BeeLarge_68
+  - first:
+      213: 6145549746716666817
+    second: BeeLarge_69
+  - first:
+      213: 6098647254510155381
+    second: BeeLarge_70
+  - first:
+      213: -2280348796566697365
+    second: BeeLarge_71
+  - first:
+      213: -2488752385963153205
+    second: BeeLarge_72
+  - first:
+      213: 2994235688656372939
+    second: BeeLarge_73
+  - first:
+      213: 7011491874560484041
+    second: BeeLarge_74
+  - first:
+      213: -4814476923559989358
+    second: BeeLarge_75
+  - first:
+      213: -2584537458248302951
+    second: BeeLarge_76
+  - first:
+      213: -509701256124773351
+    second: BeeLarge_77
+  externalObjects: {}
+  serializedVersion: 12
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: BeeLarge_0
+      rect:
+        serializedVersion: 2
+        x: 20
+        y: 121
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f808a0acc65abae40800000000000000
+      internalID: 5668806442640638095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_1
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 126
+        width: 14
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6301023613fbe170800000000000000
+      internalID: 8208922022466618219
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_2
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 135
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 908c03baacd611f00800000000000000
+      internalID: 1085769702395922441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_3
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 140
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3cb5ddeb1a76fa4d0800000000000000
+      internalID: -3121162072354890813
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_4
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 135
+        width: 14
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44ff9216a935b0470800000000000000
+      internalID: 8361869055663669060
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_5
+      rect:
+        serializedVersion: 2
+        x: 59
+        y: 131
+        width: 32
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c82821d9335843080800000000000000
+      internalID: -9208588881340759412
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_6
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 128
+        width: 10
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c8f026c2f4cab9030800000000000000
+      internalID: 3502582591257710476
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_7
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 75
+        width: 63
+        height: 75
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d55f2778b97d6b90800000000000000
+      internalID: -7247002392188725808
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_8
+      rect:
+        serializedVersion: 2
+        x: 28
+        y: 107
+        width: 48
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80f0980a7fe77db60800000000000000
+      internalID: 7770819284066438920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_9
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 131
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6464a3a96a588e290800000000000000
+      internalID: -7860886198976625082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_10
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 119
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cef2dbcba0b838a50800000000000000
+      internalID: 6522209563595059180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_11
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 120
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3646cd0f3d5997940800000000000000
+      internalID: 5294427574462342243
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_12
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 120
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6b5025a6bbb18be0800000000000000
+      internalID: -1476692809672008854
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_13
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 114
+        width: 12
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9b4b5b8afa95f990800000000000000
+      internalID: -7352800415741949026
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_14
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 114
+        width: 6
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd5866480b450fa50800000000000000
+      internalID: 6552830574936360413
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_15
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 120
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f89adb92f5ff9e920800000000000000
+      internalID: 3020225809315899791
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_16
+      rect:
+        serializedVersion: 2
+        x: 61
+        y: 96
+        width: 27
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4dc9856797fdfdc0800000000000000
+      internalID: -3603451897210876598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_17
+      rect:
+        serializedVersion: 2
+        x: 67
+        y: 111
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3e1294fba24e1bf0800000000000000
+      internalID: -351770414578262470
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_18
+      rect:
+        serializedVersion: 2
+        x: 81
+        y: 111
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0988583b622d3df0800000000000000
+      internalID: -198964964632262388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_19
+      rect:
+        serializedVersion: 2
+        x: 92
+        y: 99
+        width: 13
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3048b7c51b0c442a0800000000000000
+      internalID: -6754061673155558397
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_20
+      rect:
+        serializedVersion: 2
+        x: 107
+        y: 105
+        width: 9
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6961be7ed15b76480800000000000000
+      internalID: -8905950598052243818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_21
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 44
+        width: 94
+        height: 66
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a0e5bffce7a635f0800000000000000
+      internalID: -777249249330601818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_22
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 87
+        width: 14
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1059a3e6c4ee0470800000000000000
+      internalID: 8362873100947771419
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_23
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 97
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 62396b203a3f673f0800000000000000
+      internalID: -903266793790467290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_24
+      rect:
+        serializedVersion: 2
+        x: 95
+        y: 90
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7acc85129318b6d0800000000000000
+      internalID: -2974606035730511233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_25
+      rect:
+        serializedVersion: 2
+        x: 105
+        y: 97
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aec2e11c7f1595fb0800000000000000
+      internalID: -4658602214999315222
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_26
+      rect:
+        serializedVersion: 2
+        x: 109
+        y: 97
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c957f8d776fd908e0800000000000000
+      internalID: -1726603346538695268
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_27
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 90
+        width: 13
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35b5b235e93063270800000000000000
+      internalID: 8229769347601226579
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_28
+      rect:
+        serializedVersion: 2
+        x: 25
+        y: 79
+        width: 16
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a477de571af3dcc70800000000000000
+      internalID: 8992913993629529930
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_29
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 77
+        width: 13
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 31ab68f45ade67740800000000000000
+      internalID: 5149564518204357139
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_30
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 78
+        width: 9
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f512eb35faddfa480800000000000000
+      internalID: -8885639794684714657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_31
+      rect:
+        serializedVersion: 2
+        x: 55
+        y: 79
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c19d51700285cd10800000000000000
+      internalID: 2145263735925477831
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_32
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 88
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14b23da461f351080800000000000000
+      internalID: -9217391697366668479
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_33
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 82
+        width: 17
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04ddff98dc820b140800000000000000
+      internalID: 4733328071615044928
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_34
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 62
+        width: 36
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e6fe6ac8df9901f0800000000000000
+      internalID: -1078154882320501022
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_35
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 72
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4028d9083d4d09630800000000000000
+      internalID: 3931876479555437060
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_36
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 63
+        width: 17
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc3ffe108211f2f80800000000000000
+      internalID: -8129259938851589169
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_37
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 68
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74e527fe8f6cacdd0800000000000000
+      internalID: -2464939073560486329
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_38
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 69
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b2838d16f2225a10800000000000000
+      internalID: 1896616833528857270
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_39
+      rect:
+        serializedVersion: 2
+        x: 57
+        y: 75
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8130f6e6257717ea0800000000000000
+      internalID: -5876784842817993960
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_40
+      rect:
+        serializedVersion: 2
+        x: 93
+        y: 51
+        width: 25
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e473ccff45e21fca0800000000000000
+      internalID: -5984951487194974386
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_41
+      rect:
+        serializedVersion: 2
+        x: 117
+        y: 62
+        width: 8
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4be6538bc5fbe0ba0800000000000000
+      internalID: -6120744438601519436
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_42
+      rect:
+        serializedVersion: 2
+        x: 122
+        y: 18
+        width: 28
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32df13dd530c825f0800000000000000
+      internalID: -781163197771940573
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_43
+      rect:
+        serializedVersion: 2
+        x: 130
+        y: 73
+        width: 11
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b18800b2ce6d2c610800000000000000
+      internalID: 1640109524138362907
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_44
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 68
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b3225bfab6fc4eb30800000000000000
+      internalID: 4315802404344111675
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_45
+      rect:
+        serializedVersion: 2
+        x: 140
+        y: 73
+        width: 10
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d9a0d7e9b363d300800000000000000
+      internalID: 275673652309043666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_46
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 58
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7d370898a5147f70800000000000000
+      internalID: 9183989353964584318
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_47
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 9
+        width: 21
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec020a38c4fb71af0800000000000000
+      internalID: -425661304416493362
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_48
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 55
+        width: 16
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82f023b7fa4a875c0800000000000000
+      internalID: -4217439977439359192
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_49
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 51
+        width: 16
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ebd347ed5ed35a300800000000000000
+      internalID: 262684210760007102
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_50
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 46
+        width: 13
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e4828fccd495d580800000000000000
+      internalID: -8802966220530613018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_51
+      rect:
+        serializedVersion: 2
+        x: 111
+        y: 36
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f40bd59ed6b380b0800000000000000
+      internalID: -5727533233971985164
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_52
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 54
+        width: 13
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c74db1a300aff0540800000000000000
+      internalID: 4976470992149533820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_53
+      rect:
+        serializedVersion: 2
+        x: 116
+        y: 48
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 969d460deb06f64c0800000000000000
+      internalID: -4292105547204470423
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_54
+      rect:
+        serializedVersion: 2
+        x: 123
+        y: 53
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d06341a8c9869a160800000000000000
+      internalID: 7037270914283877901
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_55
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 50
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a63374fe3c764410800000000000000
+      internalID: 1460991738959312547
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_56
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 0
+        width: 68
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ed650fb7f9ed8dd0800000000000000
+      internalID: -2482070569340277279
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_57
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 34
+        width: 12
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 09f4044e864a5ed00800000000000000
+      internalID: 1001387262572777360
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_58
+      rect:
+        serializedVersion: 2
+        x: 28
+        y: 48
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f59af5ad137276a0800000000000000
+      internalID: -6452968744892590604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_59
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 22
+        width: 26
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2ddc99b2e6add850800000000000000
+      internalID: 6403457737897598253
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_60
+      rect:
+        serializedVersion: 2
+        x: 97
+        y: 28
+        width: 15
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e80c4f99a83f5a640800000000000000
+      internalID: 5090742730426204302
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_61
+      rect:
+        serializedVersion: 2
+        x: 25
+        y: 41
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 342a776beb46b5800800000000000000
+      internalID: 602185745451950659
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_62
+      rect:
+        serializedVersion: 2
+        x: 83
+        y: 4
+        width: 18
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ecd96376cfbbb45c0800000000000000
+      internalID: -4230080732246663730
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_63
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 40
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c15eaa0f43486ae00800000000000000
+      internalID: 1055676525575857436
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_64
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 35
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4498d26d6777f5100800000000000000
+      internalID: 98929069108595012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_65
+      rect:
+        serializedVersion: 2
+        x: 23
+        y: 22
+        width: 11
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 202a4823876856670800000000000000
+      internalID: 8531372919925023234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_66
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 3
+        width: 35
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ee617e3274c3d560800000000000000
+      internalID: 7337424212869607141
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_67
+      rect:
+        serializedVersion: 2
+        x: 113
+        y: 0
+        width: 28
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af3593c56d97914f0800000000000000
+      internalID: -857520292460145670
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_68
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 20
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 091938bbfec13f020800000000000000
+      internalID: 2374273244523106704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_69
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 15
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1cbe9822fe0694550800000000000000
+      internalID: 6145549746716666817
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_70
+      rect:
+        serializedVersion: 2
+        x: 6
+        y: 6
+        width: 8
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5763d7fad5fb2a450800000000000000
+      internalID: 6098647254510155381
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_71
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 0
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6a07a0f9d29a50e0800000000000000
+      internalID: -2280348796566697365
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_72
+      rect:
+        serializedVersion: 2
+        x: 20
+        y: 0
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc8a2c414ec267dd0800000000000000
+      internalID: -2488752385963153205
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_73
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 2
+        width: 12
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc40924ae79ad8920800000000000000
+      internalID: 2994235688656372939
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_74
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 3
+        width: 11
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c227b026b2dd4160800000000000000
+      internalID: 7011491874560484041
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_75
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 0
+        width: 18
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 29f24e70fba8f2db0800000000000000
+      internalID: -4814476923559989358
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_76
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 0
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99e3b6c00e0e12cd0800000000000000
+      internalID: -2584537458248302951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BeeLarge_77
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 9
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 91ccc17786d2de8f0800000000000000
+      internalID: -509701256124773351
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      BeeLarge_0: 5668806442640638095
+      BeeLarge_1: 8208922022466618219
+      BeeLarge_10: 6522209563595059180
+      BeeLarge_11: 5294427574462342243
+      BeeLarge_12: -1476692809672008854
+      BeeLarge_13: -7352800415741949026
+      BeeLarge_14: 6552830574936360413
+      BeeLarge_15: 3020225809315899791
+      BeeLarge_16: -3603451897210876598
+      BeeLarge_17: -351770414578262470
+      BeeLarge_18: -198964964632262388
+      BeeLarge_19: -6754061673155558397
+      BeeLarge_2: 1085769702395922441
+      BeeLarge_20: -8905950598052243818
+      BeeLarge_21: -777249249330601818
+      BeeLarge_22: 8362873100947771419
+      BeeLarge_23: -903266793790467290
+      BeeLarge_24: -2974606035730511233
+      BeeLarge_25: -4658602214999315222
+      BeeLarge_26: -1726603346538695268
+      BeeLarge_27: 8229769347601226579
+      BeeLarge_28: 8992913993629529930
+      BeeLarge_29: 5149564518204357139
+      BeeLarge_3: -3121162072354890813
+      BeeLarge_30: -8885639794684714657
+      BeeLarge_31: 2145263735925477831
+      BeeLarge_32: -9217391697366668479
+      BeeLarge_33: 4733328071615044928
+      BeeLarge_34: -1078154882320501022
+      BeeLarge_35: 3931876479555437060
+      BeeLarge_36: -8129259938851589169
+      BeeLarge_37: -2464939073560486329
+      BeeLarge_38: 1896616833528857270
+      BeeLarge_39: -5876784842817993960
+      BeeLarge_4: 8361869055663669060
+      BeeLarge_40: -5984951487194974386
+      BeeLarge_41: -6120744438601519436
+      BeeLarge_42: -781163197771940573
+      BeeLarge_43: 1640109524138362907
+      BeeLarge_44: 4315802404344111675
+      BeeLarge_45: 275673652309043666
+      BeeLarge_46: 9183989353964584318
+      BeeLarge_47: -425661304416493362
+      BeeLarge_48: -4217439977439359192
+      BeeLarge_49: 262684210760007102
+      BeeLarge_5: -9208588881340759412
+      BeeLarge_50: -8802966220530613018
+      BeeLarge_51: -5727533233971985164
+      BeeLarge_52: 4976470992149533820
+      BeeLarge_53: -4292105547204470423
+      BeeLarge_54: 7037270914283877901
+      BeeLarge_55: 1460991738959312547
+      BeeLarge_56: -2482070569340277279
+      BeeLarge_57: 1001387262572777360
+      BeeLarge_58: -6452968744892590604
+      BeeLarge_59: 6403457737897598253
+      BeeLarge_6: 3502582591257710476
+      BeeLarge_60: 5090742730426204302
+      BeeLarge_61: 602185745451950659
+      BeeLarge_62: -4230080732246663730
+      BeeLarge_63: 1055676525575857436
+      BeeLarge_64: 98929069108595012
+      BeeLarge_65: 8531372919925023234
+      BeeLarge_66: 7337424212869607141
+      BeeLarge_67: -857520292460145670
+      BeeLarge_68: 2374273244523106704
+      BeeLarge_69: 6145549746716666817
+      BeeLarge_7: -7247002392188725808
+      BeeLarge_70: 6098647254510155381
+      BeeLarge_71: -2280348796566697365
+      BeeLarge_72: -2488752385963153205
+      BeeLarge_73: 2994235688656372939
+      BeeLarge_74: 7011491874560484041
+      BeeLarge_75: -4814476923559989358
+      BeeLarge_76: -2584537458248302951
+      BeeLarge_77: -509701256124773351
+      BeeLarge_8: 7770819284066438920
+      BeeLarge_9: -7860886198976625082
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

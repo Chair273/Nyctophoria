@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using TMPro;
 
 public class RoomTransfer : MonoBehaviour
@@ -17,5 +18,13 @@ public class RoomTransfer : MonoBehaviour
     {
         this.roomIndex = roomIndex;
         transform.Find("Canvas").Find("Text").GetComponent<TextMeshProUGUI>().text = "(" + roomIndex.x + "," + roomIndex.y + ")";
+
+        StartCoroutine(enable());
+    }
+
+    private IEnumerator enable()
+    {
+        yield return new WaitForSecondsRealtime(2);
+        transform.GetComponent<CircleCollider2D>().enabled = true;
     }
 }

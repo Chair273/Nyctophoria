@@ -18,20 +18,24 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Vector3 MoveVector = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0);
+        float horizontalAxis = Input.GetAxis("Horizontal");
+        float verticalAxis = Input.GetAxis("Vertical");
+
+        Vector3 MoveVector = new Vector3(horizontalAxis > 0 ? 1 : horizontalAxis < 0 ? -1 : 0, verticalAxis > 0 ? 1 : verticalAxis < 0 ? -1 : 0, 0);
+
+        animator.SetBool("Moving", !MoveVector.Equals(Vector3.zero));
 
         Rigidbody2D.MovePosition(transform.position + MoveVector * Time.deltaTime * Speed);
 
-        if (Input.GetAxis("Vertical") > 0 || Input.GetAxis("Vertical") < 0)
+        if (horizontalAxis != 0)
         {
-            animator.SetBool("Moving", true);
-            animator.SetFloat("X axis", Input.GetAxis("Vertical"));
+            transform.localScale = new Vector3(MoveVector.x * MoveVector.y * 0.4f, 0.4f, 1);
         }
         else
         {
-            animator.SetBool("Moving", false);
+            transform.localScale = new Vector3(0.4f, 0.4f, 1);
         }
 
-        Transform playerTransform = GetComponent<Transform>();
+        animator.SetFloat("Y axis", MoveVector.y);
     }
 }

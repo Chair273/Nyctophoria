@@ -11,7 +11,6 @@ using UnityEngine.Rendering;
 using Random = UnityEngine.Random;
 using Object = UnityEngine.Object;
 using UnityEngine.Rendering.Universal;
-using JetBrains.Annotations;
 
 //----------Game----------\\
 
@@ -52,8 +51,8 @@ public class CombatHandler : MonoBehaviour
     {
         Gui = transform.Find("Gui");
 
-        Gui.Find("Background").Find("Fog").gameObject.SetActive(LowGraphicsMode);
-        Gui.Find("Background").Find("Void").Find("Fog").gameObject.SetActive(LowGraphicsMode);
+        Gui.Find("Background").Find("Fog").gameObject.SetActive(!LowGraphicsMode);
+        Gui.Find("Background").Find("Void").Find("Fog").gameObject.SetActive(!LowGraphicsMode);
 
         movementGui = Gui.Find("Movement").Find("Movement").GetComponent<TextMeshProUGUI>();
         volumeProfile = Gui.Find("PostProcessing").GetComponent<Volume>().profile;
@@ -222,7 +221,6 @@ public class CombatHandler : MonoBehaviour
     protected IEnumerator Combat()
     {
         int round = 1;
-        bool loss = false;
 
         while (!gameEnded)//while there is at least 1 player and 1 enemy alive
         {
@@ -288,10 +286,6 @@ public class CombatHandler : MonoBehaviour
                     if (!foundPlayer || !foundEnemy)
                     {
                         gameEnded = true;
-                        if (!foundPlayer)
-                        {
-                            loss = true;
-                        }
                         break;
                     }
                 }
@@ -308,18 +302,35 @@ public class CombatHandler : MonoBehaviour
 
         Debug.Log("Combat Ended");
 
+        List<Dictionary<string, object>> charInfo = Manager.GetCharacters();
+        bool survivors = false;
+
+        for (int i = 0; i < charInfo.Count; i = i)
+        {
+            if (((GameObject)charInfo[i]["ObjectReference"]).GetComponent<Character>().GetGridPos().x == 1)
+            {
+                charInfo.RemoveAt(i);
+            }
+            else
+            {
+                survivors = true;
+                i++;
+            }
+        }
+
+        Vignette vignette;
+
+        if (!volumeProfile.TryGet(out vignette)) throw new System.NullReferenceException(nameof(vignette));
+
+        StartCoroutine(Tween.New(1, vignette, 5f));
+
         yield return new WaitForSeconds(5);
 
-        if (!loss)
-        {
-            SceneManager.LoadScene("RoomGenerator");
-        }
-        else
-        {
-            this.GetComponent<UIController>().FadeToWhite();
-            yield return new WaitForSeconds(5);
-            SceneManager.LoadScene("Title");
-        }
+        AsyncOperation loaded = SceneManager.LoadSceneAsync("RoomGenerator");
+
+        yield return new WaitUntil(() => loaded.isDone);
+
+        SceneManager.SetActiveScene(SceneManager.GetSceneByName("RoomGenerator"));
         SceneManager.UnloadSceneAsync("Combat");
     }
 }
@@ -626,7 +637,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
             baseColor = new Color32(255, 255, 255, 255);
         }
 
-        spriteRenderer = transform.GetComponent<SpriteRenderer>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
 
         spriteRenderer.sprite = sprite;
         spriteRenderer.color = baseColor;
@@ -1032,11 +1043,11 @@ public class Player : Character
             yield return StartCoroutine(DrawCardCoroutine(drawAmount));
 
             CombatHandler.endTurnButton.gameObject.SetActive(true);
-            CombatHandler.endTurnButton.transform.GetComponent<Animator>().Play("Enable");
+            CombatHandler.endTurnButton.GetComponent<Animator>().Play("Enable");
 
             yield return new WaitUntil(() => turnEnd);
 
-            CombatHandler.endTurnButton.transform.GetComponent<Animator>().Play("Disable");
+            CombatHandler.endTurnButton.GetComponent<Animator>().Play("Disable");
         }
 
         turnStage = 0;
@@ -1273,7 +1284,7 @@ public class Player : Character
             GameObject item = Instantiate(itemPrefab, CombatHandler.itemGui.transform);
             item.transform.Find("Text").GetComponent<TextMeshProUGUI>().text = key + " x " + items[key];
 
-            item.transform.GetComponent<Button>().onClick.AddListener(() =>
+            item.GetComponent<Button>().onClick.AddListener(() =>
             {
                 string thisKey = key;
 
@@ -2094,7 +2105,7 @@ public class PokeVFX : Effect
     private IEnumerator Poke(Vector3 target, Character user)
     {
         GameObject obj = VFXHandler.MakeObject(spriteID, new Vector3(user.transform.position.x, user.transform.position.y + 0.75f * user.transform.localScale.y, -2));
-        SpriteRenderer spriteRenderer = obj.transform.GetComponent<SpriteRenderer>();
+        SpriteRenderer spriteRenderer = obj.GetComponent<SpriteRenderer>();
 
         Color32 baseColor = spriteRenderer.color;
         Vector3 targetPos = new Vector3(target.x, target.y + 0.75f, -2);
@@ -2177,8 +2188,8 @@ public class DiceVFX : Effect //While this is an effect, it is intended to only 
         WaitForEndOfFrame waitTime = new WaitForEndOfFrame();
 
         GameObject diceObject = Object.Instantiate(Resources.Load<GameObject>("CombatPrefabs/VFX/DamageDice"), parent);
-        Animator diceAnimator = diceObject.transform.GetComponent<Animator>();
-        AudioSource diceAudio = diceObject.transform.GetComponent<AudioSource>();
+        Animator diceAnimator = diceObject.GetComponent<Animator>();
+        AudioSource diceAudio = diceObject.GetComponent<AudioSource>();
 
         diceAnimator.Play("Roll");
 
@@ -2667,7 +2678,7 @@ public class Card : MonoBehaviour
         transform.rotation = Quaternion.Euler(0, 0, -10);
 
         gameObject.name = character.name + " " + cardInfo["Name"];
-        animator = transform.GetComponent<Animator>();
+        animator = GetComponent<Animator>();
 
         frontCard = transform.Find("Root").Find("FrontCard");
         backCard = transform.Find("Root").Find("BackCard");
@@ -2777,7 +2788,7 @@ public class Card : MonoBehaviour
                 Vector3 pos = CombatHandler.getNewPos(new Vector2Int(targetPos.x, targetPos.y + gridPos.y));
 
                 GameObject chainObject = Instantiate(spikePrefab, pos, Quaternion.identity);
-                SpriteRenderer chainRender = chainObject.transform.GetComponent<SpriteRenderer>();
+                SpriteRenderer chainRender = chainObject.GetComponent<SpriteRenderer>();
 
                 chainObjects.Add(chainObject);
 
@@ -2801,7 +2812,7 @@ public class Card : MonoBehaviour
         foreach(GameObject chainObject in chainObjects)
         {
             Destroy(chainObject, debounce ? 0 : 0.5f);
-            StartCoroutine(Tween.New(new Color32(0, 0, 0, 0), chainObject.transform.GetComponent<SpriteRenderer>(), 0.25f));
+            StartCoroutine(Tween.New(new Color32(0, 0, 0, 0), chainObject.GetComponent<SpriteRenderer>(), 0.25f));
         }
 
         chainObjects = new List<GameObject>();
@@ -2945,6 +2956,24 @@ public class Tween
             spriteRenderer.color = targetColor;
         }
     }
+
+    public static IEnumerator New(float endVal, Vignette vignette, float tweenTime)
+    {
+        float startTime = Time.time;
+
+        float startVal = (float) vignette.intensity;
+
+        while (Time.time - startTime < startTime + tweenTime && vignette)
+        {
+            vignette.intensity.Override(startVal + (Time.time - startTime) / tweenTime * (endVal - startVal));
+            yield return new WaitForFixedUpdate();
+        }
+
+        if (vignette)
+        {
+            vignette.intensity.Override(endVal);
+        }
+    }
 }
 
 public class VFXHandler : MonoBehaviour
@@ -2969,7 +2998,7 @@ public class VFXHandler : MonoBehaviour
         else
         {
             GameObject placeholder = Instantiate(VFXSprites["Missing"], pos, Quaternion.identity);
-            placeholder.transform.GetComponent<SpriteRenderer>().color = new Color32(255, 0, 0, 255);
+            placeholder.GetComponent<SpriteRenderer>().color = new Color32(255, 0, 0, 255);
             return placeholder;
         }
     }

@@ -3,16 +3,24 @@ using TMPro;
 
 public class DrawPileDisplay : MonoBehaviour
 {
-    public TextMeshProUGUI amount;
+    public TextMeshProUGUI text;
 
     private void OnMouseEnter()
     {
-        amount.text = CombatHandler.GetCurrentCharacter().GetDrawPileCount() + " cards remaining.";
-        amount.enabled = true;
+        Character current = CombatHandler.main.GetCurrentCharacter();
+
+        if (current == null || current.GetGridPos().x == 1)
+        {
+            return;
+        }
+        int amount = current.GetDrawPileCount();
+
+        text.text = (amount == 0 ? "No" : amount) + " card" + (amount != 1 ? "s " : " ") + "remaining."; //No cards remaining. 1 card remaining. # cards remaining.
+        text.enabled = true;
     }
 
     private void OnMouseExit()
     {
-        amount.enabled = false;
+        text.enabled = false;
     }
 }

@@ -2,10 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Manager : MonoBehaviour
+public class CharacterManager : MonoBehaviour
 {
     private static List<Dictionary<string, object>> characters = new List<Dictionary<string, object>>(); //first string key is the player name, second is the name of each stat
-    private static Dictionary<string, Dictionary<string, object>> charTemplate = new Dictionary<string, Dictionary<string, object>>
+    private static Dictionary<string, Dictionary<string, object>> charTemplate;
+
+    public void DefineCharacters()
+    {
+        charTemplate = new Dictionary<string, Dictionary<string, object>>
     {
         //Players
 
@@ -89,46 +93,33 @@ public class Manager : MonoBehaviour
         } },
 
     };
-
-    private static Vector2Int currentRoom = new Vector2Int();
-    private static Room[,] area;
-
-    private static int secondsLeft = 300;
-
-    public static void AddCharacter(string name)
-    {
-        if (charTemplate.ContainsKey(name))
-        {
-            characters.Add(charTemplate[name]);
-        }
-        else
-        {
-            Debug.LogWarning("Character info not found.");
-        }
     }
 
-    public static List<Dictionary<string, object>> GetCharacters()
+    public void AddCharacter(string charIndex)
+    {
+        if (!charTemplate.ContainsKey(charIndex))
+        {
+            Debug.LogError("Character index not contained in template. " + charIndex);
+            return;
+        }
+
+        Dictionary<string, object> newChar = new Dictionary<string, object>();
+
+        foreach (var kvp in charTemplate[charIndex])
+        {
+            newChar.Add(kvp.Key, kvp.Value);
+        }
+
+        characters.Add(newChar);
+    }
+
+    public List<Dictionary<string, object>> GetCharacters()
     {
         return characters;
     }
 
-    public static Vector2Int GetCurrentRoom()
+    public void ClearCharacters()
     {
-        return currentRoom;
-    }
-
-    public static void SetCurrentRoom(Vector2Int room)
-    {
-        currentRoom = room;
-    }
-
-    public static Room[,] GetArea()
-    {
-        if (area == null)
-        {
-            area = RoomGenerator.GenerateArea();
-        }
-
-        return area;
+        characters = new List<Dictionary<string, object>>();
     }
 }

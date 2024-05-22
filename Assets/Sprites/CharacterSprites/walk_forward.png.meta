@@ -125,12 +125,12 @@ TextureImporter:
       name: walk_forward_0
       rect:
         serializedVersion: 2
-        x: 74
-        y: 102
-        width: 79
-        height: 222
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+        x: 60
+        y: 75
+        width: 120
+        height: 275
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -146,12 +146,12 @@ TextureImporter:
       name: walk_forward_1
       rect:
         serializedVersion: 2
-        x: 326
-        y: 91
-        width: 75
-        height: 233
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+        x: 310
+        y: 75
+        width: 120
+        height: 275
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -167,12 +167,12 @@ TextureImporter:
       name: walk_forward_2
       rect:
         serializedVersion: 2
-        x: 576
-        y: 88
-        width: 81
-        height: 232
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+        x: 560
+        y: 75
+        width: 120
+        height: 275
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -188,12 +188,12 @@ TextureImporter:
       name: walk_forward_3
       rect:
         serializedVersion: 2
-        x: 822
-        y: 84
-        width: 83
-        height: 235
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+        x: 810
+        y: 75
+        width: 120
+        height: 275
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -209,12 +209,12 @@ TextureImporter:
       name: walk_forward_4
       rect:
         serializedVersion: 2
-        x: 1073
-        y: 91
-        width: 82
-        height: 230
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+        x: 1055
+        y: 75
+        width: 120
+        height: 275
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -230,12 +230,12 @@ TextureImporter:
       name: walk_forward_5
       rect:
         serializedVersion: 2
-        x: 1330
-        y: 97
-        width: 69
-        height: 225
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+        x: 1305
+        y: 75
+        width: 120
+        height: 275
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -251,12 +251,12 @@ TextureImporter:
       name: walk_forward_6
       rect:
         serializedVersion: 2
-        x: 1583
-        y: 105
-        width: 65
-        height: 220
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+        x: 1560
+        y: 75
+        width: 120
+        height: 275
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -272,12 +272,12 @@ TextureImporter:
       name: walk_forward_7
       rect:
         serializedVersion: 2
-        x: 1831
-        y: 101
-        width: 68
-        height: 225
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+        x: 1810
+        y: 75
+        width: 120
+        height: 275
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -293,12 +293,12 @@ TextureImporter:
       name: walk_forward_8
       rect:
         serializedVersion: 2
-        x: 2068
-        y: 88
-        width: 108
-        height: 235
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+        x: 2055
+        y: 75
+        width: 120
+        height: 275
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []

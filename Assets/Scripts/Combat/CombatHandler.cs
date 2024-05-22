@@ -4,95 +4,121 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Reflection;
-using UnityEngine.SceneManagement;
 using UnityEngine.Rendering;
 
 using Random = UnityEngine.Random;
-using Object = UnityEngine.Object;
 using UnityEngine.Rendering.Universal;
 
 //----------Game----------\\
 
 public class CombatHandler : MonoBehaviour
 {
-    public static Button endTurnButton;
+    public static CombatHandler main;
 
-    public static GameObject preTurnGui;
-    public static GameObject exhaustionDC;
-    public static GameObject drawPile;
-    public static GameObject itemGui;
+    public Button endTurnButton;
 
-    public static TextMeshProUGUI movementGui;
+    public GameObject preTurnGui;
+    public GameObject exhaustionDC;
+    public GameObject drawPile;
+    public GameObject itemGui;
+
+    public TextMeshProUGUI movementGui;
 
     public bool LowGraphicsMode;
 
-    private static Character currentCharacter;
+    private Character currentCharacter;
 
-    private static List<Character> participants = new List<Character>();
+    private List<Character> participants = new List<Character>();
 
-    private static Transform Gui;
+    private GameObject charPrefab;
 
-    private static GameObject charPrefab;
+    private bool gameEnded = false;
 
-    private static bool gameEnded = false;
+    private int totalPlayerHealth;
 
-    private static int totalPlayerHealth;
-
-    private static VolumeProfile volumeProfile;
+    private VolumeProfile volumeProfile;
 
     private List<Character> turnOrder = new List<Character>();
 
-    public static CombatHandler main;
+    private float[,] xReference = { { -0.8f, 0.5f, 1.9f, 3.1f, 4.5f, 5.8f }, { 0.2f, 1.1f, 2.1f, 2.9f, 3.9f, 4.8f } }; //used to convert a grid position to a world position, first index is the valid player x positions, second index is the valid enemy x positions
 
-    private static float[,] xReference = { { -0.8f, 0.5f, 1.9f, 3.1f, 4.5f, 5.8f }, { 0.2f, 1.1f, 2.1f, 2.9f, 3.9f, 4.8f } }; //used to convert a grid position to a world position, first index is the valid player x positions, second index is the valid enemy x positions
-
-    void Start()
+    public void Begin()
     {
-        Gui = transform.Find("Gui");
 
-        Gui.Find("Background").Find("Fog").gameObject.SetActive(!LowGraphicsMode);
-        Gui.Find("Background").Find("Void").Find("Fog").gameObject.SetActive(!LowGraphicsMode);
-
-        movementGui = Gui.Find("Movement").Find("Movement").GetComponent<TextMeshProUGUI>();
-        volumeProfile = Gui.Find("PostProcessing").GetComponent<Volume>().profile;
-        endTurnButton = Gui.Find("EndTurnButtonCanvas").Find("EndTurnButton").GetComponent<Button>();
-        preTurnGui = Gui.Find("PreTurnGui").gameObject;
-        exhaustionDC = Gui.Find("Exhaustion").Find("ExhaustionDC").gameObject;
-        drawPile = Gui.Find("DrawPile").gameObject;
-        itemGui = Gui.Find("Items").Find("Main").gameObject;
-
-        charPrefab = Resources.Load<GameObject>("CombatPrefabs/CharacterPlaceholder");
-
-        List<Dictionary<string, object>> charStats = Manager.GetCharacters();
-        participants = new List<Character>();
-
-        main = this;
-
-        totalPlayerHealth = 0;
-
-        bool[,] takenPositions = new bool[2, 6];
-
-        for (int i = 0; i < charStats.Count; i++)
+        Transform Gui;
         {
-            bool isPlayer = (bool)charStats[i]["IsPlayer"];
+            Gui = transform.Find("Gui");
 
-            GameObject charObject = Instantiate(charPrefab, Gui);
-            Type type = isPlayer ? typeof(Player) : typeof(Enemy);
-            Character character = charObject.AddComponent(type) as Character;
+            Gui.Find("Background").Find("Fog").gameObject.SetActive(!LowGraphicsMode);
+            Gui.Find("Background").Find("Void").Find("Fog").gameObject.SetActive(!LowGraphicsMode);
 
-            Vector2Int pos = new Vector2Int(isPlayer? 0 : 1, 0);
 
-            for (int v = 0; v < 6; v++)
+            movementGui = Gui.Find("Movement").Find("Movement").GetComponent<TextMeshProUGUI>();
+            volumeProfile = Gui.Find("PostProcessing").GetComponent<Volume>().profile;
+            endTurnButton = Gui.Find("EndTurnButtonCanvas").Find("EndTurnButton").GetComponent<Button>();
+            preTurnGui = Gui.Find("PreTurnGui").gameObject;
+            exhaustionDC = Gui.Find("Exhaustion").Find("ExhaustionDC").gameObject;
+            drawPile = Gui.Find("DrawPile").gameObject;
+            itemGui = Gui.Find("Items").Find("Main").gameObject;
+        }//gui declarations
+
+        {
+            charPrefab = Resources.Load<GameObject>("CombatPrefabs/CharacterPlaceholder");
+            participants = new List<Character>();
+            totalPlayerHealth = 0;
+            gameEnded = false;
+        }//misc declarations
+
+        {
+            List<Dictionary<string, object>> charStats = MainManager.characterManager.GetCharacters();
+            bool[,] takenPositions = new bool[2, 6];
+
+            for (int i = 0; i < charStats.Count; i++)
             {
-                pos = new Vector2Int(pos.x, Random.Range(v, 5));
+                bool isPlayer = (bool)charStats[i]["IsPlayer"];
 
-                if (!takenPositions[pos.x, pos.y])
+                GameObject charObject = Instantiate(charPrefab, Gui);
+                Type type = isPlayer ? typeof(Player) : typeof(Enemy);
+                Character character = charObject.AddComponent(type) as Character;
+
+                Vector2Int pos = new Vector2Int(isPlayer ? 0 : 1, 0);
+
+                for (int v = 0; v < 6; v++)
                 {
-                    takenPositions[pos.x, pos.y] = true;
-                    break;
+                    pos = new Vector2Int(pos.x, Random.Range(v, 5));
+
+                    if (!takenPositions[pos.x, pos.y])
+                    {
+                        takenPositions[pos.x, pos.y] = true;
+                        break;
+                    }
                 }
+
+                Dictionary<string, int> cards = new Dictionary<string, int>();
+
+                foreach (string key in ((Dictionary<string, int>)charStats[i]["Cards"]).Keys)
+                {
+                    cards.Add(key, ((Dictionary<string, int>)charStats[i]["Cards"])[key]);
+                }
+
+                character.New(
+                    (int)charStats[i]["Health"],
+                    pos,
+                    (string)charStats[i]["Name"],
+                    (Sprite)charStats[i]["CombatSprite"],
+                    cards,
+                    (Dictionary<string, int>)charStats[i]["Items"]);
+
+                participants.Add(character);
+                charStats[i]["ObjectReference"] = charObject;
+
+                if (isPlayer)
+                {
+                    totalPlayerHealth += (int)charStats[i]["MaxHealth"];
+                }
+
             }
+<<<<<<< Updated upstream
 
             character.New(
                 (int)charStats[i]["Health"],
@@ -115,17 +141,40 @@ public class CombatHandler : MonoBehaviour
         gameEnded = false;
 
         AttackHandler.DefineCards();
+=======
+        }//character position setter
+>>>>>>> Stashed changes
 
         UpdateHealthVignette();
         StartCoroutine(Combat());
     }
 
-    public static float getXPos(int x, int y)//returns the world x position of a grid position
+    public float getXPos(int x, int y)//returns the world x position of a grid position
     {
         return xReference[x, y];
     }
 
-    public static Character GetCharacter(Vector2Int gridPos)
+    public List<Character> GetParticipants()
+    {
+        return participants;
+    }
+
+    public List<Character> GetParticipants(int x)
+    {
+        List<Character> returnThese = new List<Character>();
+
+        foreach (Character character in participants)
+        {
+            if (character.GetGridPos().x == x)
+            {
+                returnThese.Add(character);
+            }
+        }
+
+        return returnThese;
+    }
+
+    public Character GetCharacter(Vector2Int gridPos)
     {
         if (gridPos.y < 0 || gridPos.y > 5)
         {
@@ -143,12 +192,12 @@ public class CombatHandler : MonoBehaviour
         return null;
     }
 
-    public static Character GetCurrentCharacter()
+    public Character GetCurrentCharacter()
     {
         return currentCharacter;
     }
 
-    public static Character GetLowestHealth(int targetRow)//2 means any row
+    public Character GetLowestHealth(int targetRow)//2 means any row
     {
         int lowestHealth = int.MaxValue;
         Character lowestHealthCharacter = null;
@@ -167,12 +216,12 @@ public class CombatHandler : MonoBehaviour
         return lowestHealthCharacter;
     }
 
-    public static void RemoveCharacter(Character character)
+    public void RemoveCharacter(Character character)
     {
         participants.Remove(character);
     }
 
-    public static Vector2Int GetClosestGridPos(Vector3 pos, int xIndex)
+    public Vector2Int GetClosestGridPos(Vector3 pos, int xIndex)
     {
         float closestDistance = float.MaxValue;
         Vector2Int closestPos = new Vector2Int(xIndex, 0);
@@ -189,7 +238,7 @@ public class CombatHandler : MonoBehaviour
         return closestPos;
     }
 
-    public static Vector3 getNewPos(Vector2Int moveTo)//gets the physical world space the character should be in corresponding to each grid position
+    public Vector3 getNewPos(Vector2Int moveTo)//gets the physical world space the character should be in corresponding to each grid position
     {
         float xPos = getXPos(moveTo.x, moveTo.y);
 
@@ -199,7 +248,7 @@ public class CombatHandler : MonoBehaviour
             moveTo.x == 0 ? -3: -1);
     }
 
-    public static void UpdateHealthVignette()
+    public void UpdateHealthVignette()
     {
         float currentHealth = 0f;
 
@@ -218,7 +267,12 @@ public class CombatHandler : MonoBehaviour
         vignette.intensity.Override(0.6f - (currentHealth / totalPlayerHealth) / 2);
     }
 
-    protected IEnumerator Combat()
+    private void Start()
+    {
+        main = this;
+    }
+
+    private IEnumerator Combat()
     {
         int round = 1;
 
@@ -304,6 +358,7 @@ public class CombatHandler : MonoBehaviour
 
         yield return new WaitForSeconds(5);
 
+<<<<<<< Updated upstream
         SceneManager.LoadScene("RoomGenerator");
         SceneManager.UnloadSceneAsync("Combat");
     }
@@ -1526,10 +1581,46 @@ public class Enemy : Character
         if (drawPile.Count == 0)
         {
             Debug.Log(name + " ran out of cards in their draw pile.");
+=======
+        if (!volumeProfile.TryGet(out vignette)) throw new System.NullReferenceException(nameof(vignette));
+
+        StartCoroutine(Tween.New(1, vignette, 2));
+        StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), vignette, 2));
+
+        yield return new WaitForSecondsRealtime(3);
+
+        List<Dictionary<string, object>> charInfo = MainManager.characterManager.GetCharacters();
+        bool survivors = false;
+
+        for (int i = charInfo.Count - 1; i >= 0; i--)
+        {
+            if (charInfo[i]["ObjectReference"].Equals(null) || ((GameObject)charInfo[i]["ObjectReference"]).GetComponent<Character>().GetGridPos().x == 1)
+            {
+                charInfo.RemoveAt(i);
+            }
+            else
+            {
+                charInfo[i]["Health"] = ((GameObject)charInfo[i]["ObjectReference"]).GetComponent<Character>().GetHealth();
+                charInfo[i]["ObjectReference"] = null;
+
+                survivors = true;
+            }
+        }
+
+
+        if (survivors)
+        {
+            MainManager.sceneManager.LoadScene("Overworld", "Combat");
+        }
+        else
+        {
+            MainManager.GameOver();
+>>>>>>> Stashed changes
         }
     }
 }
 
+<<<<<<< Updated upstream
 //----------Target Types----------\\
 
 public class TargetType
@@ -2852,6 +2943,8 @@ public class Card : MonoBehaviour
 
 //----------Misc----------\\
 
+=======
+>>>>>>> Stashed changes
 public class Tween
 {
     public static IEnumerator New(Vector3 targetPos, Transform transform, float tweenTime)
@@ -2930,6 +3023,7 @@ public class Tween
             spriteRenderer.color = targetColor;
         }
     }
+<<<<<<< Updated upstream
 }
 
 public class VFXHandler : MonoBehaviour
@@ -2964,3 +3058,42 @@ public class VFXHandler : MonoBehaviour
         return Instantiate(prefab);
     }
 }
+=======
+
+    public static IEnumerator New(float endVal, Vignette vignette, float tweenTime)
+    {
+        float startTime = Time.time;
+
+        float startVal = (float) vignette.intensity;
+
+        while (Time.time - startTime < startTime + tweenTime && vignette)
+        {
+            vignette.intensity.Override(startVal + (Time.time - startTime) / tweenTime * (endVal - startVal));
+            yield return new WaitForFixedUpdate();
+        }
+
+        if (vignette)
+        {
+            vignette.intensity.Override(endVal);
+        }
+    }
+
+    public static IEnumerator New(Color32 targetColor, Vignette vignette, float tweenTime)
+    {
+        float startTime = Time.time;
+
+        Color32 startColor = (Color32)(Color)vignette.color;
+
+        while (Time.time - startTime < startTime + tweenTime && vignette)
+        {
+            vignette.color.Override(Color32.Lerp(startColor, targetColor, Mathf.Clamp((Time.time - startTime) / tweenTime, 0, 1)));
+            yield return new WaitForFixedUpdate();
+        }
+
+        if (vignette)
+        {
+            vignette.color.Override(targetColor);
+        }
+    }
+}
+>>>>>>> Stashed changes

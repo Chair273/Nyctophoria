@@ -4,15 +4,23 @@ public class PlayerAdder : MonoBehaviour
 {
     public string characterName;
 
+    private bool debounce = false;
+
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && !debounce)
         {
+<<<<<<< Updated upstream
             Manager.AddCharacter(characterName);
             Destroy(gameObject);
+=======
+            debounce = true;
+            gameObject.SetActive(false);
 
-            Vector2Int currentRoom = Manager.GetCurrentRoom();
-            Manager.GetArea()[currentRoom.x, currentRoom.y].RemoveObject(gameObject);
+            MainManager.characterManager.AddCharacter(characterName);
+
+            MainManager.roomManager.RemoveObject(gameObject);
+>>>>>>> Stashed changes
         }
     }
 }

@@ -35,12 +35,11 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: UpRight
+  m_Name: Walk_Backwards
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -5475121187061505385}
-  - {fileID: -6740656094144801107}
   m_StateMachineBehaviours: []
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
@@ -50,12 +49,14 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: f2b632ef13056784d8d6caf993f8449b, type: 2}
+  m_Motion: {fileID: 7400000, guid: 58b1829bc09083646ba5e0da7b438a5b, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
   m_CycleOffsetParameter: 
   m_TimeParameter: 
+<<<<<<< Updated upstream:Assets/Sprites/CharacterSprites/Player.controller
+=======
 --- !u!1101 &-6740656094144801107
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -66,7 +67,7 @@ AnimatorStateTransition:
   m_Conditions:
   - m_ConditionMode: 4
     m_ConditionEvent: Y axis
-    m_EventTreshold: 0
+    m_EventTreshold: 0.01
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 7499685295951419295}
   m_Solo: 0
@@ -81,6 +82,7 @@ AnimatorStateTransition:
   m_InterruptionSource: 1
   m_OrderedInterruption: 0
   m_CanTransitionToSelf: 1
+>>>>>>> Stashed changes:Assets/Animations/Player/Player.controller
 --- !u!1101 &-6588315580666992316
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -89,8 +91,8 @@ AnimatorStateTransition:
   m_PrefabAsset: {fileID: 0}
   m_Name: 
   m_Conditions:
-  - m_ConditionMode: 3
-    m_ConditionEvent: Y axis
+  - m_ConditionMode: 4
+    m_ConditionEvent: X axis
     m_EventTreshold: 0
   - m_ConditionMode: 1
     m_ConditionEvent: Moving
@@ -101,12 +103,12 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0
+  m_TransitionDuration: 0.25
   m_TransitionOffset: 0
   m_ExitTime: 0
-  m_HasExitTime: 0
+  m_HasExitTime: 1
   m_HasFixedDuration: 1
-  m_InterruptionSource: 2
+  m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
 --- !u!1101 &-5475121187061505385
@@ -126,12 +128,12 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0
+  m_TransitionDuration: 0.25
   m_TransitionOffset: 0
-  m_ExitTime: 0
-  m_HasExitTime: 0
+  m_ExitTime: 0.7619047
+  m_HasExitTime: 1
   m_HasFixedDuration: 1
-  m_InterruptionSource: 2
+  m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
 --- !u!1109 &-5240539274850927699
@@ -165,37 +167,12 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0
+  m_TransitionDuration: 0.25
   m_TransitionOffset: 0
-  m_ExitTime: 0
-  m_HasExitTime: 0
-  m_HasFixedDuration: 0
-  m_InterruptionSource: 2
-  m_OrderedInterruption: 1
-  m_CanTransitionToSelf: 1
---- !u!1101 &-1745603179688043399
-AnimatorStateTransition:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_Conditions:
-  - m_ConditionMode: 2
-    m_ConditionEvent: Moving
-    m_EventTreshold: 0
-  m_DstStateMachine: {fileID: 0}
-  m_DstState: {fileID: -8139469245669871139}
-  m_Solo: 0
-  m_Mute: 0
-  m_IsExit: 0
-  serializedVersion: 3
-  m_TransitionDuration: 0
-  m_TransitionOffset: 0
-  m_ExitTime: 0
+  m_ExitTime: 0.7619047
   m_HasExitTime: 1
-  m_HasFixedDuration: 0
-  m_InterruptionSource: 2
+  m_HasFixedDuration: 1
+  m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
 --- !u!91 &9100000
@@ -207,18 +184,18 @@ AnimatorController:
   m_Name: Player
   serializedVersion: 5
   m_AnimatorParameters:
-  - m_Name: Y axis
+  - m_Name: X axis
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 9100000}
+    m_Controller: {fileID: 0}
   - m_Name: Moving
     m_Type: 4
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 9100000}
+    m_Controller: {fileID: 0}
   m_AnimatorLayers:
   - serializedVersion: 5
     m_Name: Base Layer
@@ -240,51 +217,34 @@ AnimatorStateTransition:
   m_PrefabAsset: {fileID: 0}
   m_Name: 
   m_Conditions:
+  - m_ConditionMode: 3
+    m_ConditionEvent: X axis
+    m_EventTreshold: 0
   - m_ConditionMode: 1
     m_ConditionEvent: Moving
     m_EventTreshold: 0
+<<<<<<< Updated upstream:Assets/Sprites/CharacterSprites/Player.controller
+=======
   - m_ConditionMode: 4
     m_ConditionEvent: Y axis
-    m_EventTreshold: 0
+    m_EventTreshold: 0.01
+>>>>>>> Stashed changes:Assets/Animations/Player/Player.controller
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 7499685295951419295}
   m_Solo: 0
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0
-  m_TransitionOffset: 0
-  m_ExitTime: 0
-  m_HasExitTime: 0
-  m_HasFixedDuration: 1
-  m_InterruptionSource: 2
-  m_OrderedInterruption: 1
-  m_CanTransitionToSelf: 1
---- !u!1101 &1684533176697990118
-AnimatorStateTransition:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_Conditions:
-  - m_ConditionMode: 2
-    m_ConditionEvent: Moving
-    m_EventTreshold: 0
-  m_DstStateMachine: {fileID: 0}
-  m_DstState: {fileID: -8139469245669871139}
-  m_Solo: 0
-  m_Mute: 0
-  m_IsExit: 0
-  serializedVersion: 3
-  m_TransitionDuration: 0
+  m_TransitionDuration: 0.25
   m_TransitionOffset: 0
   m_ExitTime: 0
   m_HasExitTime: 1
   m_HasFixedDuration: 1
-  m_InterruptionSource: 2
+  m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+<<<<<<< Updated upstream:Assets/Sprites/CharacterSprites/Player.controller
+=======
 --- !u!1101 &2478937918268563016
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -295,7 +255,7 @@ AnimatorStateTransition:
   m_Conditions:
   - m_ConditionMode: 3
     m_ConditionEvent: Y axis
-    m_EventTreshold: 0
+    m_EventTreshold: 0.01
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -7689505926152031099}
   m_Solo: 0
@@ -310,6 +270,7 @@ AnimatorStateTransition:
   m_InterruptionSource: 1
   m_OrderedInterruption: 0
   m_CanTransitionToSelf: 1
+>>>>>>> Stashed changes:Assets/Animations/Player/Player.controller
 --- !u!1107 &7158764709398789584
 AnimatorStateMachine:
   serializedVersion: 6
@@ -324,10 +285,10 @@ AnimatorStateMachine:
     m_Position: {x: 370, y: 60, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -7689505926152031099}
-    m_Position: {x: 600, y: -50, z: 0}
+    m_Position: {x: 520, y: 220, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 7499685295951419295}
-    m_Position: {x: 600, y: 160, z: 0}
+    m_Position: {x: 230, y: 220, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions:
@@ -346,12 +307,11 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: DownLeft
+  m_Name: Walk_Forward
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -2707297920301651270}
-  - {fileID: 2478937918268563016}
   m_StateMachineBehaviours: []
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
@@ -361,7 +321,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: 58b1829bc09083646ba5e0da7b438a5b, type: 2}
+  m_Motion: {fileID: 7400000, guid: f2b632ef13056784d8d6caf993f8449b, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 

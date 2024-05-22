@@ -1,24 +1,27 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.SceneManagement;
 
 public class CombatStarter : MonoBehaviour
 {
+    private bool debounce = false;
+
     private List<string> validEnemies = new List<string> { "Skeleton", "Crypt Keeper" };
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && !debounce)
         {
+            debounce = true;
+
             int amount = Random.Range(1, 4);
 
             for (int i = 0; i < amount; i++)
             {
-                Manager.AddCharacter(validEnemies[Random.Range(0, validEnemies.Count)]);
+                MainManager.characterManager.AddCharacter(validEnemies[Random.Range(0, validEnemies.Count)]);
             }
 
-            SceneManager.LoadScene("Combat");
+            MainManager.sceneManager.LoadScene("Combat", "Overworld");
+            MainManager.roomManager.RemoveObject(gameObject);
         }
     }
 }

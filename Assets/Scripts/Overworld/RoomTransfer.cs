@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using System.Collections;
 using TMPro;
 
@@ -10,7 +11,7 @@ public class RoomTransfer : MonoBehaviour
     {
         if (other.CompareTag("Player") && roomIndex != null)
         {
-            RoomGenerator.ChangeRoom(roomIndex);
+            MainManager.roomManager.ChangeRoom(roomIndex);
         }
     }
 
@@ -24,7 +25,8 @@ public class RoomTransfer : MonoBehaviour
 
     private IEnumerator enable()
     {
-        yield return new WaitForSecondsRealtime(2);
+        yield return new WaitForSecondsRealtime(Random.Range(1.5f, 2.5f));
         transform.GetComponent<CircleCollider2D>().enabled = true;
+        transform.Find("Light").GetComponent<Light2D>().enabled = true;
     }
 }

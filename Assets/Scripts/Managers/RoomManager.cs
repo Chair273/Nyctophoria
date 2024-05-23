@@ -108,15 +108,24 @@ public class RoomManager : MonoBehaviour
 
             for (int x = -1; x <= 1; x += 2)
             {
-                for (int y = -1; y <= 1; y += 2)
-                {
-                    Vector2Int checkPos = new Vector2Int(roomIndex.x + x, roomIndex.y + y);
+                Vector2Int checkPos = new Vector2Int(roomIndex.x + x, roomIndex.y);
 
-                    if (Random.Range(0, 3) == 0 && area[checkPos.x, checkPos.y] == null)
-                    {
-                        area[checkPos.x, checkPos.y] = new Room(checkPos);
-                        allRooms.Add(area[checkPos.x, checkPos.y]);
-                    }
+                if (Random.Range(0, 3) == 0 && area[checkPos.x, checkPos.y] == null)
+                {
+                    area[checkPos.x, checkPos.y] = new Room(checkPos);
+                    allRooms.Add(area[checkPos.x, checkPos.y]);
+                }
+
+            }
+
+            for (int y = -1; y <= 1; y += 2)
+            {
+                Vector2Int checkPos = new Vector2Int(roomIndex.x, roomIndex.y + y);
+
+                if (Random.Range(0, 3) == 0 && area[checkPos.x, checkPos.y] == null)
+                {
+                    area[checkPos.x, checkPos.y] = new Room(checkPos);
+                    allRooms.Add(area[checkPos.x, checkPos.y]);
                 }
             }
         }
@@ -139,7 +148,15 @@ public class RoomManager : MonoBehaviour
         for (int i = 0; i < amount; i++)
         {
             GameObject enemy = Instantiate(enemyPrefab);
-            allRooms[Random.Range(0, allRooms.Count)].AddObject(enemy);
+
+            Room randomRoom = allRooms[Random.Range(0, allRooms.Count)];
+
+            while (randomRoom.Equals(startRoom))
+            {
+                randomRoom = allRooms[Random.Range(0, allRooms.Count)];
+            }
+
+            randomRoom.AddObject(enemy);
 
             MainManager.sceneManager.Banish(enemy);
         }
@@ -426,7 +443,10 @@ public class Room
 
         foreach (GameObject thing in roomContents)
         {
-            MainManager.sceneManager.Summon(thing, "Overworld");
+            if(thing != null)
+            {
+                MainManager.sceneManager.Summon(thing, "Overworld");
+            }
         }
 
         if (doorIndexes.Count == 0)
@@ -444,6 +464,19 @@ public class Room
 
         foreach (Vector2Int doorIndex in doorIndexes)
         {
+            if (!doorPositions.ContainsKey(doorIndex))
+            {
+                Debug.LogWarning("Missing door position, regenerating.");
+
+                tilemap.ClearAllTiles();
+
+                Generate();
+
+                LoadRoom();
+
+                return;
+            }
+
             Vector3 doorPosition = doorPositions[doorIndex];
             Vector3Int tilePosition = tilemap.WorldToCell(doorPosition);
 

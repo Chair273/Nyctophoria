@@ -61,7 +61,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -72,12 +72,12 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 0
+  spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 120
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spriteGenerateFallbackPhysicsShape: 1
+  spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
   alphaIsTransparency: 1
   spriteTessellationDetail: -1
@@ -96,10 +96,10 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 16384
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -122,24 +122,15 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: walk_backwards_0
+      name: DownLeftWalk_0
       rect:
         serializedVersion: 2
-<<<<<<< Updated upstream:Assets/Sprites/CharacterSprites/walk_backwards.png.meta
-        x: 82
-        y: 74
-        width: 96
-        height: 251
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-=======
-        x: 65
-        y: 60
+        x: 63
+        y: 70
         width: 120
         height: 275
       alignment: 9
       pivot: {x: 0.5, y: 0.1}
->>>>>>> Stashed changes:Assets/Sprites/CharacterSprites/DownLeftWalk.png.meta
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -152,241 +143,169 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_backwards_1
+      name: DownLeftWalk_1
       rect:
         serializedVersion: 2
-<<<<<<< Updated upstream:Assets/Sprites/CharacterSprites/walk_backwards.png.meta
-        x: 336
-        y: 85
-        width: 87
-        height: 245
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-=======
-        x: 315
-        y: 60
+        x: 308
+        y: 73
         width: 120
         height: 275
       alignment: 9
       pivot: {x: 0.5, y: 0.1}
->>>>>>> Stashed changes:Assets/Sprites/CharacterSprites/DownLeftWalk.png.meta
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: ed858f6f1461bbf80800000000000000
-      internalID: -8089847833068807970
+      spriteID: 9fa2f8e387fdf4794be0cd9a3b22e439
+      internalID: 1691387162
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_backwards_2
+      name: DownLeftWalk_2
       rect:
         serializedVersion: 2
-<<<<<<< Updated upstream:Assets/Sprites/CharacterSprites/walk_backwards.png.meta
-        x: 598
-        y: 95
-        width: 72
-        height: 234
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-=======
-        x: 570
-        y: 60
+        x: 560
+        y: 70
         width: 120
         height: 275
       alignment: 9
       pivot: {x: 0.5, y: 0.1}
->>>>>>> Stashed changes:Assets/Sprites/CharacterSprites/DownLeftWalk.png.meta
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 1e36d4bf9d9f05880800000000000000
-      internalID: -8624118571795127327
+      spriteID: 043817e0802814552ae9e472a7c5a756
+      internalID: 533600504
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_backwards_3
+      name: DownLeftWalk_3
       rect:
         serializedVersion: 2
-<<<<<<< Updated upstream:Assets/Sprites/CharacterSprites/walk_backwards.png.meta
-        x: 846
-        y: 103
-        width: 75
-        height: 216
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-=======
         x: 810
-        y: 60
+        y: 70
         width: 120
         height: 275
       alignment: 9
       pivot: {x: 0.5, y: 0.1}
->>>>>>> Stashed changes:Assets/Sprites/CharacterSprites/DownLeftWalk.png.meta
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: c01aec9bb7ba0c730800000000000000
-      internalID: 4017399415501136140
+      spriteID: 9ec4d5a6e911445f3b1dcb23039c7235
+      internalID: 436791932
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_backwards_4
+      name: DownLeftWalk_4
       rect:
         serializedVersion: 2
-<<<<<<< Updated upstream:Assets/Sprites/CharacterSprites/walk_backwards.png.meta
-        x: 1067
-        y: 89
-        width: 109
-        height: 231
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-=======
         x: 1060
-        y: 60
+        y: 70
         width: 120
         height: 275
       alignment: 9
       pivot: {x: 0.5, y: 0.1}
->>>>>>> Stashed changes:Assets/Sprites/CharacterSprites/DownLeftWalk.png.meta
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: f7aaf3b34ec766b90800000000000000
-      internalID: -7248969230517818753
+      spriteID: 78176e11b611b45919752fa4966750dd
+      internalID: -1054693244
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_backwards_5
+      name: DownLeftWalk_5
       rect:
         serializedVersion: 2
-<<<<<<< Updated upstream:Assets/Sprites/CharacterSprites/walk_backwards.png.meta
-        x: 1324
-        y: 82
-        width: 105
-        height: 238
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-=======
-        x: 1310
-        y: 60
+        x: 1315
+        y: 70
         width: 120
         height: 275
       alignment: 9
       pivot: {x: 0.5, y: 0.1}
->>>>>>> Stashed changes:Assets/Sprites/CharacterSprites/DownLeftWalk.png.meta
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 63d5b03cb6a1e86d0800000000000000
-      internalID: -2986420452763935434
+      spriteID: 3152c7d6751df4e5888a7ccdf54d641c
+      internalID: 213753431
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_backwards_6
+      name: DownLeftWalk_6
       rect:
         serializedVersion: 2
-<<<<<<< Updated upstream:Assets/Sprites/CharacterSprites/walk_backwards.png.meta
-        x: 1595
-        y: 94
-        width: 79
-        height: 229
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-=======
-        x: 1565
-        y: 60
+        x: 1570
+        y: 70
         width: 120
         height: 275
       alignment: 9
       pivot: {x: 0.5, y: 0.1}
->>>>>>> Stashed changes:Assets/Sprites/CharacterSprites/DownLeftWalk.png.meta
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 42f117545c85ccd70800000000000000
-      internalID: 9064717754286808868
+      spriteID: b3bbf6fae1836484ba243aa774c0d665
+      internalID: -1738550967
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_backwards_7
+      name: DownLeftWalk_7
       rect:
         serializedVersion: 2
-<<<<<<< Updated upstream:Assets/Sprites/CharacterSprites/walk_backwards.png.meta
-        x: 1839
-        y: 105
-        width: 85
-        height: 218
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-=======
-        x: 1815
-        y: 60
+        x: 1818
+        y: 70
         width: 120
         height: 275
       alignment: 9
       pivot: {x: 0.5, y: 0.1}
->>>>>>> Stashed changes:Assets/Sprites/CharacterSprites/DownLeftWalk.png.meta
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: aeed815e66411d500800000000000000
-      internalID: 419138672484998890
+      spriteID: d24a230be6c244f8f8e5127b54d36837
+      internalID: -550370911
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_backwards_8
+      name: DownLeftWalk_8
       rect:
         serializedVersion: 2
-<<<<<<< Updated upstream:Assets/Sprites/CharacterSprites/walk_backwards.png.meta
-        x: 2089
-        y: 100
-        width: 86
-        height: 220
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-=======
         x: 2060
-        y: 60
+        y: 73
         width: 120
         height: 275
       alignment: 9
       pivot: {x: 0.5, y: 0.1}
->>>>>>> Stashed changes:Assets/Sprites/CharacterSprites/DownLeftWalk.png.meta
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 42975bff0d0e675d0800000000000000
-      internalID: -3065015308131141340
+      spriteID: f33b3550388e64b619ad02f95fb913e0
+      internalID: -828668136
       vertices: []
       indices: 
       edges: []
@@ -394,7 +313,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: d4f51d76a73896b419d036dae4a93ce9
+    spriteID: 23c587ce236174de8bc398959906b97c
     internalID: 0
     vertices: []
     indices: 
@@ -402,15 +321,15 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      walk_backwards_0: 193916573179993906
-      walk_backwards_1: -8089847833068807970
-      walk_backwards_2: -8624118571795127327
-      walk_backwards_3: 4017399415501136140
-      walk_backwards_4: -7248969230517818753
-      walk_backwards_5: -2986420452763935434
-      walk_backwards_6: 9064717754286808868
-      walk_backwards_7: 419138672484998890
-      walk_backwards_8: -3065015308131141340
+      DownLeftWalk_0: 193916573179993906
+      DownLeftWalk_1: 1691387162
+      DownLeftWalk_2: 533600504
+      DownLeftWalk_3: 436791932
+      DownLeftWalk_4: -1054693244
+      DownLeftWalk_5: 213753431
+      DownLeftWalk_6: -1738550967
+      DownLeftWalk_7: -550370911
+      DownLeftWalk_8: -828668136
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

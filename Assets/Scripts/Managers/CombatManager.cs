@@ -20,6 +20,7 @@ public class CombatManager : MonoBehaviour
 
         GameObject cardObject = Instantiate(cardPrefab);
         cardObject.transform.parent = character.transform.parent;
+        cardObject.transform.GetComponent<Canvas>().worldCamera = MainManager.mainCamera;
 
         Card card = cardObject.AddComponent<Card>();
         card.New(attacks[cardName], cardInfo[cardName], cardSize[cardName], character);

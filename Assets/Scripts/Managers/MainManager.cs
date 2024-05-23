@@ -1,7 +1,11 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class MainManager : MonoBehaviour
 {
+    public bool _LowGraphicsMode;
+    public static bool LowGraphicsMode;
+
     public static Transform thePit;
 
     public static CharacterManager characterManager;
@@ -9,18 +13,26 @@ public class MainManager : MonoBehaviour
     public static RoomManager roomManager;
     public static CombatManager combatManager;
 
+    public static Camera mainCamera;
+    public static EventSystem eventSystem;
+
     public static void GameOver()
     {
         characterManager.ClearCharacters();
         characterManager.AddCharacter("One Armed Knight");
 
-        sceneManager.LoadScene("Title", sceneManager.GetSceneName());
+        sceneManager.LoadScene("Title");
     }
 
     private void Awake()
     {
         ActivateManagers();
+
         thePit = transform.Find("The Pit");
+        mainCamera = transform.Find("Camera").GetComponent<Camera>();
+        eventSystem = transform.Find("EventSystem").GetComponent<EventSystem>();
+
+        LowGraphicsMode = _LowGraphicsMode;
     }
 
     private void ActivateManagers()

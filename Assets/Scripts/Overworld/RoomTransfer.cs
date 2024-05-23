@@ -28,5 +28,6 @@ public class RoomTransfer : MonoBehaviour
         yield return new WaitForSecondsRealtime(Random.Range(1.5f, 2.5f));
         transform.GetComponent<CircleCollider2D>().enabled = true;
         transform.Find("Light").GetComponent<Light2D>().enabled = true;
+        //transform.Find("Particle System").GetComponent<ParticleSystem>().Play();
     }
 }

@@ -93,13 +93,13 @@ public class RangedTarget : TargetType
         {
             yield return new WaitUntil(() => !Input.GetMouseButton(0));
 
-            GameObject chainObject = MonoBehaviour.Instantiate(Resources.Load<GameObject>("CombatPrefabs/Gui/Spike"), new Vector3(0, 0, -2), Quaternion.identity);
+            GameObject chainObject = Object.Instantiate(Resources.Load<GameObject>("CombatPrefabs/Gui/Spike"), new Vector3(0, 0, -2), Quaternion.identity);
             Vector3 closestPos = new Vector3(-100, 0, 0);
             Vector2Int closestGrid = new Vector2Int();
 
             while (!Input.GetMouseButton(0))
             {
-                Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 mouseWorldPos = MainManager.mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 mouseWorldPos.z = -2;
 
                 float closest = Vector3.Distance(mouseWorldPos, closestPos);

@@ -13,6 +13,10 @@ public class CombatStarter : MonoBehaviour
         {
             debounce = true;
 
+            Debug.Log("Combat start.");
+
+            gameObject.SetActive(false);
+
             int amount = Random.Range(1, 4);
 
             for (int i = 0; i < amount; i++)
@@ -20,7 +24,7 @@ public class CombatStarter : MonoBehaviour
                 MainManager.characterManager.AddCharacter(validEnemies[Random.Range(0, validEnemies.Count)]);
             }
 
-            MainManager.sceneManager.LoadScene("Combat", "Overworld");
+            MainManager.sceneManager.LoadScene("Combat");
             MainManager.roomManager.RemoveObject(gameObject);
         }
     }

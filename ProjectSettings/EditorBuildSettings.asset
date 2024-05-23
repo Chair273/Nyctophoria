@@ -9,11 +9,11 @@ EditorBuildSettings:
     path: Assets/Scenes/Manager.unity
     guid: 759202f0dfa3047e6808fa806f7318be
   - enabled: 1
-    path: Assets/Scenes/Title.unity
-    guid: 1e850ea1703ac4257aec057946977f90
-  - enabled: 1
     path: Assets/Scenes/Overworld.unity
     guid: 5458b660df8ec4ab8bb899b655b7bfab
+  - enabled: 1
+    path: Assets/Scenes/Title.unity
+    guid: 1e850ea1703ac4257aec057946977f90
   - enabled: 1
     path: Assets/Scenes/Combat.unity
     guid: b6ad1061471ec4a0cb13400c2a00f922

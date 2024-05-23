@@ -96,7 +96,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 16384
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 0
@@ -122,7 +122,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: walk_forward_0
+      name: UpRightWalk_0
       rect:
         serializedVersion: 2
         x: 60
@@ -143,7 +143,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_forward_1
+      name: UpRightWalk_1
       rect:
         serializedVersion: 2
         x: 310
@@ -164,7 +164,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_forward_2
+      name: UpRightWalk_2
       rect:
         serializedVersion: 2
         x: 560
@@ -185,10 +185,10 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_forward_3
+      name: UpRightWalk_3
       rect:
         serializedVersion: 2
-        x: 810
+        x: 813
         y: 75
         width: 120
         height: 275
@@ -206,11 +206,11 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_forward_4
+      name: UpRightWalk_4
       rect:
         serializedVersion: 2
         x: 1055
-        y: 75
+        y: 78
         width: 120
         height: 275
       alignment: 9
@@ -227,7 +227,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_forward_5
+      name: UpRightWalk_5
       rect:
         serializedVersion: 2
         x: 1305
@@ -248,7 +248,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_forward_6
+      name: UpRightWalk_6
       rect:
         serializedVersion: 2
         x: 1560
@@ -269,7 +269,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_forward_7
+      name: UpRightWalk_7
       rect:
         serializedVersion: 2
         x: 1810
@@ -290,7 +290,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walk_forward_8
+      name: UpRightWalk_8
       rect:
         serializedVersion: 2
         x: 2055
@@ -321,15 +321,15 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      walk_forward_0: -5979125611382848205
-      walk_forward_1: -6858797787319608372
-      walk_forward_2: -8711442082432845420
-      walk_forward_3: 289206470316412991
-      walk_forward_4: -3083870745221787843
-      walk_forward_5: 5144902221796801516
-      walk_forward_6: 5572990780240182275
-      walk_forward_7: 2334730147962716759
-      walk_forward_8: 8798857363037112630
+      UpRightWalk_0: -5979125611382848205
+      UpRightWalk_1: -6858797787319608372
+      UpRightWalk_2: -8711442082432845420
+      UpRightWalk_3: 289206470316412991
+      UpRightWalk_4: -3083870745221787843
+      UpRightWalk_5: 5144902221796801516
+      UpRightWalk_6: 5572990780240182275
+      UpRightWalk_7: 2334730147962716759
+      UpRightWalk_8: 8798857363037112630
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

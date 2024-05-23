@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -461,7 +460,7 @@ public class Player : Character
 
                     Debug.Log(name + " fled.");
 
-                    StartCoroutine(Tween.New(transform.position + new Vector3(Mathf.Pow(gridPos.y - 2.5f, 1.25f), -3, 0), transform, 5));
+                    StartCoroutine(Tween.New(transform.position + new Vector3(2 * (gridPos.y - 2.5f), -3, 0), transform, 5));
                     StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), spriteRenderer, 5));
                 }
                 else
@@ -716,7 +715,7 @@ public class Player : Character
         {
             dragging = true;
 
-            Vector3 pos_move = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0));
+            Vector3 pos_move = MainManager.mainCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0));
             transform.position = new Vector3(pos_move.x, pos_move.y, -2);
         }
     }

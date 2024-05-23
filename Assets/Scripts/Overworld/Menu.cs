@@ -9,7 +9,7 @@ public class Menu : MonoBehaviour
         if (Input.anyKeyDown && !debounce)
         {
             debounce = true;
-            MainManager.sceneManager.LoadScene("Overworld", "Title");
+            MainManager.sceneManager.LoadScene("Overworld");
         }
     }
 }

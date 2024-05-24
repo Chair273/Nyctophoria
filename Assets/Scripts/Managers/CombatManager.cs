@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class CombatManager : MonoBehaviour
 {
+    public bool combat;
+
     private static GameObject cardPrefab;
 
     private Dictionary<string, Attack> attacks = new Dictionary<string, Attack>();//stores the actuall code behind each card
@@ -212,6 +214,7 @@ public class CombatManager : MonoBehaviour
 
     public void Begin()
     {
+        combat = true;
         CombatHandler.main.Begin();
     }
 

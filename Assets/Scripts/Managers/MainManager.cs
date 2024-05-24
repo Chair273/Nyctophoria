@@ -7,6 +7,7 @@ public class MainManager : MonoBehaviour
     public static bool LowGraphicsMode;
 
     public static Transform thePit;
+    public static Transform theSquares;
 
     public static CharacterManager characterManager;
     public static SceneTransition sceneManager;
@@ -26,13 +27,14 @@ public class MainManager : MonoBehaviour
 
     private void Awake()
     {
-        ActivateManagers();
-
         thePit = transform.Find("The Pit");
+        theSquares = transform.Find("The Squares");
         mainCamera = transform.Find("Camera").GetComponent<Camera>();
         eventSystem = transform.Find("EventSystem").GetComponent<EventSystem>();
 
         LowGraphicsMode = _LowGraphicsMode;
+
+        ActivateManagers();
     }
 
     private void ActivateManagers()

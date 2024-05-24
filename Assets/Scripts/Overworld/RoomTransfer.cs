@@ -1,33 +1,44 @@
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using System.Collections;
-using TMPro;
 
 public class RoomTransfer : MonoBehaviour
 {
-    private Vector2Int roomIndex;
+    public Vector2Int roomIndex;
+
+    private bool debounce = true;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player") && roomIndex != null)
+        if (other.CompareTag("Player") && roomIndex != null && !debounce)
         {
-            MainManager.roomManager.ChangeRoom(roomIndex);
+            debounce = true;
+
+            transform.Find("Light").GetComponent<Light2D>().enabled = false;
+            transform.GetComponent<CircleCollider2D>().enabled = false;
+
+            MainManager.roomManager.StartCoroutine(MainManager.roomManager.ChangeRoom(roomIndex));
         }
     }
 
-    public void SetRoomIndex(Vector2Int roomIndex)
+    public void Activate()
     {
-        this.roomIndex = roomIndex;
-        transform.Find("Canvas").Find("Text").GetComponent<TextMeshProUGUI>().text = "(" + roomIndex.x + "," + roomIndex.y + ")";
+        debounce = true;
 
-        StartCoroutine(enable());
+        transform.Find("Light").GetComponent<Light2D>().enabled = false;
+        transform.GetComponent<CircleCollider2D>().enabled = false;
+
+        MainManager.roomManager.StartCoroutine(DelayedEnable());
     }
 
-    private IEnumerator enable()
+    private IEnumerator DelayedEnable()
     {
-        yield return new WaitForSecondsRealtime(Random.Range(1.5f, 2.5f));
-        transform.GetComponent<CircleCollider2D>().enabled = true;
+        yield return new WaitForSecondsRealtime(Random.Range(0.5f, 2));
+        yield return new WaitUntil(() => (RoomGenerator.main.player.position - transform.position).magnitude >= 0.5f);
+
         transform.Find("Light").GetComponent<Light2D>().enabled = true;
-        //transform.Find("Particle System").GetComponent<ParticleSystem>().Play();
+        transform.GetComponent<CircleCollider2D>().enabled = true;
+
+        debounce = false;
     }
 }

@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -17,17 +16,15 @@ public class SceneTransition : MonoBehaviour
 
     public void Banish(GameObject thing)
     {
-        thing.transform.parent = null;
+        thing.transform.SetParent(null, true);
         SceneManager.MoveGameObjectToScene(thing, SceneManager.GetSceneByName("Manager"));
-        thing.transform.parent = MainManager.thePit;
-        thing.SetActive(false);
+        thing.transform.SetParent(MainManager.thePit, true);
     }
 
     public void Summon(GameObject thing, string scene)
     {
-        thing.transform.parent = null;
+        thing.transform.SetParent(null, true);
         SceneManager.MoveGameObjectToScene(thing, SceneManager.GetSceneByName(scene));
-        thing.SetActive(true);
     }
 
     private IEnumerator Load(string sceneName)

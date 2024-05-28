@@ -33,8 +33,17 @@ public class RoomTransfer : MonoBehaviour
 
     private IEnumerator DelayedEnable()
     {
-        yield return new WaitForSecondsRealtime(Random.Range(0.5f, 2));
-        yield return new WaitUntil(() => (RoomGenerator.main.player.position - transform.position).magnitude >= 0.5f);
+        WaitForSecondsRealtime waitTime = new WaitForSecondsRealtime(0.1f);
+
+        yield return new WaitForSecondsRealtime(Random.Range(1.5f, 2.5f));
+
+        if (RoomGenerator.main != null)
+        {
+            while ((RoomGenerator.main.player.position - transform.position).magnitude < 0.5f)
+            {
+                yield return waitTime;
+            }
+        }
 
         transform.Find("Light").GetComponent<Light2D>().enabled = true;
         transform.GetComponent<CircleCollider2D>().enabled = true;

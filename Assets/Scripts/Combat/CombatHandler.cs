@@ -38,7 +38,7 @@ public class CombatHandler : MonoBehaviour
 
     private List<Character> turnOrder = new List<Character>();
 
-    private float[,] xReference = { { -0.8f, 0.5f, 1.9f, 3.1f, 4.5f, 5.8f }, { 0.2f, 1.1f, 2.1f, 2.9f, 3.9f, 4.8f } }; //used to convert a grid position to a world position, first index is the valid player x positions, second index is the valid enemy x positions
+    private float[,] xReference = { { -3.35f, -2.05f, -0.65f, 0.65f, 2.05f, 3.35f }, { -2.35f, -1.45f, -0.45f, 0.45f, 1.45f, 2.35f } }; //used to convert a grid position to a world position, first index is the valid player x positions, second index is the valid enemy x positions
 
     public void Begin()
     {
@@ -218,8 +218,8 @@ public class CombatHandler : MonoBehaviour
         float xPos = getXPos(moveTo.x, moveTo.y);
 
         return new Vector3(xPos, moveTo.x == 0 ? 
-            0.095f * Mathf.Pow(xPos - 2.5f, 2) - 1.25f : //player equation
-            0.085f * Mathf.Pow(xPos - 2.5f, 2) + 0.4f, //enemy equation
+            0.095f * Mathf.Pow(xPos, 2) - 0.25f : //player equation
+            0.085f * Mathf.Pow(xPos, 2) + 1.4f, //enemy equation
             moveTo.x == 0 ? -3: -1);
     }
 

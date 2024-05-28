@@ -641,7 +641,7 @@ public class Player : Character
             card.gameObject.SetActive(true);
 
             card.GetComponent<Animator>().Play("Card Flip");
-            StartCoroutine(Tween.New(new Vector3(-4.25f, 0, 0), card.transform, 0.2f));
+            StartCoroutine(Tween.New(new Vector3(-6.65f, 0.4f, 0), card.transform, 0.2f));
 
             yield return new WaitForSeconds(0.1f);
 

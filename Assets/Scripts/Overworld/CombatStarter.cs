@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public class CombatStarter : MonoBehaviour
@@ -9,11 +10,9 @@ public class CombatStarter : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player") && !debounce)
+        if (other.CompareTag("Player") && !debounce && !MainManager.combatManager.combat)
         {
             debounce = true;
-
-            Debug.Log("Combat start.");
 
             gameObject.SetActive(false);
 
@@ -24,8 +23,11 @@ public class CombatStarter : MonoBehaviour
                 MainManager.characterManager.AddCharacter(validEnemies[Random.Range(0, validEnemies.Count)]);
             }
 
+            MainManager.roomManager.UnloadInstant();
+
             MainManager.sceneManager.LoadScene("Combat");
             MainManager.roomManager.RemoveObject(gameObject);
         }
     }
+
 }

@@ -73,7 +73,7 @@ public class Attack
         return targetTypes;
     }
 
-    public Dictionary<String, object> GetInfo()
+    public Dictionary<string, object> GetInfo()
     {
         return info;
     }
@@ -131,7 +131,7 @@ public class Card : MonoBehaviour
         this.cardInfo = cardInfo;
         this.character = character;
 
-        transform.position = new Vector3(-5, -3.8f, 1);
+        transform.position = new Vector3(-7.25f, -3, 1);
         transform.rotation = Quaternion.Euler(0, 0, -10);
 
         gameObject.name = character.name + " " + cardInfo["Name"];
@@ -157,10 +157,10 @@ public class Card : MonoBehaviour
 
     public void Organize(List<Card> hand, int index)
     {
-        float xPos = 9 * (index + 0.5f) / hand.Count - 2;
-        float yPos = -0.05f * Mathf.Pow(xPos - 2.5f, 2) - 4;
-        float zPos = 0.15f * Mathf.Pow(xPos - 2.0f, 2) - 15;
-        float rotation = -Mathf.Pow(xPos - 2.5f, 3) / 5;
+        float xPos = 9 * (index + 0.5f) / hand.Count - 4.5f;
+        float yPos = -0.05f * Mathf.Pow(xPos, 2) - 3;
+        float zPos = 0.15f * Mathf.Pow(xPos - 0.1f, 2) - 15;
+        float rotation = -Mathf.Pow(xPos, 3) / 5;
 
         Vector3 newPos = new Vector3(xPos, yPos, zPos);
 

@@ -68,6 +68,11 @@ public class RoomManager : MonoBehaviour
         area[currentRoom.x, currentRoom.y].UnloadRoom();
     }
 
+    public void UnloadInstant()
+    {
+        area[currentRoom.x, currentRoom.y].UnloadInstant();
+    }
+
     public void SetCurrentRoom(Vector2Int currentRoom)
     {
         this.currentRoom = currentRoom;
@@ -295,7 +300,7 @@ public class Room
 
         doors = new List<GameObject>();
 
-        Vector2Int baseSize = new Vector2Int(Random.Range(4, 9), Random.Range(4, 9));
+        Vector2Int baseSize = new Vector2Int(Random.Range(4, 7), Random.Range(4, 7));
 
         roomPoints = new Dictionary<Vector2Int, Vector2Int>
         {
@@ -306,7 +311,7 @@ public class Room
 
         for (int i = 0; i < pointAmount; i++)
         {
-            Vector2Int randomSize = new Vector2Int(Random.Range(4, 7), Random.Range(4, 7));
+            Vector2Int randomSize = new Vector2Int(Random.Range(3, 7), Random.Range(3, 7));
             Vector2Int randomPoint = new Vector2Int
                 (
                     Random.Range((randomSize.x - baseSize.x) / 2 + 1, (baseSize.x + randomSize.x) / 2 - 1),
@@ -412,7 +417,10 @@ public class Room
             if (doorList.Count > 0)
             {
                 Vector3Int randomDoor = doorList[Random.Range(0, doorList.Count)];
-                Vector3 newPos = (tilemap.CellToWorld(randomDoor) + tilemap.CellToWorld(randomDoor + new Vector3Int(-doorIndex.x, -doorIndex.y + 2, 0))) / 2;
+                Vector3Int clampedIndex = new Vector3Int(Mathf.Clamp(doorIndex.x, -1, 0), Mathf.Clamp(doorIndex.y, -1, 0), 0);
+                Vector3Int absIndex = new Vector3Int(Mathf.Abs(doorIndex.y), Mathf.Abs(doorIndex.x), 0);
+
+                Vector3 newPos = tilemap.CellToWorld(randomDoor) - tilemap.CellToWorld(clampedIndex) + tilemap.CellToWorld(absIndex) / 2;
 
                 doorPositions[doorIndex] = newPos;
                 indexToGrid[doorIndex] = randomDoor;
@@ -464,10 +472,10 @@ public class Room
             tilemap.SetTileFlags(indexToGrid[doorIndex], TileFlags.None);
             tilemap.SetColor(indexToGrid[doorIndex], new Color32(255, 255, 255, 0));
 
-            GameObject doorObject = Object.Instantiate(doorPrefab);
+            GameObject doorObject = Object.Instantiate(doorPrefab, roomObject);
             doors.Add(doorObject);
 
-            doorObject.transform.position = doorPositions[doorIndex];
+            doorObject.transform.localPosition = doorPositions[doorIndex];
             doorObject.GetComponent<RoomTransfer>().roomIndex = doorIndex;
             doorObject.transform.Find("Light").GetComponent<Light2D>().shadowsEnabled = !MainManager.LowGraphicsMode;
         }
@@ -479,24 +487,20 @@ public class Room
     {
         MainManager.sceneManager.Summon(roomObject.gameObject, "Overworld");
         roomObject.SetParent(RoomGenerator.main.transform);
-        roomObject.localPosition = Vector3.zero;
 
         foreach (GameObject thing in roomContents)
         {
             if(thing != null)
             {
                 MainManager.sceneManager.Summon(thing, "Overworld");
+                thing.transform.SetParent(RoomGenerator.main.transform, true);
+                thing.SetActive(true);
             }
         }
 
         foreach (GameObject door in doors)
         {
-            MainManager.sceneManager.Summon(door, "Overworld");
-
-            RoomTransfer roomTransfer = door.transform.GetComponent<RoomTransfer>();
-
-            //door.transform.position = doorPositions[roomTransfer.roomIndex];
-            roomTransfer.Activate();
+            door.transform.GetComponent<RoomTransfer>().Activate();
         }
 
         MainManager.roomManager.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), tilemap, 1));
@@ -504,17 +508,25 @@ public class Room
 
     public void UnloadRoom()
     {
-        foreach (GameObject door in doors)
-        {
-            MainManager.sceneManager.Banish(door);
-        }
-
         foreach (GameObject thing in roomContents)
         {
+            thing.SetActive(false);
             MainManager.sceneManager.Banish(thing);
         }
 
         MainManager.roomManager.StartCoroutine(UnloadVisuals());
+    }
+
+    public void UnloadInstant()
+    {
+        foreach (GameObject thing in roomContents)
+        {
+            thing.SetActive(false);
+            thing.transform.SetParent(null, true);
+            MainManager.sceneManager.Banish(thing);
+        }
+
+        MainManager.sceneManager.Banish(roomObject.gameObject);
     }
 
     private IEnumerator UnloadVisuals()

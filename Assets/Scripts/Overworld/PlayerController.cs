@@ -5,6 +5,7 @@ public class PlayerController : MonoBehaviour
     public bool canMove;
 
     public float Speed;
+    public float size;
 
     public Animator animator;
 
@@ -30,7 +31,7 @@ public class PlayerController : MonoBehaviour
             float yScale = MoveVector.y != 0 ? MoveVector.y : -1;
             float xScale = MoveVector.x != 0 ? MoveVector.x : 1;
 
-            transform.localScale = new Vector3(xScale * yScale * 0.4f, 0.4f, 1);
+            transform.localScale = new Vector3(xScale * yScale * size, size, 1);
         }
     }
 }

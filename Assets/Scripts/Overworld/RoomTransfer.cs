@@ -10,7 +10,7 @@ public class RoomTransfer : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player") && roomIndex != null && !debounce)
+        if (other.CompareTag("Player") && roomIndex != null && !debounce && !MainManager.roomManager.transitionDebounce) 
         {
             debounce = true;
 
@@ -33,9 +33,9 @@ public class RoomTransfer : MonoBehaviour
 
     private IEnumerator DelayedEnable()
     {
-        WaitForSecondsRealtime waitTime = new WaitForSecondsRealtime(0.1f);
+        WaitForEndOfFrame waitTime = new WaitForEndOfFrame();
 
-        yield return new WaitForSecondsRealtime(Random.Range(1.5f, 2.5f));
+        yield return new WaitForSecondsRealtime(Random.Range(1.5f, 3.0f));
 
         if (RoomGenerator.main != null)
         {
@@ -44,6 +44,8 @@ public class RoomTransfer : MonoBehaviour
                 yield return waitTime;
             }
         }
+
+        yield return new WaitForSecondsRealtime(Random.Range(0.3f, 0.8f));
 
         transform.Find("Light").GetComponent<Light2D>().enabled = true;
         transform.GetComponent<CircleCollider2D>().enabled = true;

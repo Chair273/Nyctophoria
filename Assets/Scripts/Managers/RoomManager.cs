@@ -6,6 +6,8 @@ using UnityEngine.Rendering.Universal;
 
 public class RoomManager : MonoBehaviour
 {
+    public bool transitionDebounce = false;
+
     private Vector2Int currentRoom;
 
     private Room[,] area;
@@ -22,6 +24,14 @@ public class RoomManager : MonoBehaviour
 
     public IEnumerator ChangeRoom(Vector2Int roomVector)
     {
+        if (transitionDebounce)
+        {
+            yield break;
+        }
+        transitionDebounce = true;
+
+        Debug.Log("Transition.");
+
         Vector2Int newRoom = new Vector2Int(currentRoom.x + roomVector.x, currentRoom.y + roomVector.y);
 
         if (area[newRoom.x, newRoom.y] == null)
@@ -30,8 +40,9 @@ public class RoomManager : MonoBehaviour
             yield break;
         }
 
-        area[currentRoom.x, currentRoom.y].UnloadRoom();
-        area[newRoom.x, newRoom.y].LoadRoom();
+        StartCoroutine(area[currentRoom.x, currentRoom.y].UnloadRoom());
+        StartCoroutine(area[newRoom.x, newRoom.y].LoadRoom());
+
         currentRoom = newRoom;
 
         Vector3 doorPos = area[newRoom.x, newRoom.y].getDoorPos(-roomVector);
@@ -39,18 +50,21 @@ public class RoomManager : MonoBehaviour
         Transform player = RoomGenerator.main.player;
 
         player.GetComponent<PlayerController>().canMove = false;
-
         StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), player.GetComponent<SpriteRenderer>(), 0.25f));
 
         yield return new WaitForSecondsRealtime(0.5f);
 
         player.position = doorPos;
-
         StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), player.GetComponent<SpriteRenderer>(), 0.25f));
 
         yield return new WaitForSecondsRealtime(0.25f);
 
-        player.GetComponent<PlayerController>().canMove = true;
+        if (player != null)
+        {
+            player.GetComponent<PlayerController>().canMove = true;
+        }
+
+        transitionDebounce = false;
     }
 
     public void RemoveObject(GameObject gameObject)
@@ -60,12 +74,12 @@ public class RoomManager : MonoBehaviour
 
     public void LoadCurrent()
     {
-        area[currentRoom.x, currentRoom.y].LoadRoom();
+        StartCoroutine(area[currentRoom.x, currentRoom.y].LoadRoom());
     }
 
     public void UnloadCurrent()
     {
-        area[currentRoom.x, currentRoom.y].UnloadRoom();
+        StartCoroutine(area[currentRoom.x, currentRoom.y].UnloadRoom());
     }
 
     public void UnloadInstant()
@@ -164,7 +178,7 @@ public class RoomManager : MonoBehaviour
 
         GameObject enemyPrefab = Resources.Load<GameObject>("Overworld/Prefabs/Enemy");
 
-        int amount = Random.Range(5, 9);
+        int amount = Random.Range(5, 10);
 
         for (int i = 0; i < amount; i++)
         {
@@ -184,7 +198,7 @@ public class RoomManager : MonoBehaviour
 
         string map = "Map:\n";
 
-        for (int y = 0; y < 7; y++)
+        for (int y = 6; y >= 0; y--)
         {
             for (int x = 0; x < 7; x++)
             {
@@ -253,11 +267,17 @@ public class Room
 
     private static GameObject doorPrefab = Resources.Load<GameObject>("Overworld/Prefabs/Door");
 
+    private int attempt = 0;
+
+    private bool loaded = false;
+    private bool loadDebounce = false;
+
     private Vector2Int roomIndex;//the grid position of the room
 
     private List<GameObject> doors;
     private List<GameObject> roomContents = new List<GameObject>();
     private List<Vector2Int> doorIndexes;//indicates which doors the room should have
+    private List<Vector3Int> validFloors;
 
     private Dictionary<Vector2Int, Vector3> doorPositions = new Dictionary<Vector2Int, Vector3>();//world positions of each door
     private Dictionary<Vector2Int, Vector3Int> indexToGrid = new Dictionary<Vector2Int, Vector3Int>();
@@ -271,6 +291,7 @@ public class Room
     };
     private static Dictionary<Vector2Int, TileBase> IndexToTile;
     private Dictionary<Vector2Int, Vector2Int> roomPoints;//keys are the position of the point, values are the size. Used to create random room shapes
+    private Dictionary<GameObject, Vector3Int> contentPositions = new Dictionary<GameObject, Vector3Int>();//Positions of each thing in the room
 
     public Room(Vector2Int roomIndex)
     {
@@ -294,18 +315,19 @@ public class Room
 
     public void Generate()
     {
+        attempt++;
+        Debug.Log("Generating room " + roomIndex + ". Attempt " + attempt + ".");
+
         tilemap.ClearAllTiles();
-
         ResetDoorPositions();
-
-        doors = new List<GameObject>();
+        ResetContentPositions();
 
         Vector2Int baseSize = new Vector2Int(Random.Range(4, 7), Random.Range(4, 7));
+        Dictionary<Vector2Int, List<Vector3Int>> validWalls = new Dictionary<Vector2Int, List<Vector3Int>>();
 
-        roomPoints = new Dictionary<Vector2Int, Vector2Int>
-        {
-            {Vector2Int.zero, baseSize}
-        };
+        doors = new List<GameObject>();
+        roomPoints = new Dictionary<Vector2Int, Vector2Int> { {Vector2Int.zero, baseSize} };
+        validFloors = new List<Vector3Int>();
 
         int pointAmount = Random.Range(3, 6);
 
@@ -332,9 +354,6 @@ public class Room
             }
         }
 
-        Dictionary<Vector2Int, List<Vector3Int>> validWalls = new Dictionary<Vector2Int, List<Vector3Int>>();
-        List<Vector3Int> floorPositions = new List<Vector3Int>();
-
         foreach (Vector2Int doorIndex in doorIndexes)
         {
             validWalls.Add(doorIndex, new List<Vector3Int>());
@@ -355,31 +374,39 @@ public class Room
 
                 if (tileName.Equals("Floor"))
                 {
-                    bool found = false;
+                    bool invalid = false;
 
-                    for (int x2 = -2; x2 <= 1; x2++)
+                    for (int x2 = -1; x2 <= 1 && !invalid; x2++)//Ensures all adjacent tiles are floors.
                     {
-                        for (int y2 = -2; y2 <= 1; y2++)
+                        for (int y2 = -1; y2 <= 1 && !invalid; y2++)
                         {
                             Vector3Int checkPos2 = new Vector3Int(x + x2, y + y2, 0);
                             if (tilemap.GetTile(checkPos2) == null || !tilemap.GetSprite(new Vector3Int(x + x2, y + y2, 0)).name.Equals("Floor"))
                             {
-                                found = true;
+                                invalid = true;
                                 break;
                             }
                         }
+                    }
 
-                        if (found)
+                    for (int x2 = -2; x2 <= 2 && !invalid; x2++)//Prevents spawning next to doors.
+                    {
+                        for (int y2 = -2; y2 <= 2 && !invalid; y2++)
                         {
-                            break;
+                            Vector3Int checkPos2 = new Vector3Int(x + x2, y + y2, -1);
+                            if (tilemap.GetTile(checkPos2) != null)
+                            {
+                                invalid = true;
+                                break;
+                            }
                         }
                     }
 
-                    if (!found)
-                    {
-                        floorPositions.Add(new Vector3Int(x, y, 0));
-                    }
 
+                    if (!invalid)
+                    {
+                        validFloors.Add(new Vector3Int(x, y, 0));
+                    }
                 }
 
                 if (!wallToIndex.ContainsKey(tileName))
@@ -436,25 +463,6 @@ public class Room
 
         }
 
-        foreach (GameObject thing in roomContents)
-        {
-            if (floorPositions.Count == 0)
-            {
-                Debug.LogWarning("Missing floor for object, regenerating room: " + roomIndex);
-
-                Generate();
-
-                return;
-            }
-            else
-            {
-                int randomIndex = Random.Range(0, floorPositions.Count);
-
-                thing.transform.position = tilemap.CellToWorld(floorPositions[randomIndex]) + new Vector3(0, 0, -1);
-                floorPositions.RemoveAt(randomIndex);
-            }
-        }
-
         foreach (Vector2Int doorIndex in doorIndexes)
         {
             if (!doorPositions.ContainsKey(doorIndex))
@@ -480,72 +488,7 @@ public class Room
             doorObject.transform.Find("Light").GetComponent<Light2D>().shadowsEnabled = !MainManager.LowGraphicsMode;
         }
 
-        UnloadRoom();
-    }
-
-    public void LoadRoom()
-    {
-        MainManager.sceneManager.Summon(roomObject.gameObject, "Overworld");
-        roomObject.SetParent(RoomGenerator.main.transform);
-
-        foreach (GameObject thing in roomContents)
-        {
-            if(thing != null)
-            {
-                MainManager.sceneManager.Summon(thing, "Overworld");
-                thing.transform.SetParent(RoomGenerator.main.transform, true);
-                thing.SetActive(true);
-            }
-        }
-
-        foreach (GameObject door in doors)
-        {
-            door.transform.GetComponent<RoomTransfer>().Activate();
-        }
-
-        MainManager.roomManager.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), tilemap, 1));
-    }
-
-    public void UnloadRoom()
-    {
-        foreach (GameObject thing in roomContents)
-        {
-            thing.SetActive(false);
-            MainManager.sceneManager.Banish(thing);
-        }
-
-        MainManager.roomManager.StartCoroutine(UnloadVisuals());
-    }
-
-    public void UnloadInstant()
-    {
-        foreach (GameObject thing in roomContents)
-        {
-            thing.SetActive(false);
-            thing.transform.SetParent(null, true);
-            MainManager.sceneManager.Banish(thing);
-        }
-
-        MainManager.sceneManager.Banish(roomObject.gameObject);
-    }
-
-    private IEnumerator UnloadVisuals()
-    {
-        MainManager.roomManager.StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), tilemap, 1));
-
-        yield return new WaitForSecondsRealtime(1);
-
-        MainManager.sceneManager.Banish(roomObject.gameObject);
-    }
-
-    public Vector3 getDoorPos(Vector2Int doorIndex)
-    {
-        return doorPositions[doorIndex];
-    }
-
-    public Vector2Int GetRoomIndex()
-    {
-        return roomIndex;
+        UnloadInstant();
     }
 
     public void AddDoors(List<Vector2Int> doorIndexes)
@@ -557,13 +500,171 @@ public class Room
 
     public void AddObject(GameObject newObject)
     {
-        roomContents.Add(newObject);
+        if (!roomContents.Contains(newObject))
+        {
+            roomContents.Add(newObject);
+            contentPositions.Add(newObject, Vector3Int.zero);
+        }
+
+        if (validFloors.Count == 0)
+        {
+            Debug.LogWarning("Missing floor for object, regenerating room: " + roomIndex);
+
+            Generate();
+
+            return;
+        }
+
+        int randomIndex = Random.Range(0, validFloors.Count);
+
+        newObject.transform.SetParent(roomObject);
+        newObject.transform.position = MainManager.theSquares.GetComponent<Tilemap>().CellToWorld(validFloors[randomIndex]) + new Vector3(0, 0, -1);
+        contentPositions[newObject] = validFloors[randomIndex];
+        validFloors.RemoveAt(randomIndex);
+
+        if (!loaded)
+        {
+            newObject.SetActive(false);
+            MainManager.sceneManager.Banish(newObject);
+
+            if (newObject.transform.TryGetComponent<CombatStarter>(out CombatStarter combatStarter))
+            {
+                combatStarter.mainCollider.enabled = false;
+            }
+        }
+        else
+        {
+            newObject.SetActive(true);
+        }
     }
 
     public void RemoveObject(GameObject newObject)
     {
         roomContents.Remove(newObject);
         Object.Destroy(newObject);
+    }
+
+
+    public IEnumerator LoadRoom()
+    {
+        yield return new WaitUntil(() => !loadDebounce);
+        loadDebounce = true;
+
+        MainManager.sceneManager.Summon(roomObject.gameObject, "Overworld");
+        roomObject.SetParent(RoomGenerator.main.transform);
+
+        foreach (GameObject thing in roomContents)
+        {
+            if(thing != null)
+            {
+                MainManager.sceneManager.Summon(thing, "Overworld");
+                thing.transform.SetParent(RoomGenerator.main.transform, true);
+
+                SpriteRenderer spriteRenderer = thing.transform.GetComponent<SpriteRenderer>();
+                spriteRenderer.color = new Color32(255, 255, 255, 0);
+                MainManager.roomManager.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), spriteRenderer, 1));
+
+                if (thing.transform.TryGetComponent<CombatStarter>(out CombatStarter combatStarter))
+                {
+                    combatStarter.mainCollider.enabled = false;
+                }
+
+                thing.SetActive(true);
+            }
+        }
+
+        foreach (GameObject door in doors)
+        {
+            door.transform.GetComponent<RoomTransfer>().Activate();
+        }
+
+        MainManager.roomManager.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), tilemap, 1));
+
+        loaded = true;
+
+        yield return new WaitForSecondsRealtime(1.1f);
+
+        foreach (GameObject thing in roomContents)
+        {
+            if (thing.transform.TryGetComponent<CombatStarter>(out CombatStarter combatStarter))
+            {
+                combatStarter.mainCollider.enabled = true;
+            }
+        }
+
+        loadDebounce = false;
+    }
+
+    public IEnumerator UnloadRoom()
+    {
+        yield return new WaitUntil(() => !loadDebounce);
+
+        loadDebounce = true;
+        loaded = false;
+
+        foreach (GameObject thing in roomContents)
+        {
+            SpriteRenderer spriteRenderer = thing.transform.GetComponent<SpriteRenderer>();
+            spriteRenderer.color = new Color32(255, 255, 255, 255);
+            MainManager.roomManager.StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), spriteRenderer, 1));
+
+            if (thing.transform.TryGetComponent<CombatStarter>(out CombatStarter combatStarter))
+            {
+                combatStarter.mainCollider.enabled = false;
+            }
+        }
+
+        MainManager.roomManager.StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), tilemap, 1));
+
+        yield return new WaitForSecondsRealtime(1.1f);
+
+        foreach (GameObject thing in roomContents)
+        {
+            thing.SetActive(false);
+            MainManager.sceneManager.Banish(thing);
+
+        }
+
+        MainManager.sceneManager.Banish(roomObject.gameObject);
+
+        loadDebounce = false;
+    }
+
+    public void UnloadInstant()
+    {
+        loaded = false;
+
+        foreach (GameObject thing in roomContents)
+        {
+            if (thing.transform.TryGetComponent<CombatStarter>(out CombatStarter combatStarter))
+            {
+                combatStarter.mainCollider.enabled = false;
+            }
+
+            thing.transform.GetComponent<SpriteRenderer>().color = new Color32(255, 255, 255, 0);
+            thing.SetActive(false);
+            MainManager.sceneManager.Banish(thing);
+        }
+
+        MainManager.sceneManager.Banish(roomObject.gameObject);
+    }
+
+
+    public Vector3 getDoorPos(Vector2Int doorIndex)
+    {
+        return doorPositions[doorIndex];
+    }
+
+    public List<Vector3Int> GetValidObjectPositions()
+    {
+        List<Vector3Int> posList = new List<Vector3Int>();
+
+        return posList;
+    }
+
+    public Vector2Int GetRoomIndex()
+    {
+        return roomIndex;
     }
 
     private void ResetDoorPositions()
@@ -580,6 +681,16 @@ public class Room
                 doorPositions[doorIndex] = Vector3.zero;
                 indexToGrid[doorIndex] = Vector3Int.zero;
             }
+        }
+    }
+
+    private void ResetContentPositions()
+    {
+        List<GameObject> keys = new List<GameObject>(contentPositions.Keys);
+
+        foreach(GameObject key in keys)
+        {
+            contentPositions[key] = Vector3Int.zero;
         }
     }
 }

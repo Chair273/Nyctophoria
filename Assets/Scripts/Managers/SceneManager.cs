@@ -29,6 +29,11 @@ public class SceneTransition : MonoBehaviour
 
     private IEnumerator Load(string sceneName)
     {
+        if (sceneName.Equals("Combat") && MainManager.combatManager.combat)
+        {
+            yield break;
+        }
+
         string current = SceneManager.GetActiveScene().name;
 
         AsyncOperation loaded = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);

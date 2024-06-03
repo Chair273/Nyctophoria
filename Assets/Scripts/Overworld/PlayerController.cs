@@ -9,6 +9,8 @@ public class PlayerController : MonoBehaviour
 
     public Animator animator;
 
+    private int prevX;
+
     private Rigidbody2D Rigidbody2D;
 
     void Start()
@@ -22,16 +24,18 @@ public class PlayerController : MonoBehaviour
         {
             Vector3 MoveVector = new Vector3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0);
 
-            animator.SetBool("Moving", !MoveVector.Equals(Vector3.zero));
-            animator.SetBool("Up", MoveVector.y > 0);
+            int yVector = Mathf.RoundToInt(MoveVector.y);
+            int xVector = Mathf.RoundToInt(MoveVector.x);
 
-            Rigidbody2D.MovePosition(transform.position + new Vector3(MoveVector.x, MoveVector.y * (86f / 150f), 0) * Time.deltaTime * Speed);
+            animator.SetBool("Moving", !MoveVector.Equals(Vector3.zero));
+            animator.SetBool("Up", yVector > 0);
+
+            Rigidbody2D.MovePosition(transform.position + new Vector3(xVector, yVector * (86f / 150f), 0) * Time.deltaTime * Speed);
             transform.position = new Vector3(transform.position.x, transform.position.y, 0);
 
-            float yScale = MoveVector.y != 0 ? MoveVector.y : -1;
-            float xScale = MoveVector.x != 0 ? MoveVector.x : 1;
-
-            transform.localScale = new Vector3(xScale * yScale * size, size, 1);
+            prevX = xVector != 0 ? xVector : prevX;
+            
+            transform.localScale = new Vector3((prevX > 0 ? 1 : -1) * (yVector > 0 ? 1 : -1) * size, size, 1);
         }
     }
 }

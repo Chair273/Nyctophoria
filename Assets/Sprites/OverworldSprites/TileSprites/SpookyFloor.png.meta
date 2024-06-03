@@ -1,7 +1,10 @@
 fileFormatVersion: 2
-guid: fc16e15aa88e74d65a917d305b1b3e88
+guid: 1c00a49e638b748b8a4d05ed257b7851
 TextureImporter:
-  internalIDToNameTable: []
+  internalIDToNameTable:
+  - first:
+      213: 2760016012920969632
+    second: SpookyFloor_0
   externalObjects: {}
   serializedVersion: 12
   mipmaps:
@@ -43,17 +46,17 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 0
   spriteMeshType: 1
-  alignment: 9
-  spritePivot: {x: 0.35140997, y: 0.13915858}
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 150
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
   alphaIsTransparency: 1
-  spriteTessellationDetail: 0
+  spriteTessellationDetail: -1
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
@@ -91,40 +94,42 @@ TextureImporter:
     overridden: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 3
-    buildTarget: Server
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: SpookyFloor_0
+      rect:
+        serializedVersion: 2
+        x: 181
+        y: 181
+        width: 150
+        height: 88
+      alignment: 9
+      pivot: {x: 0.5, y: 0.011363637}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a95b88c0fb8d4620800000000000000
+      internalID: 2760016012920969632
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
-    physicsShape:
-    - - {x: -143.5, y: -69.5}
-      - {x: -143.5, y: -68.5}
-      - {x: -69.5, y: -25.5}
-      - {x: -68.5, y: -25.5}
-      - {x: 6.5, y: -67.5}
-      - {x: 6.5, y: -68.5}
-      - {x: -67.5, y: -111.5}
-      - {x: -68.5, y: -111.5}
+    physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
-    internalID: 1537655665
+    spriteID: 82e3006e9534b44db8d935d8276c8ef6
+    internalID: 0
     vertices: []
     indices: 
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      SpookyFloor_0: 2760016012920969632
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

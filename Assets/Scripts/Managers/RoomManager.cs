@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.Rendering.Universal;
+using System.Linq;
 
 public class RoomManager : MonoBehaviour
 {
@@ -29,8 +30,6 @@ public class RoomManager : MonoBehaviour
             yield break;
         }
         transitionDebounce = true;
-
-        Debug.Log("Transition.");
 
         Vector2Int newRoom = new Vector2Int(currentRoom.x + roomVector.x, currentRoom.y + roomVector.y);
 
@@ -269,6 +268,8 @@ public class Room
 
     private int attempt = 0;
 
+    private const float slopeVal = 86f / 150f;
+
     private bool loaded = false;
     private bool loadDebounce = false;
 
@@ -278,6 +279,53 @@ public class Room
     private List<GameObject> roomContents = new List<GameObject>();
     private List<Vector2Int> doorIndexes;//indicates which doors the room should have
     private List<Vector3Int> validFloors;
+    private List<Vector3Int> sortWalls;
+
+    private static Dictionary<string, Vector3> offset = new Dictionary<string, Vector3>
+    {
+        {"LeftWall", Vector3.zero},
+        {"LeftDoor", Vector3.zero},
+        {"RightWall", new Vector3(-63, 35, 0) / 150},
+        {"RightDoor", new Vector3(-63, 35, 0) / 150},
+        {"FrontWall", Vector3.zero},
+        {"FrontDoor", Vector3.zero},
+        {"BackWall", new Vector3(63, 35, 0) / 150},
+        {"BackDoor", new Vector3(63, 35, 0) / 150},
+        {"LeftCorner", new Vector3(75, 42, 0) / 150},
+        {"RightCorner", new Vector3(-75, 42, 0) / 150},
+        {"UpCorner", Vector3.zero},
+        {"DownCorner", new Vector3(0, 71, 0) / 150},
+        {"LeftCap", new Vector3(63, 36, 0) / 150},
+        {"RightCap", new Vector3(-59, 36, 0) / 150},
+        {"UpCap", new Vector3(0, 87, 0) / 150},
+        {"DownCap", new Vector3(0, 71, 0) / 150},
+    };
+
+    private static Dictionary<string, float> slopeMult = new Dictionary<string, float>
+    {
+        {"LeftWall", slopeVal},
+        {"LeftDoor", slopeVal},
+        {"RightWall", slopeVal},
+        {"RightDoor", slopeVal},
+        {"FrontWall", -slopeVal},
+        {"FrontDoor", -slopeVal},
+        {"BackWall", -slopeVal},
+        {"BackDoor", -slopeVal},
+        {"LeftCorner", -slopeVal},
+        {"RightCorner", slopeVal},
+        {"LeftCap", 0},
+        {"RightCap", 0},
+        {"UpCap", 0},
+        {"DownCap", 0},
+    };
+
+    private static Dictionary<string, float> absSlope = new Dictionary<string, float>
+    {
+        {"UpCorner", slopeVal},
+        {"DownCorner", -slopeVal},
+    };
+
+    private static Dictionary<string, TileBase> tiles;
 
     private Dictionary<Vector2Int, Vector3> doorPositions = new Dictionary<Vector2Int, Vector3>();//world positions of each door
     private Dictionary<Vector2Int, Vector3Int> indexToGrid = new Dictionary<Vector2Int, Vector3Int>();
@@ -298,19 +346,34 @@ public class Room
         this.roomIndex = roomIndex;
 
         roomObject = Object.Instantiate(Resources.Load<Transform>("Overworld/Prefabs/Room"), MainManager.theSquares);
-        tile = Resources.Load<RuleTile>("Overworld/Prefabs/Crypt");
-
-        tilemap = roomObject.GetComponent<Tilemap>();
         roomObject.GetComponent<ShadowCaster2D>().enabled = !MainManager.LowGraphicsMode;
+        roomObject.name = "Room " + roomIndex;
+
+        tile = Resources.Load<RuleTile>("Overworld/Prefabs/Crypt");
+        tilemap = roomObject.GetComponent<Tilemap>();
+
         doorIndexes = new List<Vector2Int>();
 
-        IndexToTile = new Dictionary<Vector2Int, TileBase>
+        if (IndexToTile == null)
         {
-            {new Vector2Int(1, 0), Resources.Load<TileBase>("OverWorld/Tiles/FrontDoor")},
-            {new Vector2Int(-1, 0), Resources.Load<TileBase>("OverWorld/Tiles/BackDoor")},
-            {new Vector2Int(0, -1), Resources.Load<TileBase>("OverWorld/Tiles/RightDoor")},
-            {new Vector2Int(0, 1), Resources.Load<TileBase>("OverWorld/Tiles/LeftDoor")}
-        };
+            IndexToTile = new Dictionary<Vector2Int, TileBase>
+            {
+                {new Vector2Int(1, 0), Resources.Load<TileBase>("OverWorld/Tiles/FrontDoor")},
+                {new Vector2Int(-1, 0), Resources.Load<TileBase>("OverWorld/Tiles/BackDoor")},
+                {new Vector2Int(0, -1), Resources.Load<TileBase>("OverWorld/Tiles/RightDoor")},
+                {new Vector2Int(0, 1), Resources.Load<TileBase>("OverWorld/Tiles/LeftDoor")}
+            };
+        }
+
+        if (tiles == null)
+        {
+            tiles = new Dictionary<string, TileBase>();
+
+            foreach (Tile tile in Resources.LoadAll("Overworld/Tiles", typeof(Tile)))
+            {
+                tiles.Add(tile.name, tile);
+            }
+        }
     }
 
     public void Generate()
@@ -328,6 +391,7 @@ public class Room
         doors = new List<GameObject>();
         roomPoints = new Dictionary<Vector2Int, Vector2Int> { {Vector2Int.zero, baseSize} };
         validFloors = new List<Vector3Int>();
+        sortWalls = new List<Vector3Int>();
 
         int pointAmount = Random.Range(3, 6);
 
@@ -359,9 +423,9 @@ public class Room
             validWalls.Add(doorIndex, new List<Vector3Int>());
         }
 
-        for (int x = tilemap.origin.x; x < tilemap.origin.x + tilemap.size.x; x++)
+        for (int x = tilemap.cellBounds.xMin; x < tilemap.cellBounds.xMax ; x++)
         {
-            for (int y = tilemap.origin.x; y < tilemap.origin.x + tilemap.size.x; y++)
+            for (int y = tilemap.cellBounds.yMin; y < tilemap.cellBounds.yMax; y++)
             {
                 Vector3Int checkPos = new Vector3Int(x, y, 0);
 
@@ -372,7 +436,7 @@ public class Room
 
                 string tileName = tilemap.GetSprite(new Vector3Int(x, y, 0)).name;
 
-                if (tileName.Equals("Floor"))
+                if (tileName.Equals("Floor")) 
                 {
                     bool invalid = false;
 
@@ -406,6 +470,12 @@ public class Room
                     if (!invalid)
                     {
                         validFloors.Add(new Vector3Int(x, y, 0));
+
+                        if (Random.Range(0, 10) == 0)
+                        {
+                            tilemap.SetAnimationFrame(new Vector3Int(x, y, 0), 1);
+                            
+                        }
                     }
                 }
 
@@ -474,11 +544,7 @@ public class Room
                 return;
             }
 
-
-            tilemap.SetTile(indexToGrid[doorIndex] + new Vector3Int(0, 0, -1), IndexToTile[doorIndex]);
-
-            tilemap.SetTileFlags(indexToGrid[doorIndex], TileFlags.None);
-            tilemap.SetColor(indexToGrid[doorIndex], new Color32(255, 255, 255, 0));
+            tilemap.SetAnimationFrame(indexToGrid[doorIndex], 1);
 
             GameObject doorObject = Object.Instantiate(doorPrefab, roomObject);
             doors.Add(doorObject);
@@ -486,6 +552,33 @@ public class Room
             doorObject.transform.localPosition = doorPositions[doorIndex];
             doorObject.GetComponent<RoomTransfer>().roomIndex = doorIndex;
             doorObject.transform.Find("Light").GetComponent<Light2D>().shadowsEnabled = !MainManager.LowGraphicsMode;
+        }
+
+        for (int x = tilemap.cellBounds.xMin; x < tilemap.cellBounds.xMax; x++)
+        {
+            for (int y = tilemap.cellBounds.yMin; y < tilemap.cellBounds.yMax; y++)
+            {
+                Sprite tile = tilemap.GetSprite(new Vector3Int(x, y, 0));
+
+                if (tile == null){ continue; }
+
+                Vector3Int newPos = new Vector3Int(x, y, 1);
+
+                tilemap.SetTile(new Vector3Int(x, y, 1), tiles[tile.name]);
+
+                if (offset.ContainsKey(tile.name))
+                {
+                    sortWalls.Add(newPos);
+                }
+            }
+        }
+
+        for (int x = tilemap.cellBounds.xMin; x < tilemap.cellBounds.xMax; x++)
+        {
+            for (int y = tilemap.cellBounds.yMin; y < tilemap.cellBounds.yMax; y++)
+            {
+                tilemap.SetTile(new Vector3Int(x, y, 0), null);
+            }
         }
 
         UnloadInstant();
@@ -582,6 +675,8 @@ public class Room
 
         loaded = true;
 
+        MainManager.roomManager.StartCoroutine(StartSorting());
+
         yield return new WaitForSecondsRealtime(1.1f);
 
         foreach (GameObject thing in roomContents)
@@ -665,6 +760,89 @@ public class Room
     public Vector2Int GetRoomIndex()
     {
         return roomIndex;
+    }
+
+
+    private IEnumerator StartSorting()
+    {
+        WaitForEndOfFrame wait = new WaitForEndOfFrame();
+        List<Transform> objects = new List<Transform>();
+
+        foreach (Transform child in RoomGenerator.main.ObjectContainer)
+        {
+            objects.Add(child.transform);
+        }
+
+        while (loaded)
+        {
+            objects = objects.OrderByDescending(obj => obj.position.y).ToList();
+
+            for (int i = 0; i < objects.Count; i++)
+            {
+                Transform obj = objects[i];
+                obj.position = new Vector3(obj.position.x, obj.position.y, i + 0.5f);
+            }
+
+            if (sortWalls.Count == 0)
+            {
+                Debug.LogError("No walls to sort.");
+            }
+
+            for (int i = 0; i < sortWalls.Count; i++)
+            {
+                string name = tilemap.GetSprite(sortWalls[i]).name;
+                bool found = false;
+                bool abs = absSlope.ContainsKey(name);
+                float slope = abs ? absSlope[name] : slopeMult[name];
+
+                Vector3 tilePos = tilemap.CellToWorld(sortWalls[i]) + offset[name];
+
+
+                for (int v = 0; v < objects.Count; v++)
+                {
+                    Vector3 objPos = objects[v].position;
+                    float x = abs ? Mathf.Abs(objPos.x) : objPos.x;
+
+                    if (objPos.y >= x * slope - tilePos.x * slope + tilePos.y)
+                    {
+                        tilemap.SetTile(sortWalls[i], null);
+
+                        sortWalls[i] = new Vector3Int(sortWalls[i].x, sortWalls[i].y, v - objects.Count);
+
+                        tilemap.SetTile(sortWalls[i], tiles[name]);
+
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    tilemap.SetTile(sortWalls[i], null);
+
+                    sortWalls[i] = new Vector3Int(sortWalls[i].x, sortWalls[i].y, 1);
+
+                    tilemap.SetTile(sortWalls[i], tiles[name]);
+                }
+
+            }
+
+            yield return wait;
+        }
+
+        for (int i = 0; i < sortWalls.Count; i++)
+        {
+            Vector3Int pos = sortWalls[i];
+            Vector3Int newPos = new Vector3Int(pos.x, pos.y, 1);
+
+            string name = tilemap.GetSprite(pos).name;
+
+            tilemap.SetTile(pos, null);
+
+            sortWalls[i] = newPos;
+
+            tilemap.SetTile(newPos, tiles[name]);
+        }
     }
 
     private void ResetDoorPositions()

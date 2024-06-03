@@ -8,6 +8,7 @@ public class RoomGenerator : MonoBehaviour
     public TileBase tile;
 
     public Transform player;
+    public Transform ObjectContainer;
 
     private void Start()
     {

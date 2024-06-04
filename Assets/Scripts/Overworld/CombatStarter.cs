@@ -7,25 +7,29 @@ public class CombatStarter : MonoBehaviour
 
     private bool debounce = false;
 
-    private List<string> validEnemies = new List<string> { "Skeleton", "Crypt Keeper" };
+    private string type;
+
+    private static List<string> validEnemies = new List<string> { "Skeleton", "CryptKeeper" };
+
+    private void Start()
+    {
+        type = validEnemies[Random.Range(0, validEnemies.Count)];
+        transform.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/" + type);
+    }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player") && !debounce && !MainManager.combatManager.combat)
         {
+            MainManager.roomManager.RemoveObject(gameObject);
+
             debounce = true;
 
             MainManager.roomManager.UnloadInstant();
 
-            int amount = Random.Range(1, 4);
-
-            for (int i = 0; i < amount; i++)
-            {
-                MainManager.characterManager.AddCharacter(validEnemies[Random.Range(0, validEnemies.Count)]);
-            }
+            MainManager.characterManager.AddCharacter(validEnemies[Random.Range(0, validEnemies.Count)]);
 
             MainManager.sceneManager.LoadScene("Combat");
-            MainManager.roomManager.RemoveObject(gameObject);
         }
     }
 

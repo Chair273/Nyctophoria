@@ -20,7 +20,7 @@ public class MainManager : MonoBehaviour
     public static void GameOver()
     {
         characterManager.ClearCharacters();
-        characterManager.AddCharacter("One Armed Knight");
+        characterManager.AddCharacter("OneArmedKnight");
 
         sceneManager.LoadScene("Title");
     }
@@ -48,7 +48,7 @@ public class MainManager : MonoBehaviour
         combatManager.DefineCards();
         roomManager.GenerateArea();
 
-        characterManager.AddCharacter("One Armed Knight");
+        characterManager.AddCharacter("OneArmedKnight");
 
         sceneManager.LoadScene("Title");
     }

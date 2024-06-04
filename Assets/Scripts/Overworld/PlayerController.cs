@@ -31,7 +31,6 @@ public class PlayerController : MonoBehaviour
             animator.SetBool("Up", yVector > 0);
 
             Rigidbody2D.MovePosition(transform.position + new Vector3(xVector, yVector * (86f / 150f), 0) * Time.deltaTime * Speed);
-            transform.position = new Vector3(transform.position.x, transform.position.y, 0);
 
             prevX = xVector != 0 ? xVector : prevX;
             

@@ -1,9 +1,24 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class SceneTransition : MonoBehaviour
 {
+    private Dictionary<string, Vector3> cameraPos = new Dictionary<string, Vector3>
+    {
+        {"Title", new Vector3(0, 0, -500)},
+        {"Overworld", new Vector3(0, 1.6f, -500)},
+        {"Combat", new Vector3(0, 0, -500)},
+    };
+
+    private Dictionary<string, float> cameraSize = new Dictionary<string, float>
+    {
+        {"Title", 5},
+        {"Overworld", 3},
+        {"Combat", 5},
+    };
+
     public string GetSceneName()
     {
         return SceneManager.GetActiveScene().name;
@@ -48,6 +63,8 @@ public class SceneTransition : MonoBehaviour
         }
 
         SceneManager.SetActiveScene(SceneManager.GetSceneByName(sceneName));
+        MainManager.mainCamera.transform.position = cameraPos[sceneName];
+        MainManager.mainCamera.orthographicSize = cameraSize[sceneName];
 
         if (sceneName.Equals("Overworld"))
         {

@@ -13,7 +13,7 @@ public class CharacterManager : MonoBehaviour
     {
         //Players
 
-        {"One Armed Knight", new Dictionary<string, object>
+        {"OneArmedKnight", new Dictionary<string, object>
         {
             {"Name", "One Armed Knight"},
             {"IsPlayer", true},
@@ -34,7 +34,7 @@ public class CharacterManager : MonoBehaviour
             {"ObjectReference", null}
         } },
 
-        {"Plague Caster", new Dictionary<string, object>
+        {"PlagueCaster", new Dictionary<string, object>
         {
             {"Name", "Plague Caster"},
             {"IsPlayer", true },
@@ -73,7 +73,7 @@ public class CharacterManager : MonoBehaviour
             {"ObjectReference", null}
         } },
 
-        {"Crypt Keeper", new Dictionary<string, object>
+        {"CryptKeeper", new Dictionary<string, object>
         {
             {"Name", "Crypt Keeper"},
             {"IsPlayer", false },

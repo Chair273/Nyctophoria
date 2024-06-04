@@ -177,7 +177,7 @@ public class RoomManager : MonoBehaviour
 
         GameObject enemyPrefab = Resources.Load<GameObject>("Overworld/Prefabs/Enemy");
 
-        int amount = Random.Range(5, 10);
+        int amount = Random.Range(5, 11) + allRooms.Count;
 
         for (int i = 0; i < amount; i++)
         {
@@ -562,9 +562,9 @@ public class Room
 
                 if (tile == null){ continue; }
 
-                Vector3Int newPos = new Vector3Int(x, y, 1);
+                Vector3Int newPos = new Vector3Int(x, y, 50);
 
-                tilemap.SetTile(new Vector3Int(x, y, 1), tiles[tile.name]);
+                tilemap.SetTile(newPos, tiles[tile.name]);
 
                 if (offset.ContainsKey(tile.name))
                 {
@@ -648,10 +648,10 @@ public class Room
 
         foreach (GameObject thing in roomContents)
         {
-            if(thing != null)
+            if (thing != null)
             {
                 MainManager.sceneManager.Summon(thing, "Overworld");
-                thing.transform.SetParent(RoomGenerator.main.transform, true);
+                thing.transform.SetParent(RoomGenerator.main.ObjectContainer, true);
 
                 SpriteRenderer spriteRenderer = thing.transform.GetComponent<SpriteRenderer>();
                 spriteRenderer.color = new Color32(255, 255, 255, 0);
@@ -671,10 +671,9 @@ public class Room
             door.transform.GetComponent<RoomTransfer>().Activate();
         }
 
-        MainManager.roomManager.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), tilemap, 1));
-
         loaded = true;
 
+        MainManager.roomManager.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), tilemap, 1));
         MainManager.roomManager.StartCoroutine(StartSorting());
 
         yield return new WaitForSecondsRealtime(1.1f);
@@ -767,6 +766,7 @@ public class Room
     {
         WaitForEndOfFrame wait = new WaitForEndOfFrame();
         List<Transform> objects = new List<Transform>();
+        int objectCount = RoomGenerator.main.ObjectContainer.childCount;
 
         foreach (Transform child in RoomGenerator.main.ObjectContainer)
         {
@@ -775,18 +775,33 @@ public class Room
 
         while (loaded)
         {
-            objects = objects.OrderByDescending(obj => obj.position.y).ToList();
-
-            for (int i = 0; i < objects.Count; i++)
-            {
-                Transform obj = objects[i];
-                obj.position = new Vector3(obj.position.x, obj.position.y, i + 0.5f);
-            }
-
+            //prevent errors
             if (sortWalls.Count == 0)
             {
                 Debug.LogError("No walls to sort.");
             }
+
+            if (objectCount != RoomGenerator.main.ObjectContainer.childCount)
+            {
+                objectCount = RoomGenerator.main.ObjectContainer.childCount;
+                objects = new List<Transform>();
+
+                foreach (Transform child in RoomGenerator.main.ObjectContainer)
+                {
+                    objects.Add(child.transform);
+                }
+            }
+            //
+
+            //sort objects from lowest to highest, starting at 1 & jumping by 2
+            objects = objects.OrderBy(obj => obj.position.y).ToList();
+
+            for (int i = 0; i < objects.Count; i++)
+            {
+                Transform obj = objects[i];
+                obj.position = new Vector3(obj.position.x, obj.position.y, i * 2 + 1);
+            }
+            //
 
             for (int i = 0; i < sortWalls.Count; i++)
             {
@@ -797,7 +812,7 @@ public class Room
 
                 Vector3 tilePos = tilemap.CellToWorld(sortWalls[i]) + offset[name];
 
-
+                //find the first object that is above the tile's sort line, then put the tile below (in front of) it.
                 for (int v = 0; v < objects.Count; v++)
                 {
                     Vector3 objPos = objects[v].position;
@@ -807,7 +822,7 @@ public class Room
                     {
                         tilemap.SetTile(sortWalls[i], null);
 
-                        sortWalls[i] = new Vector3Int(sortWalls[i].x, sortWalls[i].y, v - objects.Count);
+                        sortWalls[i] = new Vector3Int(sortWalls[i].x, sortWalls[i].y, v * 2);
 
                         tilemap.SetTile(sortWalls[i], tiles[name]);
 
@@ -820,20 +835,21 @@ public class Room
                 {
                     tilemap.SetTile(sortWalls[i], null);
 
-                    sortWalls[i] = new Vector3Int(sortWalls[i].x, sortWalls[i].y, 1);
+                    sortWalls[i] = new Vector3Int(sortWalls[i].x, sortWalls[i].y, objectCount * 2);
 
                     tilemap.SetTile(sortWalls[i], tiles[name]);
                 }
-
+                //
             }
 
             yield return wait;
         }
 
+        //reset wall positions as the room unloads
         for (int i = 0; i < sortWalls.Count; i++)
         {
             Vector3Int pos = sortWalls[i];
-            Vector3Int newPos = new Vector3Int(pos.x, pos.y, 1);
+            Vector3Int newPos = new Vector3Int(pos.x, pos.y, objectCount * 2);
 
             string name = tilemap.GetSprite(pos).name;
 
@@ -843,6 +859,7 @@ public class Room
 
             tilemap.SetTile(newPos, tiles[name]);
         }
+        //
     }
 
     private void ResetDoorPositions()

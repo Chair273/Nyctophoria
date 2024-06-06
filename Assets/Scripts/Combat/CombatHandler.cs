@@ -331,8 +331,6 @@ public class CombatHandler : MonoBehaviour
 
         Debug.Log("Combat Ended");
 
-        yield return new WaitForSeconds(5);
-
         Vignette vignette;
 
         if (!volumeProfile.TryGet(out vignette)) throw new System.NullReferenceException(nameof(vignette));
@@ -340,16 +338,16 @@ public class CombatHandler : MonoBehaviour
         StartCoroutine(Tween.New(1, vignette, 2));
         StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), vignette, 2));
 
-        yield return new WaitForSecondsRealtime(3);
+        yield return new WaitForSecondsRealtime(2);
 
         List<Dictionary<string, object>> charInfo = MainManager.characterManager.GetCharacters();
         bool survivors = false;
 
         for (int i = charInfo.Count - 1; i >= 0; i--)
         {
-            if (charInfo[i]["CombatReference"] == null || ((GameObject)charInfo[i]["CombatReference"]).GetComponent<Character>().GetGridPos().x == 1)
+            if (charInfo[i]["CombatReference"] == null || ((GameObject)charInfo[i]["CombatReference"]).GetComponent<Character>().GetGridPos().x == 1 || (int)charInfo[i]["Health"] <= 0)
             {
-                if (charInfo[i]["OverworldReference"] != null && (int)charInfo[i]["Health"] <= 0)
+                if (charInfo[i]["OverworldReference"] != null)
                 {
                     MainManager.roomManager.RemoveObject((GameObject)charInfo[i]["OverworldReference"]);
                 }

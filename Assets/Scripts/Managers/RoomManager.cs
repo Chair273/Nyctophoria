@@ -73,6 +73,7 @@ public class RoomManager : MonoBehaviour
 
     public void RemoveObject(GameObject gameObject)
     {
+        Debug.Log(gameObject);
         area[currentRoom.x, currentRoom.y].RemoveObject(gameObject);
     }
 
@@ -634,7 +635,6 @@ public class Room
 
     public void RemoveObject(GameObject newObject)
     {
-        Debug.Log(roomContents.Contains(newObject));
         roomContents.Remove(newObject);
         Object.Destroy(newObject);
     }
@@ -672,6 +672,8 @@ public class Room
         {
             door.transform.GetComponent<RoomTransfer>().Activate();
         }
+
+        CenterCamera();
 
         loaded = true;
 
@@ -890,5 +892,33 @@ public class Room
         {
             contentPositions[key] = Vector3Int.zero;
         }
+    }
+
+    private void CenterCamera()
+    {
+        List<Vector3> tilePos = new List<Vector3>();
+
+        for (int x = tilemap.cellBounds.xMin; x < tilemap.cellBounds.xMax; x++)
+        {
+            for (int y = tilemap.cellBounds.yMin; y < tilemap.cellBounds.yMax; y++)
+            {
+                if (tilemap.GetTile(new Vector3Int(x, y, 50)) != null)
+                {
+                    tilePos.Add(tilemap.CellToWorld(new Vector3Int(x, y, -500)));
+                }
+            }
+        }
+
+        Vector3 cameraPos = Vector3.zero;
+
+        foreach (Vector3 pos in tilePos)
+        {
+            cameraPos += pos;
+        }
+
+        cameraPos /= tilePos.Count;
+        cameraPos += new Vector3(0, 0.5f, 0);
+
+        MainManager.sceneManager.StartCoroutine(Tween.New(cameraPos, MainManager.mainCamera.transform, 0.5f));
     }
 }

@@ -31,7 +31,7 @@ public class CombatStarter : MonoBehaviour
         Transform player = RoomGenerator.main.player;
         float endTime = Time.time + 2;
 
-        while (Time.time < endTime && ((Vector2)player.position - (Vector2)transform.position).magnitude < 0.4f)
+        while (player.gameObject != null && Time.time < endTime && ((Vector2)player.position - (Vector2)transform.position).magnitude < 0.4f)
         {
             yield return wait;
         }

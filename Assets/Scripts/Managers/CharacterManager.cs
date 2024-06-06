@@ -116,7 +116,7 @@ public class CharacterManager : MonoBehaviour
             newChar.Add(kvp.Key, kvp.Value);
         }
 
-        newChar["OverworldRefrence"] = OverworldReference;
+        newChar["OverworldReference"] = OverworldReference;
 
         characters.Add(newChar);
 

@@ -28,7 +28,7 @@ public class RoomTransfer : MonoBehaviour
         transform.Find("Light").GetComponent<Light2D>().enabled = false;
         transform.GetComponent<CircleCollider2D>().enabled = false;
 
-        MainManager.roomManager.StartCoroutine(DelayedEnable());
+        StartCoroutine(DelayedEnable());
     }
 
     private IEnumerator DelayedEnable()
@@ -37,12 +37,9 @@ public class RoomTransfer : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(Random.Range(1.5f, 3.0f));
 
-        if (RoomGenerator.main != null)
+        while (RoomGenerator.main != null && ((Vector2)RoomGenerator.main.player.position - (Vector2)transform.position).magnitude < 0.4f)
         {
-            while (((Vector2)RoomGenerator.main.player.position - (Vector2)transform.position).magnitude < 0.4f)
-            {
-                yield return waitTime;
-            }
+            yield return waitTime;
         }
 
         transform.Find("Light").GetComponent<Light2D>().enabled = true;

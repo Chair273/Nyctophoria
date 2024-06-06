@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class CharacterManager : MonoBehaviour
 {
+    public Vector3 playerPos = Vector3.zero;
+
     private static List<Dictionary<string, object>> characters = new List<Dictionary<string, object>>(); //first string key is the player name, second is the name of each stat
     private static Dictionary<string, Dictionary<string, object>> charTemplate;
 
@@ -31,7 +33,8 @@ public class CharacterManager : MonoBehaviour
                 {"Rabbit Bones", 1 }
             } },
             {"CombatSprite", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/OneArmedKnight") },
-            {"ObjectReference", null}
+            {"OverworldReference", null},
+            {"CombatReference", null}
         } },
 
         {"PlagueCaster", new Dictionary<string, object>
@@ -51,7 +54,8 @@ public class CharacterManager : MonoBehaviour
                 {"Placebo", 2 }
             } },
             {"CombatSprite", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/PlagueCaster") },
-            {"ObjectReference", null}
+            {"OverworldReference", null},
+            {"CombatReference", null}
         } },
 
         //Enemies
@@ -70,7 +74,8 @@ public class CharacterManager : MonoBehaviour
             } },
             {"Items", new Dictionary<string, int> ()},
             {"CombatSprite", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/Skeleton") },
-            {"ObjectReference", null}
+            {"OverworldReference", null},
+            {"CombatReference", null}
         } },
 
         {"CryptKeeper", new Dictionary<string, object>
@@ -89,18 +94,19 @@ public class CharacterManager : MonoBehaviour
             } },
             {"Items", new Dictionary<string, int> ()},
             {"CombatSprite", Resources.Load<Sprite>("CombatPrefabs/CharacterSprites/CryptKeeper") },
-            {"ObjectReference", null}
+            {"OverworldReference", null},
+            {"CombatReference", null}
         } },
 
     };
     }
 
-    public void AddCharacter(string charIndex)
+    public Dictionary<string, object> AddCharacter(string charIndex, GameObject OverworldReference)
     {
         if (!charTemplate.ContainsKey(charIndex))
         {
             Debug.LogError("Character index not contained in template. " + charIndex);
-            return;
+            return null;
         }
 
         Dictionary<string, object> newChar = new Dictionary<string, object>();
@@ -110,7 +116,11 @@ public class CharacterManager : MonoBehaviour
             newChar.Add(kvp.Key, kvp.Value);
         }
 
+        newChar["OverworldRefrence"] = OverworldReference;
+
         characters.Add(newChar);
+
+        return newChar;
     }
 
     public List<Dictionary<string, object>> GetCharacters()

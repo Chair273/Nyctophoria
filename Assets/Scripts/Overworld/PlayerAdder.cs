@@ -13,7 +13,7 @@ public class PlayerAdder : MonoBehaviour
             debounce = true;
             gameObject.SetActive(false);
 
-            MainManager.characterManager.AddCharacter(characterName);
+            MainManager.characterManager.AddCharacter(characterName, null);
 
             MainManager.roomManager.RemoveObject(gameObject);
         }

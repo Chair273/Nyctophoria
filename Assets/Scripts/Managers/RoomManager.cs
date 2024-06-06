@@ -23,6 +23,11 @@ public class RoomManager : MonoBehaviour
         return currentRoom;
     }
 
+    public List<GameObject> GetContents()
+    {
+        return area[currentRoom.x, currentRoom.y].GetContents();
+    }
+
     public IEnumerator ChangeRoom(Vector2Int roomVector)
     {
         if (transitionDebounce)
@@ -44,7 +49,7 @@ public class RoomManager : MonoBehaviour
 
         currentRoom = newRoom;
 
-        Vector3 doorPos = area[newRoom.x, newRoom.y].getDoorPos(-roomVector);
+        Vector3 doorPos = area[newRoom.x, newRoom.y].GetDoorPos(-roomVector);
 
         Transform player = RoomGenerator.main.player;
 
@@ -281,26 +286,6 @@ public class Room
     private List<Vector3Int> validFloors;
     private List<Vector3Int> sortWalls;
 
-    /*private static Dictionary<string, Vector3> offset = new Dictionary<string, Vector3>
-    {
-        {"LeftWall", Vector3.zero},
-        {"LeftDoor", Vector3.zero},
-        {"RightWall", new Vector3(-63, 35, 0) / 150},
-        {"RightDoor", new Vector3(-63, 35, 0) / 150},
-        {"FrontWall", Vector3.zero},
-        {"FrontDoor", Vector3.zero},
-        {"BackWall", new Vector3(63, 35, 0) / 150},
-        {"BackDoor", new Vector3(63, 35, 0) / 150},
-        {"LeftCorner", new Vector3(75, 42, 0) / 150},
-        {"RightCorner", new Vector3(-75, 42, 0) / 150},
-        {"UpCorner", Vector3.zero},
-        {"DownCorner", new Vector3(0, 71, 0) / 150},
-        {"LeftCap", new Vector3(63, 36, 0) / 150},
-        {"RightCap", new Vector3(-59, 36, 0) / 150},
-        {"UpCap", new Vector3(0, 87, 0) / 150},
-        {"DownCap", new Vector3(0, 71, 0) / 150},
-    };*/
-
     private static Dictionary<string, Vector3> offset = new Dictionary<string, Vector3>
     {
         {"LeftWall", Vector3.zero},
@@ -337,7 +322,6 @@ public class Room
         {"RightCap", -slopeVal},
         {"UpCap", -slopeVal},
         {"DownCap", slopeVal},
-
         {"UpCorner", slopeVal},
         {"DownCorner", -slopeVal},
     };
@@ -675,9 +659,9 @@ public class Room
                 spriteRenderer.color = new Color32(255, 255, 255, 0);
                 MainManager.roomManager.StartCoroutine(Tween.New(new Color32(255, 255, 255, 255), spriteRenderer, 1));
 
-                if (thing.transform.TryGetComponent<CombatStarter>(out CombatStarter combatStarter))
+                if (thing.transform.TryGetComponent(out CombatStarter combatStarter))
                 {
-                    combatStarter.mainCollider.enabled = false;
+                    combatStarter.Disable();
                 }
 
                 thing.SetActive(true);
@@ -698,9 +682,9 @@ public class Room
 
         foreach (GameObject thing in roomContents)
         {
-            if (thing.transform.TryGetComponent<CombatStarter>(out CombatStarter combatStarter))
+            if (thing.transform.TryGetComponent(out CombatStarter combatStarter))
             {
-                combatStarter.mainCollider.enabled = true;
+                combatStarter.StartCoroutine(combatStarter.DelayedEnable());
             }
         }
 
@@ -720,9 +704,9 @@ public class Room
             spriteRenderer.color = new Color32(255, 255, 255, 255);
             MainManager.roomManager.StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), spriteRenderer, 1));
 
-            if (thing.transform.TryGetComponent<CombatStarter>(out CombatStarter combatStarter))
+            if (thing.transform.TryGetComponent(out CombatStarter combatStarter))
             {
-                combatStarter.mainCollider.enabled = false;
+                combatStarter.Disable();
             }
         }
 
@@ -748,9 +732,9 @@ public class Room
 
         foreach (GameObject thing in roomContents)
         {
-            if (thing.transform.TryGetComponent<CombatStarter>(out CombatStarter combatStarter))
+            if (thing.transform.TryGetComponent(out CombatStarter combatStarter))
             {
-                combatStarter.mainCollider.enabled = false;
+                combatStarter.Disable();
             }
 
             thing.transform.GetComponent<SpriteRenderer>().color = new Color32(255, 255, 255, 0);
@@ -762,9 +746,14 @@ public class Room
     }
 
 
-    public Vector3 getDoorPos(Vector2Int doorIndex)
+    public Vector3 GetDoorPos(Vector2Int doorIndex)
     {
         return doorPositions[doorIndex];
+    }
+
+    public List<GameObject> GetContents()
+    {
+        return roomContents;
     }
 
     public List<Vector3Int> GetValidObjectPositions()
@@ -874,7 +863,6 @@ public class Room
         }
         //
 
-        Debug.Log("Sort end");
     }
 
     private void ResetDoorPositions()

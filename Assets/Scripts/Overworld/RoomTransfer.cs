@@ -39,13 +39,11 @@ public class RoomTransfer : MonoBehaviour
 
         if (RoomGenerator.main != null)
         {
-            while ((RoomGenerator.main.player.position - transform.position).magnitude < 0.5f)
+            while (((Vector2)RoomGenerator.main.player.position - (Vector2)transform.position).magnitude < 0.4f)
             {
                 yield return waitTime;
             }
         }
-
-        yield return new WaitForSecondsRealtime(Random.Range(0.3f, 0.8f));
 
         transform.Find("Light").GetComponent<Light2D>().enabled = true;
         transform.GetComponent<CircleCollider2D>().enabled = true;

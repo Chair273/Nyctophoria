@@ -51,6 +51,11 @@ public class SceneTransition : MonoBehaviour
 
         string current = SceneManager.GetActiveScene().name;
 
+        if (current.Equals("Overworld"))
+        {
+            MainManager.characterManager.playerPos = RoomGenerator.main.player.position;
+        }
+
         AsyncOperation loaded = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
 
         yield return new WaitUntil(() => loaded.isDone);
@@ -69,6 +74,7 @@ public class SceneTransition : MonoBehaviour
         if (sceneName.Equals("Overworld"))
         {
             MainManager.roomManager.LoadCurrent();
+            RoomGenerator.main.player.position = MainManager.characterManager.playerPos;
         }
         else if (sceneName.Equals("Combat"))
         {

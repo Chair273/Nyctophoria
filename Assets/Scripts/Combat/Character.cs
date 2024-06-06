@@ -223,8 +223,13 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
 
         for (int i = 0; i < charInfo.Count; i++)
         {
-            if (((GameObject)charInfo[i]["ObjectReference"]).Equals(gameObject))
+            if (((GameObject)charInfo[i]["CombatReference"]).Equals(gameObject))
             {
+                if (charInfo[i]["OverworldReference"] != null)
+                {
+                    MainManager.roomManager.RemoveObject((GameObject)charInfo[i]["OverworldReference"]);
+                }
+
                 charInfo.RemoveAt(i);
                 break;
             }

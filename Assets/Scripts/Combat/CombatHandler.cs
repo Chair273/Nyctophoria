@@ -110,7 +110,7 @@ public class CombatHandler : MonoBehaviour
                     (Dictionary<string, int>)charStats[i]["Items"]);
 
                 participants.Add(character);
-                charStats[i]["ObjectReference"] = charObject;
+                charStats[i]["CombatReference"] = charObject;
 
                 if (isPlayer)
                 {
@@ -347,14 +347,19 @@ public class CombatHandler : MonoBehaviour
 
         for (int i = charInfo.Count - 1; i >= 0; i--)
         {
-            if (charInfo[i]["ObjectReference"].Equals(null) || ((GameObject)charInfo[i]["ObjectReference"]).GetComponent<Character>().GetGridPos().x == 1)
+            if (charInfo[i]["CombatReference"] == null || ((GameObject)charInfo[i]["CombatReference"]).GetComponent<Character>().GetGridPos().x == 1)
             {
+                if (charInfo[i]["OverworldReference"] != null && (int)charInfo[i]["Health"] <= 0)
+                {
+                    MainManager.roomManager.RemoveObject((GameObject)charInfo[i]["OverworldReference"]);
+                }
+
                 charInfo.RemoveAt(i);
             }
             else
             {
-                charInfo[i]["Health"] = ((GameObject)charInfo[i]["ObjectReference"]).GetComponent<Character>().GetHealth();
-                charInfo[i]["ObjectReference"] = null;
+                charInfo[i]["Health"] = ((GameObject)charInfo[i]["CombatReference"]).GetComponent<Character>().GetHealth();
+                charInfo[i]["CombatReference"] = null;
 
                 survivors = true;
             }

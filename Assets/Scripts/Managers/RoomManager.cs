@@ -281,7 +281,7 @@ public class Room
     private List<Vector3Int> validFloors;
     private List<Vector3Int> sortWalls;
 
-    private static Dictionary<string, Vector3> offset = new Dictionary<string, Vector3>
+    /*private static Dictionary<string, Vector3> offset = new Dictionary<string, Vector3>
     {
         {"LeftWall", Vector3.zero},
         {"LeftDoor", Vector3.zero},
@@ -299,28 +299,45 @@ public class Room
         {"RightCap", new Vector3(-59, 36, 0) / 150},
         {"UpCap", new Vector3(0, 87, 0) / 150},
         {"DownCap", new Vector3(0, 71, 0) / 150},
+    };*/
+
+    private static Dictionary<string, Vector3> offset = new Dictionary<string, Vector3>
+    {
+        {"LeftWall", Vector3.zero},
+        {"LeftDoor", Vector3.zero},
+        {"RightWall", new Vector3(12, 78, 0) / 150},
+        {"RightDoor", new Vector3(12, 78, 0) / 150},
+        {"FrontWall", Vector3.zero},
+        {"FrontDoor", Vector3.zero},
+        {"BackWall", new Vector3(-12, 78, 0) / 150},
+        {"BackDoor", new Vector3(-12, 78, 0) / 150},
+        {"LeftCorner", new Vector3(75, 42, 0) / 150},
+        {"RightCorner", new Vector3(-75, 42, 0) / 150},
+        {"UpCorner", Vector3.zero},
+        {"DownCorner", new Vector3(0, 71, 0) / 150},
+        {"LeftCap", new Vector3(63, 36, 0) / 150},
+        {"RightCap", new Vector3(-59, 36, 0) / 150},
+        {"UpCap", new Vector3(0, 87, 0) / 150},
+        {"DownCap", new Vector3(0, 71, 0) / 150},
     };
 
-    private static Dictionary<string, float> slopeMult = new Dictionary<string, float>
+    private static Dictionary<string, float> tileLines = new Dictionary<string, float>
     {
         {"LeftWall", slopeVal},
         {"LeftDoor", slopeVal},
-        {"RightWall", slopeVal},
-        {"RightDoor", slopeVal},
-        {"FrontWall", -slopeVal},
-        {"FrontDoor", -slopeVal},
+        {"RightWall", -slopeVal},
+        {"RightDoor", -slopeVal},
+        {"FrontWall", slopeVal},
+        {"FrontDoor", slopeVal},
         {"BackWall", -slopeVal},
         {"BackDoor", -slopeVal},
-        {"LeftCorner", -slopeVal},
+        {"LeftCorner", slopeVal},
         {"RightCorner", slopeVal},
-        {"LeftCap", 0},
-        {"RightCap", 0},
-        {"UpCap", 0},
-        {"DownCap", 0},
-    };
+        {"LeftCap", -slopeVal},
+        {"RightCap", -slopeVal},
+        {"UpCap", -slopeVal},
+        {"DownCap", slopeVal},
 
-    private static Dictionary<string, float> absSlope = new Dictionary<string, float>
-    {
         {"UpCorner", slopeVal},
         {"DownCorner", -slopeVal},
     };
@@ -633,6 +650,7 @@ public class Room
 
     public void RemoveObject(GameObject newObject)
     {
+        Debug.Log(roomContents.Contains(newObject));
         roomContents.Remove(newObject);
         Object.Destroy(newObject);
     }
@@ -807,18 +825,13 @@ public class Room
             {
                 string name = tilemap.GetSprite(sortWalls[i]).name;
                 bool found = false;
-                bool abs = absSlope.ContainsKey(name);
-                float slope = abs ? absSlope[name] : slopeMult[name];
 
                 Vector3 tilePos = tilemap.CellToWorld(sortWalls[i]) + offset[name];
 
                 //find the first object that is above the tile's sort line, then put the tile below (in front of) it.
                 for (int v = 0; v < objects.Count; v++)
                 {
-                    Vector3 objPos = objects[v].position;
-                    float x = abs ? Mathf.Abs(objPos.x) : objPos.x;
-
-                    if (objPos.y >= x * slope - tilePos.x * slope + tilePos.y)
+                    if (objects[v].position.y >= tileLines[name] * Mathf.Abs(objects[v].position.x - tilePos.x) + tilePos.y)
                     {
                         tilemap.SetTile(sortWalls[i], null);
 
@@ -860,6 +873,8 @@ public class Room
             tilemap.SetTile(newPos, tiles[name]);
         }
         //
+
+        Debug.Log("Sort end");
     }
 
     private void ResetDoorPositions()

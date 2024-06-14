@@ -19,6 +19,8 @@ public class MainManager : MonoBehaviour
 
     public static void GameOver()
     {
+        roomManager.GenerateArea();
+
         characterManager.ClearCharacters();
         characterManager.AddCharacter("OneArmedKnight", null);
 

@@ -99,6 +99,11 @@ public class RoomManager : MonoBehaviour
 
     public void GenerateArea()
     {
+        for (int i = 0; i < MainManager.thePit.childCount; i++)
+        {
+            Destroy(MainManager.thePit.GetChild(i).gameObject);
+        }
+
         area = new Room[7, 7];
 
         Room startRoom = new Room(new Vector2Int(Random.Range(1, 6), Random.Range(1, 3)));

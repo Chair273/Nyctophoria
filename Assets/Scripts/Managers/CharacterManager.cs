@@ -41,8 +41,8 @@ public class CharacterManager : MonoBehaviour
         {
             {"Name", "Plague Caster"},
             {"IsPlayer", true },
-            {"MaxHealth", 30},
-            {"Health",  30},
+            {"MaxHealth", 35},
+            {"Health",  35},
             {"Cards", new Dictionary<string, int>
             {
                 {"Summon Bees", 3 },
@@ -64,11 +64,11 @@ public class CharacterManager : MonoBehaviour
         {
             {"Name", "Skeleton"},
             {"IsPlayer", false },
-            {"MaxHealth", 30},
-            {"Health",  30},
+            {"MaxHealth", 20},
+            {"Health",  20},
             {"Cards", new Dictionary<string, int>
             {
-                {"Spear Strike", 3 },
+                {"Spear Strike", 7 },
                 {"Bifurcated Strike", 3 },
                 {"Guard", 2 }
             } },
@@ -82,14 +82,14 @@ public class CharacterManager : MonoBehaviour
         {
             {"Name", "Crypt Keeper"},
             {"IsPlayer", false },
-            {"MaxHealth", 40},
-            {"Health",  40},
+            {"MaxHealth", 25},
+            {"Health",  25},
             {"Cards", new Dictionary<string, int>
             {
-                {"Spear Strike", 2 },
+                {"Spear Strike", 6 },
                 {"Bifurcated Strike", 1 },
                 {"Guard", 1 },
-                {"Summon Bees", 1 },
+                {"Summon Bees", 4 },
                 {"Lesser Ooze", 2 }
             } },
             {"Items", new Dictionary<string, int> ()},

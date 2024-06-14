@@ -247,6 +247,7 @@ public class CombatHandler : MonoBehaviour
         main = this;
     }
 
+
     private IEnumerator Combat()
     {
         int round = 1;
@@ -345,21 +346,25 @@ public class CombatHandler : MonoBehaviour
 
         for (int i = charInfo.Count - 1; i >= 0; i--)
         {
-            if (charInfo[i]["CombatReference"] == null || ((GameObject)charInfo[i]["CombatReference"]).GetComponent<Character>().GetGridPos().x == 1 || (int)charInfo[i]["Health"] <= 0)
+            Character character = ((GameObject)charInfo[i]["CombatReference"]).GetComponent<Character>();
+            charInfo[i]["Health"] = character.GetHealth();
+
+            if (character.GetGridPos().x == 1)
             {
-                if (charInfo[i]["OverworldReference"] != null)
+                if (charInfo[i]["OverworldReference"] != null && character.GetHealth() <= 0)
                 {
                     MainManager.roomManager.RemoveObject((GameObject)charInfo[i]["OverworldReference"]);
                 }
 
                 charInfo.RemoveAt(i);
             }
+            else if (character.GetHealth() > 0)
+            {
+                survivors = true;
+            }
             else
             {
-                charInfo[i]["Health"] = ((GameObject)charInfo[i]["CombatReference"]).GetComponent<Character>().GetHealth();
-                charInfo[i]["CombatReference"] = null;
-
-                survivors = true;
+                charInfo.RemoveAt(i);
             }
         }
 

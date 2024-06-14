@@ -201,7 +201,7 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
             CombatHandler.main.RemoveCharacter(this);
             Debug.Log(name + " has perished.");
 
-            StartCoroutine(Die());
+            Die();
         }
         else
         {
@@ -217,27 +217,22 @@ public class Character : MonoBehaviour //the superclass of both enemies and play
         yield return StartCoroutine(Tween.New(baseColor, spriteRenderer, 0.2f));
     }
 
-    protected virtual IEnumerator Die()
+    protected virtual void Die() { }
+
+    protected IEnumerator Die(Vector3 newPos)
     {
-        List<Dictionary<string, object>> charInfo = MainManager.characterManager.GetCharacters();
+        StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), spriteRenderer, 0.25f));
+        StartCoroutine(Tween.New(newPos, transform, 0.5f));
+        StartCoroutine(Tween.New(Quaternion.Euler(0, 0, Random.Range(-4, 5) * 5), transform, 0.25f));
 
-        for (int i = 0; i < charInfo.Count; i++)
-        {
-            if (((GameObject)charInfo[i]["CombatReference"]).Equals(gameObject))
-            {
-                if (charInfo[i]["OverworldReference"] != null)
-                {
-                    MainManager.roomManager.RemoveObject((GameObject)charInfo[i]["OverworldReference"]);
-                }
+        yield return new WaitForSeconds(0.15f);
 
-                charInfo.RemoveAt(i);
-                break;
-            }
-        }
+        StartCoroutine(Tween.New(new Color32(0, 0, 0, 0), spriteRenderer, 0.4f));
 
-        yield return new WaitForFixedUpdate();
+        yield return new WaitForSeconds(0.6f);
 
-        Destroy(gameObject);
+        gameObject.SetActive(false);
+        CombatHandler.main.RemoveCharacter(this);
     }
 
 
@@ -457,7 +452,7 @@ public class Player : Character
                 int roll = Random.Range(1, 21);
                 new DiceVFX(this, transform, roll, 20);
 
-                if (roll >= 3 + charList.Count * 2)
+                if (roll >= 3 + charList.Count * 2 || roll == 20)
                 {
                     CombatHandler.main.RemoveCharacter(this);
 
@@ -465,8 +460,8 @@ public class Player : Character
 
                     Debug.Log(name + " fled.");
 
-                    StartCoroutine(Tween.New(transform.position + new Vector3(2 * (gridPos.y - 2.5f), -3, 0), transform, 5));
-                    StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), spriteRenderer, 5));
+                    StartCoroutine(Tween.New(transform.position + new Vector3(0, -0.5f, 0), transform, 0.25f));
+                    StartCoroutine(Tween.New(new Color32(255, 255, 255, 0), spriteRenderer, 0.25f));
                 }
                 else
                 {
@@ -578,24 +573,12 @@ public class Player : Character
         return returnVal;
     }
 
-    protected override IEnumerator Die()
+    protected override void Die()
     {
+        StartCoroutine(base.Die(new Vector3(transform.position.x, transform.position.y - 0.125f, transform.position.z)));
+
         turnEnd = true;
         turnStage = 0;
-
-        Vector3 newPos = new Vector3(transform.position.x, transform.position.y - 0.125f, transform.position.z);//the only difference is that players go down and enemies go up
-
-        StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), spriteRenderer, 0.25f));
-        StartCoroutine(Tween.New(newPos, transform, 0.5f));
-        StartCoroutine(Tween.New(Quaternion.Euler(0, 0, Random.Range(-4, 5) * 5), transform, 0.25f));
-
-        yield return new WaitForSeconds(0.15f);
-
-        StartCoroutine(Tween.New(new Color32(0, 0, 0, 0), spriteRenderer, 0.4f));
-
-        yield return new WaitForSeconds(0.6f);
-
-        StartCoroutine(base.Die());
     }
 
     public override void DrawCard(int amount)
@@ -999,21 +982,9 @@ public class Enemy : Character
         }
     }
 
-    protected override IEnumerator Die()
+    protected override void Die()
     {
-        Vector3 newPos = new Vector3(transform.position.x, transform.position.y + 0.3f, transform.position.z);//the only difference is that players go down and enemies go up
-
-        StartCoroutine(Tween.New(new Color32(0, 0, 0, 255), spriteRenderer, 0.15f));
-        StartCoroutine(Tween.New(newPos, transform, 0.5f));
-        StartCoroutine(Tween.New(Quaternion.Euler(0, 0, Random.Range(-4, 5) * 5), transform, 0.5f));
-
-        yield return new WaitForSeconds(0.15f);
-
-        StartCoroutine(Tween.New(new Color32(0, 0, 0, 0), spriteRenderer, 0.4f));
-
-        yield return new WaitForSeconds(0.6f);
-
-        StartCoroutine(base.Die());
+        StartCoroutine(base.Die(new Vector3(transform.position.x, transform.position.y + 0.3f, transform.position.z)));
     }
 
     public override void DrawCard(int amount)
